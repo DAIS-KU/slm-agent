@@ -1,0 +1,8 @@
+Pay attention to grammar issue.
+Note that when adding a branch to a conditional statement, the statement originally has a fixed indentation. When you modify the code and output the diff file, you must make the output result adapt to the original indentation
+When you are using tools such as str_replace, please pay attention to the indentation in the original program lines to avoid continuous matching failures caused by ignoring indentation.
+Please check the context indentation after replacing the original lines in the program. If there are errors in the indentation of the inserted code, please correct them.
+
+<grammar issue>
+Make sure to have correct indent. Wrap your code well within a function! Do not have indent error in all the codes. Be careful!
+</grammar issue>

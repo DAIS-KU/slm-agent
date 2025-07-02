@@ -1,0 +1,51 @@
+Objective: Modify the Astropy QDP table reader/writer code to fix failing test cases. Key issues to address include:
+
+1. Table Block Segmentation
+Problem: Tables are separated by NO rows, but the code may not split blocks correctly.
+Fix: Split data blocks using NO lines and ensure table_id correctly indexes these blocks.
+2. Error Column Handling (TERR/SERR)
+Problem: Column indices for READ TERR and READ SERR are 1-based (QDP standard), but code may treat them as 0-based.
+Fix:
+For READ TERR X: The data column at index X has asymmetric errors in the next two columns (e.g., X=1 → data column 0, errors in columns 1 and 2).
+For READ SERR Y: The data column at index Y has symmetric errors in the next column.
+3. Handling NO and NaN Values
+Problem: NO (missing data) and NaN values are not properly masked or converted during read/write.
+Fix:
+Read: Replace NO with masked values or NaN in MaskedColumn.
+Write: Convert masked/NaN values back to NO.
+4. Delimiter Support
+Problem: Comma-separated QDP files (e.g., test_roundtrip_example_comma) fail due to incorrect delimiter handling.
+Fix: Add sep parameter to _read_table_qdp and _write_table_qdp to handle both space and comma-delimited data.
+5. Metadata Preservation
+Problem: Initial comments (before READ commands) and table-specific comments (after !) are not stored in table.meta.
+Fix: Capture comments in meta['initial_comments'] and meta['comments'] and regenerate them when writing.
+6. Column Names Assignment
+Problem: User-provided names parameter does not override default column names (e.g., MJD, Rate).
+Fix: Use names to rename columns instead of appending suffixes.
+7. Multiple Command Block Warning
+Problem: Files with multiple READ commands (e.g., test_roundtrip) do not trigger AstropyUserWarning.
+Fix: Detect repeated READ blocks and issue a warning.
+Validation Criteria
+Ensure all tests pass, with special attention to:
+
+NaN/NO Roundtrips: Values should remain consistent after read → write → read.
+Example: In test_roundtrip, NO in input → masked in table → NO in output.
+Error Columns: Verify MJD_perr and MJD_nerr are correctly read (e.g., test_get_tables_from_qdp_file).
+Metadata: Check meta['comments'] and meta['initial_comments'] are preserved.
+Delimiters: Ensure comma-separated data (e.g., test_roundtrip_example_comma) is parsed correctly.
+Code Modifications Needed:
+
+Reader:
+Split data into blocks using NO lines.
+Map TERR/SERR columns correctly (1-based → 0-based indices).
+Replace NO with masked values and handle NaN.
+Capture comments in table.meta.
+Writer:
+Convert masked/NaN values to NO.
+Rebuild comments from meta.
+Support customizable delimiters.
+Test Focus:
+
+test_roundtrip: NaN/NO handling and metadata.
+test_read_example: Error column alignment.
+test_roundtrip_example_comma: Delimiter flexibility.
