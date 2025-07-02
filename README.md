@@ -195,4 +195,10 @@ Other scripts support:
 
 
 ## Acknowledgement
-Code adapted from the official implementation of [smolagents](https://github.com/huggingface/smolagents) and [OpenHands](https://github.com/All-Hands-AI/OpenHands).
+This work builds upon and adapts code from the official implementations of two prominent open-source frameworks:
+
+- **[smolagents](https://github.com/huggingface/smolagents )** — a lightweight, flexible, and powerful library designed to enable the rapid development and deployment of AI agents with minimal effort.
+- **[OpenHands](https://github.com/All-Hands-AI/OpenHands )** — an advanced platform enabling AI-powered software development agents capable of interacting with code, terminals, and APIs just like human developers.
+
+These frameworks were instrumental in validating the effectiveness and performance of our proposed methods. We extend our gratitude to the contributors and maintainers of both projects for their foundational work in advancing agent-based systems.
+
