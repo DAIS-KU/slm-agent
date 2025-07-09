@@ -268,7 +268,7 @@ Here is the task:
             semantic_match_template = prompts["semantic_match_prompt"]
 
             student_agent_reason_template = prompts["student_agent_reason"]
-            teacher_agent_reason_template = prompts["teacher_agent_reson"]
+            teacher_agent_reason_template = prompts["teacher_agent_reason"]
 
             student_agent_refine_template = prompts["student_agent_refine"]
             teacher_agent_refine_template = prompts["teacher_agent_refine"]
