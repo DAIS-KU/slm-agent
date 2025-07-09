@@ -45,21 +45,8 @@ def prepare_model_kwargs(model_id, args):
 
 def get_api_model(model_id):
 
-    parts = model_id.split(':', 1)
-    if len(parts) != 2:
-        raise ValueError(f"model_id should be company:model_name '{model_id}'")
-
-    vendor_prefix, model_name = parts
-    vendor_lower = vendor_prefix.strip().lower()
-    model_name = model_name.strip()
     model_wrapper = OpenAIServerModel
+    key = os.getenv("OPENAI_API_KEY")
+    url = os.getenv("OPENAI_BASE_URL")
 
-    if vendor_lower == 'openai':
-        key = os.getenv("OPENAI_API_KEY")
-        url = os.getenv("OPENAI_BASE_URL")
-        if "deepseek" in model_name.lower() or 'claude' in model_name.lower():
-            model_wrapper = FakeToolCallOpenAIServerModel
-    else:
-        raise ValueError(f"Invalid campany name: '{vendor_lower}'")
-
-    return model_name, key, url, model_wrapper
+    return model_id, key, url, model_wrapper
