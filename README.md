@@ -203,3 +203,12 @@ This work builds upon and adapts code from the official implementations of two p
 
 These frameworks were instrumental in validating the effectiveness and performance of our proposed methods. We extend our gratitude to the contributors and maintainers of both projects for their foundational work in advancing agent-based systems.
 
+## Cite Us
+```
+@inproceedings{tang2025agent,
+  title={Agent KB: Leveraging Cross-Domain Experience for Agentic Problem Solving},
+  author={Tang, Xiangru and Qin, Tianrui and Peng, Tianhao and Zhou, Ziyang and Shao, Daniel and Du, Tingting and Wei, Xinming and Xia, Peng and Wu, Fang and Zhu, He and Zhang, Ge and Liu, Jiaheng and Wang, Xingyao and Hong, Sirui and Wu, Chenglin and Cheng, Hao and Wang, Chi and Zhou, Wangchunshu},
+  booktitle={ICML 2025 Workshop on Collaborative and Federated Agentic Workflows}
+}
+```
+
