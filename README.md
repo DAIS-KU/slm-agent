@@ -11,24 +11,25 @@
   <a href='https://github.com/OPPO-PersonalAI/OAgents/blob/main/LICENSE'><img src='https://img.shields.io/badge/License-Apache%202.0-blue'></a>
   
 </div>
-This is the official repository for paper "AGENT KB: A Hierarchical Memory Framework for Cross-Domain Agentic Problem Solving".
+This is the official repository for the paper "Agent KB: Leveraging Cross-Domain Experience for Agentic Problem Solving
+".
 
 <div align="center">
     <img src="./assets/agent_kb.png" width="80%" height="auto" />
 </div>
 
 ## Key Features of Agent KB
-- Hierarchical Memory Structure : Combines working memory, episodic memory, and semantic knowledge base.
-- Agentic Reasoning : Supports autonomous decision-making and planning using LLMs.
-- Cross-Domain Adaptability : Designed for generalization across different task domains (e.g., QA, coding, planning).
-- Modular Design : Easy to integrate with various benchmarks and environments.
+- Hierarchical Memory Structure: Combines working memory, episodic memory, and semantic knowledge base.
+- Agentic Reasoning: Supports autonomous decision-making and planning using LLMs.
+- Cross-Domain Adaptability: Designed for generalization across different task domains (e.g., QA, coding, planning).
+- Modular Design: Easy to integrate with various benchmarks and environments.
 
 
 ## GAIA Part
 
 To start, follow the steps below:
 
-### Access to main part of GAIA
+### Access to the main part of GAIA
 
 ```bash
 cd ./Agent-KB-GAIA/examples/open_deep_research
@@ -75,7 +76,7 @@ The expected directory structure is as follows:
 ```
 #### Step 2: Test run on GAIA
 
-You're now all set to run on GAIA! Simply execute the run_gaia.py script, like so:
+You're now all set to run on GAIA! Simply execute the run_gaia.py script like so:
 ```bash
 python run_gaia.py --model-id openai:gpt-4.1 --model-id-search openai:gpt-4.1 --run-name gpt-4.1-gaia
 ```
