@@ -1,6 +1,6 @@
 <div align="center">
 
-<h2>AGENT KB: A Hierarchical Memory Framework for Cross-Domain Agentic Problem Solving, OPPO PersonalAI Lab.</h2>
+<h2>Agent KB: Leveraging Cross-Domain Experience for Agentic Problem Solving</h2>
 
 </div>
 
