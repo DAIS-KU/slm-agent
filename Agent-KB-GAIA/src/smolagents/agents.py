@@ -1162,8 +1162,8 @@ class ToolCallingAgent(MultiStepAgent):
         planning_interval: Optional[int] = None,
         agent_kb: bool = False,
         agent_type: Optional[str] = "tool_agent",
-        top_k:Optional[int] = 1,
-        retrieval_type:Optional[str] = "hybrid",
+        top_k: Optional[int] = 1,
+        retrieval_type: Optional[str] = "hybrid",
         **kwargs,
     ):
         prompt_templates = prompt_templates or yaml.safe_load(
@@ -1175,9 +1175,9 @@ class ToolCallingAgent(MultiStepAgent):
             prompt_templates=prompt_templates,
             planning_interval=planning_interval,
             agent_kb=agent_kb,
-            agent_type= agent_type,
-            top_k = top_k,
-            retrieval_type = retrieval_type,
+            agent_type=agent_type,
+            top_k=top_k,
+            retrieval_type=retrieval_type,
             **kwargs,
         )
 
@@ -1398,8 +1398,8 @@ class CodeAgent(MultiStepAgent):
         use_e2b_executor: bool = False,
         max_print_outputs_length: Optional[int] = None,
         agent_kb: bool = False,
-        top_k:Optional[int] = 1,
-        retrieval_type:Optional[str] = "hybrid",
+        top_k: Optional[int] = 1,
+        retrieval_type: Optional[str] = "hybrid",
         **kwargs,
     ):
         self.additional_authorized_imports = additional_authorized_imports if additional_authorized_imports else []
