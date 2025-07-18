@@ -273,17 +273,18 @@ Here is the task:
             student_agent_refine_template = prompts["student_agent_refine"]
             teacher_agent_refine_template = prompts["teacher_agent_refine"]
             
-            student_reaon = student_agent_reason_template.format(
+            student_reason = student_agent_reason_template.format(
                 user_query=example["question"]
             )
+            student_summary = call_model(query=student_reason, model_name=model_name_retrieval, key=key, url=url)
 
             retrieval_method = {
                 "hybrid": akb_client.hybrid_search,
                 "text": akb_client.text_search,
                 "semantic": akb_client.semantic_search
             }[args.retrieval_type]
-            student_retrieval_results = retrieval_method(student_reaon, top_k=args.top_k)
 
+            student_retrieval_results = retrieval_method(student_summary, top_k=args.top_k)
             student_retrieval = ""
             for result in student_retrieval_results:
                 student_retrieval += "\nSimilar task:\n"
@@ -308,7 +309,7 @@ Here is the task:
                 true_answer=example["true_answer"]
             )
 
-            semantic_check = call_model(query=output_query, model_name=model_name_retrieval, key=key_search, url=url_search)
+            semantic_check = call_model(query=output_query, model_name=model_name_retrieval, key=key, url=url)
 
             if (not question_scorer(output, example["true_answer"])) and (semantic_check == "false"):
                 akb_client = AKBClient()
@@ -339,7 +340,7 @@ Here is the task:
                 teacher_reason = teacher_agent_reason_template.format(
                     agent_log=str(annotated_example)
                 )
-                summary = call_model(query=teacher_reason, model_name=model_name_retrieval, key=key_search, url=url_search)
+                summary = call_model(query=teacher_reason, model_name=model_name_retrieval, key=key, url=url)
 
                 teacher_retrieval_results = retrieval_method(example["question"] + log_plan + summary, top_k=args.top_k)
 
