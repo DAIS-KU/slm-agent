@@ -212,3 +212,12 @@ These frameworks were instrumental in validating the effectiveness and performan
 }
 ```
 
+---
+
+## Star ⭐
+
+<div align="center">
+
+[![Star History Chart](https://api.star-history.com/svg?repos=OPPO-PersonalAI/Agent-KB&type=Date)](https://github.com/OPPO-PersonalAI/Agent-KB)
+
+</div>
