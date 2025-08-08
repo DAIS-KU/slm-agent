@@ -205,10 +205,11 @@ These frameworks were instrumental in validating the effectiveness and performan
 
 ## Cite Us
 ```
-@inproceedings{tang2025agent,
+@article{tang2025agent,
   title={Agent KB: Leveraging Cross-Domain Experience for Agentic Problem Solving},
-  author={Tang, Xiangru and Qin, Tianrui and Peng, Tianhao and Zhou, Ziyang and Shao, Daniel and Du, Tingting and Wei, Xinming and Xia, Peng and Wu, Fang and Zhu, He and Zhang, Ge and Liu, Jiaheng and Wang, Xingyao and Hong, Sirui and Wu, Chenglin and Cheng, Hao and Wang, Chi and Zhou, Wangchunshu},
-  booktitle={ICML 2025 Workshop on Collaborative and Federated Agentic Workflows}
+  author={Tang, Xiangru and Qin, Tianrui and Peng, Tianhao and Zhou, Ziyang and Shao, Daniel and Du, Tingting and Wei, Xinming and Xia, Peng and Wu, Fang and Zhu, He and others},
+  journal={arXiv preprint arXiv:2507.06229},
+  year={2025}
 }
 ```
 
