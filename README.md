@@ -14,6 +14,10 @@
 
 This is the official repository for the paper "Agent KB: Leveraging Cross-Domain Experience for Agentic Problem Solving" **(ICML 2025 CFAgentic Workshop Best Paper Runner-Up Award)**.
 
+The work is done by [Xiangru Tang](https://xiangrutang.github.io/), Tianrui Qin, Tianhao Peng, Ziyang Zhou, Daniel Shao, Tingting Du, Xinming Wei, Peng Xia, Fang Wu, He Zhu, Ge Zhang, Jiaheng Liu, Xingyao Wang, Sirui Hong, Chenglin Wu, Hao Cheng, Chi Wang, Wangchunshu Zhou
+
+
+
 <div align="center">
     <img src="./assets/agent_kb.png" width="80%" height="auto" />
 </div>
