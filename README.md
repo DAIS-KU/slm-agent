@@ -13,10 +13,7 @@
 </div>
 This is the official repository for the paper "Agent KB: Leveraging Cross-Domain Experience for Agentic Problem Solving" **(ICML 2025 CFAgentic Workshop Best Paper Runner-Up Award)**.
 
-This is the codes of the paper
-[LM-Infinite: Zero-Shot Extreme Length Generalization for Large Language Models](https://arxiv.org/abs/2308.16137)
 **(NAACL 2024 Outstanding Paper award)** in PyTorch.
-The work is done by [Chi Han](https://glaciohound.github.io), Qifan Wang, Hao Peng, Wenhan Xiong, Yu Chen, Heng Ji, Sinong Wang.
 
 
 <div align="center">
