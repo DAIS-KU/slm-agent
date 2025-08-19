@@ -34,6 +34,8 @@ from scripts.automodel import get_api_model, process_selected_tasks_param, prepa
 from agent_kb.agent_kb_utils import AKBClient, call_model
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
+from smolagents.agents import populate_template
+
 from tqdm import tqdm
 
 from smolagents import (
@@ -273,8 +275,9 @@ Here is the task:
             student_agent_refine_template = prompts["student_agent_refine"]
             teacher_agent_refine_template = prompts["teacher_agent_refine"]
             
-            student_reason = student_agent_reason_template.format(
-                user_query=example["question"]
+            student_reason = populate_template(
+                student_agent_reason_template,
+                variables={"user_query": example["question"]}
             )
             student_summary = call_model(query=student_reason, model_name=model_name_retrieval, key=key, url=url)
 
@@ -292,8 +295,9 @@ Here is the task:
                 student_retrieval += "\nSuggestions:\n"
                 student_retrieval += result['agent_experience']
             
-            student_refine = student_agent_refine_template.format(
-                knowledge=student_retrieval
+            student_refine = populate_template(
+                student_agent_refine_template,
+                variables={"knowledge": student_retrieval}
             )
             
             student_suggestions = call_model(query=student_refine, model_name=model_name_retrieval, key=key, url=url)
@@ -303,10 +307,13 @@ Here is the task:
             final_result = prepare_response(augmented_question, agent_memory, reformulation_model=model)
             output = str(final_result)
 
-            output_query = semantic_match_template.format(
-                question=example["question"],
-                prediction=output,
-                true_answer=example["true_answer"]
+            output_query = populate_template(
+                semantic_match_template,
+                variables={
+                    "question": example["question"],
+                    "prediction": output,
+                    "true_answer": example["true_answer"]
+                }
             )
 
             semantic_check = call_model(query=output_query, model_name=model_name_retrieval, key=key, url=url)
@@ -337,9 +344,11 @@ Here is the task:
                     "intermediate_steps": intermediate_steps,
                 }
 
-                teacher_reason = teacher_agent_reason_template.format(
-                    agent_log=str(annotated_example)
+                teacher_reason = populate_template(
+                    teacher_agent_reason_template,
+                    variables={"agent_log": str(annotated_example)}
                 )
+
                 summary = call_model(query=teacher_reason, model_name=model_name_retrieval, key=key, url=url)
 
                 teacher_retrieval_results = retrieval_method(example["question"] + log_plan + summary, top_k=args.top_k)
@@ -351,9 +360,12 @@ Here is the task:
                     teacher_retrieval += "\nSuggestions:\n"
                     teacher_retrieval += result['agent_experience']
 
-                teacher_refine = teacher_agent_refine_template.format(
-                    knowledge=teacher_retrieval,
-                    log_summary=summary
+                teacher_refine = populate_template(
+                    teacher_agent_refine_template,
+                    variables={
+                        "knowledge": teacher_retrieval,
+                        "log_summary": summary
+                    }
                 )
 
                 teacher_suggestions = call_model(query=teacher_refine, model_name=model_name_retrieval, key=key, url=url)
