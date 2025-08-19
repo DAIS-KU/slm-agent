@@ -11,8 +11,12 @@
   <a href='https://github.com/OPPO-PersonalAI/OAgents/blob/main/LICENSE'><img src='https://img.shields.io/badge/License-Apache%202.0-blue'></a>
   
 </div>
-This is the official repository for the paper "Agent KB: Leveraging Cross-Domain Experience for Agentic Problem Solving
-".
+
+This is the official repository for the paper "Agent KB: Leveraging Cross-Domain Experience for Agentic Problem Solving" **(ICML 2025 CFAgentic Workshop Best Paper Runner-Up Award)**.
+
+The work is done by [Xiangru Tang*](https://xiangrutang.github.io/), Tianrui Qin*, Tianhao Peng*, Ziyang Zhou, Daniel Shao, Tingting Du, Xinming Wei, Peng Xia, Fang Wu, He Zhu, Ge Zhang, Jiaheng Liu, Xingyao Wang, Sirui Hong, Chenglin Wu, Hao Cheng, Chi Wang, [Wangchunshu Zhou](https://michaelzhouwang.github.io/).
+
+
 
 <div align="center">
     <img src="./assets/agent_kb.png" width="80%" height="auto" />
