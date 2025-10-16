@@ -1,10 +1,10 @@
 result/
 
 # Python 캐시파일
-__pycache__/
-*.pyc
+**/__pycache__/
+**/*.pyc
 
 
 # OS 임시파일
-.DS_Store
-Thumbs.db
+**/.DS_Store
+**/Thumbs.db
