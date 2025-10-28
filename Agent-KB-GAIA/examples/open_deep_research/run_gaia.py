@@ -223,7 +223,6 @@ def answer_single_question(example, args, model_id, model_id_search, answers_fil
             torch_dtype="auto", 
             # max_new_tokens=2048, 
             temperature=0.1, 
-            # token="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"
         )
         model_search = TransformersModel(
             model_id=model_id_search,
@@ -232,7 +231,6 @@ def answer_single_question(example, args, model_id, model_id_search, answers_fil
             torch_dtype="auto", 
             # max_new_tokens=2048, 
             temperature=0.1, 
-            # token="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"
         )
     else:
         model_name, key, url, model_wrapper = get_api_model(model_id)
