@@ -3,19 +3,11 @@ from openai import OpenAI
 
 import requests
 
-def call_model(query, model_name, key, url):
+def call_model(query, model_name, key, url, model, slm=False):
     if len(query) > 300000:
         query = query[:300000]
-    client = OpenAI(
-        base_url=url,
-        api_key=key,
-    )
-
-    completion = client.chat.completions.create(
-        extra_body={},
-        model=model_name,
-        messages=[
-            {
+    if slm:
+        messages = [{
             "role": "user",
             "content": [
                 {
@@ -23,10 +15,31 @@ def call_model(query, model_name, key, url):
                 "text": query
                 },
             ]
-            }
-        ]
-    )
-    return completion.choices[0].message.content
+            }]
+        message = model(messages)
+        return message.content
+    else:
+        client = OpenAI(
+            base_url=url,
+            api_key=key,
+        )
+        completion = client.chat.completions.create(
+            extra_body={},
+            model=model_name,
+            messages=[
+                {
+                "role": "user",
+                "content": [
+                    {
+                    "type": "text",
+                    "text": query
+                    },
+                ]
+                }
+            ]
+        )
+        return completion.choices[0].message.content
+
 
 
 class AKBClient:

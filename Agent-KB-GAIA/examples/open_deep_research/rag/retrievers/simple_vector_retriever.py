@@ -19,7 +19,7 @@ from typing import IO, TYPE_CHECKING, Any, Dict, List, Optional, Union
 from rag.embeddings import BaseEmbedding, OpenAIEmbedding
 from rag.retrievers.base import BaseRetriever
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 import numpy as np
 
 from rag.storages import QdrantStorage

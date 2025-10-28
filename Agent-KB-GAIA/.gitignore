@@ -138,3 +138,7 @@ archive/
 savedir/
 output/
 tool_output/
+
+
+# Log
+*.log

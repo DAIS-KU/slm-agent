@@ -34,7 +34,7 @@ from rag.utils import Constants
 if TYPE_CHECKING:
     from unstructured.documents.elements import Element
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class VectorRetriever(BaseRetriever):
     r"""An implementation of the `BaseRetriever` by using vector storage and

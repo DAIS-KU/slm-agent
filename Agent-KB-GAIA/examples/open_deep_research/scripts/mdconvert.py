@@ -134,8 +134,8 @@ class PlainTextConverter(DocumentConverter):
         # Only accept text files
         if content_type is None:
             return None
-        # elif "text/" not in content_type.lower():
-        #     return None
+        elif "text/" not in content_type.lower():
+            return None
 
         text_content = ""
         with open(local_path, "rt", encoding="utf-8") as fh:
@@ -388,28 +388,197 @@ class DocxConverter(HtmlConverter):
         return result
 
 
-class XlsxConverter(HtmlConverter):
+# class XlsxConverter(HtmlConverter):
+#     """
+#     Converts XLSX files to Markdown, with each sheet presented as a separate Markdown table.
+#     """
+
+#     def convert(self, local_path, **kwargs) -> Union[None, DocumentConverterResult]:
+#         # Bail if not a XLSX
+#         extension = kwargs.get("file_extension", "")
+#         if extension.lower() not in [".xlsx", ".xls"]:
+#             return None
+
+#         sheets = pd.read_excel(local_path, sheet_name=None)
+#         md_content = ""
+#         for s in sheets:
+#             md_content += f"## {s}\n"
+#             html_content = sheets[s].to_html(index=False)
+#             md_content += self._convert(html_content).text_content.strip() + "\n\n"
+
+#         return DocumentConverterResult(
+#             title=None,
+#             text_content=md_content.strip(),
+#         )
+# scripts/mdconvert.py (적당한 위치에 추가: DocumentConverter들과 같은 레벨)
+class XmlConverter(DocumentConverter):
     """
-    Converts XLSX files to Markdown, with each sheet presented as a separate Markdown table.
+    Converts .xml files to Markdown.
+
+    - 우선 pandas.read_xml로 테이블성 XML 시도
+    - 실패하면 일반 XML 트리를 Markdown으로 요약
     """
 
-    def convert(self, local_path, **kwargs) -> Union[None, DocumentConverterResult]:
-        # Bail if not a XLSX
+    def convert(self, local_path: str, **kwargs):
         extension = kwargs.get("file_extension", "")
-        if extension.lower() not in [".xlsx", ".xls"]:
+        if extension is None or extension.lower() != ".xml":
             return None
 
-        sheets = pd.read_excel(local_path, sheet_name=None)
-        md_content = ""
-        for s in sheets:
-            md_content += f"## {s}\n"
-            html_content = sheets[s].to_html(index=False)
-            md_content += self._convert(html_content).text_content.strip() + "\n\n"
+        max_rows = kwargs.get("max_rows", 200)
 
-        return DocumentConverterResult(
-            title=None,
-            text_content=md_content.strip(),
-        )
+        # 1) 테이블성 XML이면 pandas로 바로 처리
+        try:
+            # pandas>=1.3 + lxml 필요
+            df = pd.read_xml(local_path)
+            if df is not None and not df.empty:
+                md = "## XML Table\n"
+                df_out = df.head(max_rows)
+                md += df_out.to_markdown(index=False) + "\n"
+                if len(df) > max_rows:
+                    md += f"\n> Showing first {max_rows} of {len(df)} rows.\n"
+                return DocumentConverterResult(title=None, text_content=md.strip())
+        except Exception:
+            # 표 형태가 아니거나 파서가 없을 수 있음 → 트리 방식으로 폴백
+            pass
+
+        # 2) 일반 XML → 트리 요약 (태그/속성/텍스트)
+        try:
+            from bs4 import BeautifulSoup
+            with open(local_path, "rb") as fh:
+                soup = BeautifulSoup(fh.read(), "xml")
+
+            if soup is None or soup.contents is None:
+                return DocumentConverterResult(title=None, text_content="_(empty xml)_")
+
+            # 루트 찾기
+            root = None
+            for c in soup.contents:
+                if getattr(c, "name", None):
+                    root = c
+                    break
+
+            if root is None:
+                return DocumentConverterResult(title=None, text_content="_(empty xml)_")
+
+            lines = [f"# XML: <{root.name}>"]
+
+            # 반복 노드 감지해서 간단 목록 테이블도 만들어 보기
+            # (동일한 자식 태그가 다수 반복되면 그 이름을 잡아 속성/텍스트를 표로 미리보기)
+            from collections import Counter
+            child_names = [ch.name for ch in root.children if getattr(ch, "name", None)]
+            common = Counter(child_names).most_common(1)
+            if common and common[0][1] >= 2:
+                rep_tag = common[0][0]
+                rows = []
+                for ch in root.find_all(rep_tag, recursive=False):
+                    attrs = {f"@{k}": v for k, v in (ch.attrs or {}).items()}
+                    text = (ch.text or "").strip()
+                    rows.append({**attrs, "#text": text})
+                if rows:
+                    df = pd.DataFrame(rows)
+                    lines.append(f"\n## Repeated elements: <{rep_tag}>\n")
+                    lines.append(df.head(max_rows).to_markdown(index=False))
+                    if len(df) > max_rows:
+                        lines.append(f"\n> Showing first {max_rows} of {len(df)} rows.")
+
+            # 트리 요약(깊이 제한)
+            max_depth = kwargs.get("max_depth", 4)
+            max_children = kwargs.get("max_children", 50)
+
+            def summarize(node, depth=0):
+                if depth > max_depth:
+                    return
+                if not getattr(node, "name", None):
+                    return
+                # 현재 노드
+                attr_str = " ".join([f'{k}="{v}"' for k, v in (node.attrs or {}).items()])
+                bullet = ("  " * depth) + f"- <{node.name}"
+                if attr_str:
+                    bullet += f" {attr_str}"
+                text = (node.string or "").strip() if node.string else ""
+                if text:
+                    # 너무 긴 텍스트는 자르기
+                    if len(text) > 200:
+                        text = text[:200] + "..."
+                    bullet += f"> {text}"
+                lines.append(bullet)
+
+                # 자식들
+                count = 0
+                for ch in node.children:
+                    if getattr(ch, "name", None):
+                        summarize(ch, depth + 1)
+                        count += 1
+                        if count >= max_children:
+                            lines.append(("  " * (depth + 1)) + f"- ...(more children truncated)")
+                            break
+
+            lines.append("\n## Structure")
+            summarize(root, 0)
+
+            return DocumentConverterResult(title=None, text_content="\n".join(lines).strip())
+
+        except Exception as e:
+            raise FileConversionException(f"Failed to parse XML: {e}")
+
+
+class XlsxConverter(HtmlConverter):
+    """
+    Converts XLS/XLSX/XLSM files to Markdown, with each sheet as a Markdown table.
+    """
+    def convert(self, local_path, **kwargs):
+        extension = kwargs.get("file_extension", "")
+        ext = extension.lower()
+        if ext not in [".xlsx", ".xls", ".xlsm"]:
+            return None
+
+        sheets_dict = {}
+
+        if ext == ".xls":
+            # Use xlrd==1.2.0 directly for legacy .xls
+            try:
+                import xlrd  # must be 1.2.0
+            except ImportError as e:
+                raise FileConversionException(
+                    "xlrd is required to read .xls. Install xlrd==1.2.0"
+                ) from e
+            try:
+                wb = xlrd.open_workbook(local_path)
+                for sh in wb.sheets():
+                    rows = [sh.row_values(r) for r in range(sh.nrows)]
+                    if not rows:
+                        df = pd.DataFrame()
+                    else:
+                        # Treat first row as header when possible
+                        header = [str(c) for c in rows[0]]
+                        df = pd.DataFrame(rows[1:], columns=header) if len(rows) > 1 else pd.DataFrame(columns=header)
+                    sheets_dict[sh.name] = df
+            except Exception as e:
+                raise FileConversionException(f"Failed to parse .xls via xlrd: {e}") from e
+
+        else:
+            # .xlsx / .xlsm via pandas + openpyxl
+            try:
+                sheets_dict = pd.read_excel(local_path, sheet_name=None, engine="openpyxl")
+            except Exception as e:
+                raise FileConversionException(f"Failed to parse Excel file with openpyxl: {e}") from e
+
+        # Render to Markdown
+        md_content = ""
+        max_rows = kwargs.get("max_rows", 200)
+        for s, df in sheets_dict.items():
+            md_content += f"## {s}\n"
+            if df.empty:
+                md_content += "_(empty sheet)_\n\n"
+                continue
+
+            df_out = df.head(max_rows)
+            html_table = df_out.to_html(index=False)
+            md_content += self._convert(html_table).text_content.strip() + "\n\n"
+            if len(df) > max_rows:
+                md_content += f"> Showing first {max_rows} of {len(df)} rows.\n\n"
+
+        return DocumentConverterResult(title=None, text_content=md_content.strip())
 
 
 class PptxConverter(HtmlConverter):
@@ -800,6 +969,8 @@ class MarkdownConverter:
         self.register_page_converter(ImageConverter())
         self.register_page_converter(ZipConverter())
         self.register_page_converter(PdfConverter())
+        self.register_page_converter(XmlConverter())
+
 
     def convert(
         self, source: Union[str, requests.Response], **kwargs: Any
@@ -980,22 +1151,37 @@ class MarkdownConverter:
         if True:
             extensions.append(ext)
 
+    # def _guess_ext_magic(self, path):
+    #     """Use puremagic (a Python implementation of libmagic) to guess a file's extension based on the first few bytes."""
+    #     # Use puremagic to guess
+    #     try:
+    #         guesses = puremagic.magic_file(path)
+    #         if len(guesses) > 0:
+    #             ext = guesses[0].extension.strip()
+    #             if len(ext) > 0:
+    #                 return ext
+    #     except FileNotFoundError:
+    #         pass
+    #     except IsADirectoryError:
+    #         pass
+    #     except PermissionError:
+    #         pass
+    #     return None
     def _guess_ext_magic(self, path):
         """Use puremagic (a Python implementation of libmagic) to guess a file's extension based on the first few bytes."""
-        # Use puremagic to guess
+        # 디렉터리/특수 파일은 스킵
         try:
+            if not os.path.isfile(path):
+                return None
             guesses = puremagic.magic_file(path)
             if len(guesses) > 0:
                 ext = guesses[0].extension.strip()
                 if len(ext) > 0:
                     return ext
-        except FileNotFoundError:
-            pass
-        except IsADirectoryError:
-            pass
-        except PermissionError:
-            pass
-        return None
+        except (FileNotFoundError, IsADirectoryError, PermissionError, puremagic.PureError, OSError):
+            # regular file이 아니거나 접근 불가하면 확장자 추정 스킵
+            return None
+        return None    
 
     def register_page_converter(self, converter: DocumentConverter) -> None:
         """Register a page text converter."""

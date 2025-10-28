@@ -42,8 +42,10 @@ from smolagents import (
     CodeAgent,
     Model,
     ToolCallingAgent,
+    TransformersModel,
 )
-
+from dotenv import load_dotenv
+load_dotenv()
 
 AUTHORIZED_IMPORTS = [
     "requests",
@@ -92,8 +94,8 @@ trajectory_lock = threading.Lock()
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--concurrency", type=int, default=1)
-    parser.add_argument("--model-id", type=str, default="gpt-4.1")
-    parser.add_argument("--model-id-search", type=str, default="gpt-4.1")
+    parser.add_argument("--model-id", type=str, default="Qwen/Qwen3-4B-Instruct-2507")
+    parser.add_argument("--model-id-search", type=str, default="Qwen/Qwen3-4B-Instruct-2507")
     parser.add_argument("--run-name", type=str, required=True)
     parser.add_argument("--debug", default=False, action="store_true")
     parser.add_argument("--level", type=str, default="all", choices=["all", "1", "2", "3"],)
@@ -106,6 +108,9 @@ def parse_args():
     parser.add_argument('--search_reflection', action='store_true', help='Enable reflection')
     # agent_kb params
     parser.add_argument('--agent_kb', action='store_true', help='Enable knowledge base retrieval')
+    parser.add_argument('--apply_student', action='store_true', help='Enable student correction')
+    parser.add_argument('--apply_teacher', action='store_true', help='Enable teacher correction')
+    parser.add_argument('--slm', action='store_true', help='Enable SLM agent')
     parser.add_argument('--retrieval_type', type=str, default="hybrid", help="search type")
     parser.add_argument('--top_k', type=int, default=3, help="top_k retrieval")
     parser.add_argument('--model_name_retrieval', type=str, default="gpt-4.1", help="agent kb model choice")
@@ -207,31 +212,52 @@ def append_answer(entry: dict, jsonl_file: str, file_lock) -> None:
     assert os.path.exists(jsonl_file), "File not found!"
     logger.info("Answer exported to file: {}".format(jsonl_file.resolve()))
 
-def answer_single_question(example, args, model_id, model_id_search, answers_file, debug=False, retrieval=False):
+def answer_single_question(example, args, model_id, model_id_search, answers_file, debug=False, retrieval=False, apply_student=False, apply_teacher=False, slm=False):
 
-    model_name, key, url, model_wrapper = get_api_model(model_id)
-    model_name_search, key_search, url_search, model_wrapper_search = get_api_model(model_id_search)
+    if slm:
+        key, url=None, None
+        model = TransformersModel(
+            model_id=model_id,
+            device_map="auto",          
+            # trust_remote_code=True, 
+            torch_dtype="auto", 
+            # max_new_tokens=2048, 
+            temperature=0.1, 
+            # token="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"
+        )
+        model_search = TransformersModel(
+            model_id=model_id_search,
+            device_map="auto",          
+            # trust_remote_code=True, 
+            torch_dtype="auto", 
+            # max_new_tokens=2048, 
+            temperature=0.1, 
+            # token="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"
+        )
+    else:
+        model_name, key, url, model_wrapper = get_api_model(model_id)
+        model_name_search, key_search, url_search, model_wrapper_search = get_api_model(model_id_search)
 
-    kwargs = prepare_model_kwargs(model_id, args)
-    kwargs_search = prepare_model_kwargs(model_id_search, args)
+        kwargs = prepare_model_kwargs(model_id, args)
+        kwargs_search = prepare_model_kwargs(model_id_search, args)
 
-    model = model_wrapper(
-        model_name,
-        custom_role_conversions=custom_role_conversions,
-        max_completion_tokens=8192,
-        api_key=key,
-        api_base=url,
-        **kwargs
-    )
+        model = model_wrapper(
+            model_name,
+            custom_role_conversions=custom_role_conversions,
+            max_completion_tokens=8192,
+            api_key=key,
+            api_base=url,
+            **kwargs
+        )
 
-    model_search = model_wrapper_search(
-        model_name_search,
-        custom_role_conversions=custom_role_conversions,
-        max_completion_tokens=8192,
-        api_key=key_search,
-        api_base=url_search,
-        **kwargs_search
-    )
+        model_search = model_wrapper_search(
+            model_name_search,
+            custom_role_conversions=custom_role_conversions,
+            max_completion_tokens=8192,
+            api_key=key_search,
+            api_base=url_search,
+            **kwargs_search
+        )
 
     document_inspection_tool = TextInspectorTool(model, 100000)
     audio_inspection_tool = AudioInspectorTool(model, 100000)
@@ -261,7 +287,8 @@ Here is the task:
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
-        if retrieval:
+        if apply_student:
+            print("="*30+"Student retrieval started."+"="*30)
             akb_client = AKBClient()
             model_name_retrieval = args.model_name_retrieval
             # import prompts for agent kb
@@ -279,7 +306,10 @@ Here is the task:
                 student_agent_reason_template,
                 variables={"user_query": example["question"]}
             )
-            student_summary = call_model(query=student_reason, model_name=model_name_retrieval, key=key, url=url)
+            student_summary = call_model(query=student_reason, model_name=model_name_retrieval, key=key, url=url, model=model, slm=slm)
+            print("="*30+"Student Reasoned"+"="*30) 
+            print(f"student_summary:{student_summary}")           
+            print("="*30+"Student Reasoned"+"="*30)
 
             retrieval_method = {
                 "hybrid": akb_client.hybrid_search,
@@ -292,20 +322,29 @@ Here is the task:
             for result in student_retrieval_results:
                 student_retrieval += "\nSimilar task:\n"
                 student_retrieval += result['query']
+                # student_retrieval += "\nPlannings:\n"
+                # student_retrieval += result['plan']
                 student_retrieval += "\nSuggestions:\n"
                 student_retrieval += result['agent_experience']
-            
+                
             student_refine = populate_template(
                 student_agent_refine_template,
                 variables={"knowledge": student_retrieval}
             )
             
-            student_suggestions = call_model(query=student_refine, model_name=model_name_retrieval, key=key, url=url)
+            student_suggestions = call_model(query=student_refine, model_name=model_name_retrieval, key=key, url=url, model=model, slm=slm)
+            print("="*30+"Student Refiened."+"="*30)
+            print(f"student_refine:{student_refine}")
+            print(f"student_suggestions:{student_suggestions}")
+            print("="*30+"Student Refiened."+"="*30)
 
             final_result = agent.run(augmented_question, additional_knowledge=student_suggestions)
             agent_memory = agent.write_memory_to_messages(summary_mode=True)
             final_result = prepare_response(augmented_question, agent_memory, reformulation_model=model)
             output = str(final_result)
+            print("="*30+"Student Output."+"="*30)
+            print(f"output:{output}")
+            print("="*30+"Student Output."+"="*30)
 
             output_query = populate_template(
                 semantic_match_template,
@@ -316,9 +355,13 @@ Here is the task:
                 }
             )
 
-            semantic_check = call_model(query=output_query, model_name=model_name_retrieval, key=key, url=url)
+            score_result = question_scorer(output, example["true_answer"])
+            semantic_check = call_model(query=output_query, model_name=model_name_retrieval, key=key, url=url, model=model, slm=slm)
+            print("="*30+f"score_result: {score_result}, semantic_check: {semantic_check}"+"="*30)
 
-            if (not question_scorer(output, example["true_answer"])) and (semantic_check == "false"):
+            if apply_teacher and (not score_result) and (semantic_check != "true"):
+            # if (not score_result) and (semantic_check == "false"):
+                print("="*30 + "Teacher Called"+"="*30)
                 akb_client = AKBClient()
                 intermediate_steps=[]
                 for memory_step in agent.memory.steps:
@@ -349,7 +392,11 @@ Here is the task:
                     variables={"agent_log": str(annotated_example)}
                 )
 
-                summary = call_model(query=teacher_reason, model_name=model_name_retrieval, key=key, url=url)
+                summary = call_model(query=teacher_reason, model_name=model_name_retrieval, key=key, url=url, model=model, slm=slm)
+                print("="*30 + "Teacher Reasoned."+"="*30)
+                print(f"teacher_reason:{teacher_reason}")    
+                print(f"summary:{summary}")                
+                print("="*30 + "Teacher Reasoned."+"="*30)
 
                 teacher_retrieval_results = retrieval_method(example["question"] + log_plan + summary, top_k=args.top_k)
 
@@ -357,6 +404,8 @@ Here is the task:
                 for result in teacher_retrieval_results:
                     teacher_retrieval += "\nSimilar task:\n"
                     teacher_retrieval += result['query']
+                    # teacher_retrieval += "\nPlannings:\n"
+                    # teacher_retrieval += result['plan']
                     teacher_retrieval += "\nSuggestions:\n"
                     teacher_retrieval += result['agent_experience']
 
@@ -368,17 +417,54 @@ Here is the task:
                     }
                 )
 
-                teacher_suggestions = call_model(query=teacher_refine, model_name=model_name_retrieval, key=key, url=url)
+                teacher_suggestions = call_model(query=teacher_refine, model_name=model_name_retrieval, key=key, url=url, model=model, slm=slm)
+                print("="*30 + "Teacher Refined."+"="*30)
+                print(f"teacher_refine:{teacher_refine}")    
+                print(f"teacher_suggestions:{teacher_suggestions}")                
+                print("="*30 + "Teacher Refined."+"="*30)
 
                 final_result = agent.run(augmented_question, additional_knowledge=teacher_suggestions)
                 agent_memory = agent.write_memory_to_messages(summary_mode=True)
                 final_result = prepare_response(augmented_question, agent_memory, reformulation_model=model)
                 output = str(final_result)
+                print("="*30+"Student Final Output."+"="*30)
+                print(f"output:{output}")
+                print("="*30+"Student Output."+"="*30)
         else:
-            final_result = agent.run(augmented_question)
-            agent_memory = agent.write_memory_to_messages(summary_mode=True)
-            final_result = prepare_response(augmented_question, agent_memory, reformulation_model=model)
-            output = str(final_result)
+            if retrieval:
+                print("="*30+"Retrieval only without correction."+"="*30)
+                akb_client = AKBClient()
+                model_name_retrieval = args.model_name_retrieval
+                retrieval_method = {
+                    "hybrid": akb_client.hybrid_search,
+                    "text": akb_client.text_search,
+                    "semantic": akb_client.semantic_search
+                }[args.retrieval_type]
+                
+                retrieval_results = retrieval_method(augmented_question, top_k=args.top_k)
+                retrieval = "You must reference below contents.:\n\n"
+                for result in retrieval_results:
+                    retrieval += "\nSimilar task:\n"
+                    retrieval += result['query']
+                    retrieval += "\nSuggestions:\n"
+                    retrieval += result['agent_experience']
+
+                final_result = agent.run(augmented_question, additional_knowledge=retrieval)
+                agent_memory = agent.write_memory_to_messages(summary_mode=True)
+                final_result = prepare_response(augmented_question, agent_memory, reformulation_model=model)
+                output = str(final_result)
+                print("="*30+"Retrieval only Final Output."+"="*30)
+                print(f"output:{output}")
+                print("="*30+"Retrieval only Output."+"="*30)
+            else:
+                print("="*30+"Nothing Final retrieved."+"="*30)
+                final_result = agent.run(augmented_question)
+                agent_memory = agent.write_memory_to_messages(summary_mode=True)
+                final_result = prepare_response(augmented_question, agent_memory, reformulation_model=model)
+                output = str(final_result)
+                print("="*30+"Retrieval Nothing Final Output."+"="*30)
+                print(f"output:{output}")
+                print("="*30+"Retrieval Nothing Output."+"="*30)
 
 
         intermediate_steps=[]
@@ -466,14 +552,32 @@ def main():
     selected_tasks = process_selected_tasks_param(args.selected_tasks)
     level = args.level
     tasks_to_run = get_examples_to_answer(answers_file, eval_df, selected_tasks, level, args.debug)
+    # tasks_ids_to_solve= [
+    #     "e1fc63a2-da7a-432f-be78-7c4a95598703",
+    #     "ec09fa32-d03f-4bf8-84b0-1f16922c3ae4",
+    #     "cffe0e32-c9a6-4c52-9877-78ceb4aaa9fb",
+    #     "2d83110e-a098-4ebb-9987-066c06fa42d0",
+    #     "5cfb274c-0207-4aa7-9575-6ac0bd95d9b2",
+    #     "27d5d136-8563-469e-92bf-fd103c28b57c",
+    #     "dc28cf18-6431-458b-83ef-64b3ce566c10",
+    #     "42576abe-0deb-4869-8c63-225c2d75a95a",
+    #     "6f37996b-2ac7-44b0-8e68-6d28256631b4",
+    #     "389793a7-ca17-4e82-81cb-2b3a2391b4b9",
+    #     "4b650a35-8529-4695-89ed-8dc7a500a498",
+    #     "c714ab3a-da30-4603-bacd-d008800188b9",
+    #     "65afbc8a-89ca-4ad5-8d62-355bb401f61d",
+    #     "3cef3a44-215e-4aed-8e3b-b1e3f08063b7"
+    # ]
 
     if args.debug or args.concurrency == 1:
         for example in tasks_to_run:
-            answer_single_question(example, args, args.model_id, args.model_id_search, answers_file, args.debug, args.agent_kb)
+            # if example['task_id'] not in tasks_ids_to_solve:
+            #     continue
+            answer_single_question(example, args, args.model_id, args.model_id_search, answers_file, args.debug, args.agent_kb, args.apply_student, args.apply_teacher, args.slm)
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
             futures = [
-                exe.submit(answer_single_question, example, args, args.model_id, args.model_id_search, answers_file, args.debug, args.agent_kb)
+                exe.submit(answer_single_question, example, args, args.model_id, args.model_id_search, answers_file, args.debug, args.agent_kb, args.apply_student, args.apply_teacher, args.slm)
                 for example in tasks_to_run
             ]
             for f in tqdm(as_completed(futures), total=len(tasks_to_run), desc="Processing tasks"):

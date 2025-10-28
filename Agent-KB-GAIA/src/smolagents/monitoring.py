@@ -60,7 +60,8 @@ class Monitor:
         Args:
             step_log ([`MemoryStep`]): Step log to update the monitor with.
         """
-        step_duration = step_log.duration
+        # step_duration = step_log.duration
+        step_duration = step_log.duration if step_log.duration else 0
         self.step_durations.append(step_duration)
         console_outputs = f"[Step {len(self.step_durations) - 1}: Duration {step_duration:.2f} seconds"
 
