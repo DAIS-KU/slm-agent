@@ -150,8 +150,13 @@ class WikiSearcher(BaseSearcher):
             "redirects": 1,
             "inprop": "url"
         }
+        headers = {
+            # 위키미디어 정책상 반드시 필요
+            "User-Agent": "DAIS-WikiSearcher/1.0 (huijeong_son@korea.co.kr)",
+            "Accept": "application/json"
+        }
         try:
-            response = requests.get(base_url, params=params, timeout=10)
+            response = requests.get(base_url, params=params, headers=headers, timeout=10)
             response.raise_for_status()
             data = response.json()
 

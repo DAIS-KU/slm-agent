@@ -13,6 +13,7 @@ import datasets
 import pandas as pd
 from dotenv import load_dotenv
 from huggingface_hub import login
+import torch
 
 from scripts.scorer import question_scorer
 from scripts.reformulator import prepare_response
@@ -125,7 +126,7 @@ SET = "validation"
 
 custom_role_conversions = {"tool-call": "assistant", "tool-response": "user"}
 
-eval_ds = datasets.load_dataset("gaia-benchmark/GAIA", "2023_all", trust_remote_code=True)[SET]
+eval_ds =  datasets.load_dataset("gaia-benchmark/GAIA", "2023_level1", trust_remote_code=True, num_proc=1)[SET] #2023_all
 eval_ds = eval_ds.rename_columns({"Question": "question", "Final answer": "true_answer", "Level": "task"})
 
 def preprocess_file_paths(row):
@@ -212,26 +213,9 @@ def append_answer(entry: dict, jsonl_file: str, file_lock) -> None:
     assert os.path.exists(jsonl_file), "File not found!"
     logger.info("Answer exported to file: {}".format(jsonl_file.resolve()))
 
-def answer_single_question(example, args, model_id, model_id_search, answers_file, debug=False, retrieval=False, apply_student=False, apply_teacher=False, slm=False):
-
+def answer_single_question(example, args, model_id, model_id_search, answers_file, debug=False, retrieval=False, apply_student=False, apply_teacher=False, slm=False, model=None, model_search=None):
     if slm:
         key, url=None, None
-        model = TransformersModel(
-            model_id=model_id,
-            device_map="auto",          
-            # trust_remote_code=True, 
-            torch_dtype="auto", 
-            # max_new_tokens=2048, 
-            temperature=0.1, 
-        )
-        model_search = TransformersModel(
-            model_id=model_id_search,
-            device_map="auto",          
-            # trust_remote_code=True, 
-            torch_dtype="auto", 
-            # max_new_tokens=2048, 
-            temperature=0.1, 
-        )
     else:
         model_name, key, url, model_wrapper = get_api_model(model_id)
         model_name_search, key_search, url_search, model_wrapper_search = get_api_model(model_id_search)
@@ -566,16 +550,36 @@ def main():
     #     "65afbc8a-89ca-4ad5-8d62-355bb401f61d",
     #     "3cef3a44-215e-4aed-8e3b-b1e3f08063b7"
     # ]
+    if args.slm:
+        dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
+        model = TransformersModel(
+        model_id=args.model_id,
+        device_map="cuda",          
+        # trust_remote_code=True, 
+        torch_dtype=str(dtype).replace("torch.", ""), 
+        # max_new_tokens=2048, 
+        temperature=0.1, 
+    )
+        model_search = TransformersModel(
+        model_id=args.model_id_search,
+        device_map="cuda",          
+        # trust_remote_code=True, 
+        torch_dtype=str(dtype).replace("torch.", ""), 
+        # max_new_tokens=2048, 
+        temperature=0.1, 
+    )
+    else:
+        model, model_search =None, None
 
     if args.debug or args.concurrency == 1:
         for example in tasks_to_run:
             # if example['task_id'] not in tasks_ids_to_solve:
             #     continue
-            answer_single_question(example, args, args.model_id, args.model_id_search, answers_file, args.debug, args.agent_kb, args.apply_student, args.apply_teacher, args.slm)
+            answer_single_question(example, args, args.model_id, args.model_id_search, answers_file, args.debug, args.agent_kb, args.apply_student, args.apply_teacher, args.slm, model, model_search)
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
             futures = [
-                exe.submit(answer_single_question, example, args, args.model_id, args.model_id_search, answers_file, args.debug, args.agent_kb, args.apply_student, args.apply_teacher, args.slm)
+                exe.submit(answer_single_question, example, args, args.model_id, args.model_id_search, answers_file, args.debug, args.agent_kb, args.apply_student, args.apply_teacher, args.slm, model, model_search)
                 for example in tasks_to_run
             ]
             for f in tqdm(as_completed(futures), total=len(tasks_to_run), desc="Processing tasks"):
