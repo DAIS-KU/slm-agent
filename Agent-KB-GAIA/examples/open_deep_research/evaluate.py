@@ -146,26 +146,6 @@ def evaluate(input_path, output_path):
 
 
 if __name__ == "__main__":
-    evaluate(input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/gpt-with-student.jsonl",
-     output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/gpt-with-student.jsonl")
-
     evaluate(input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/gpt-with-teacher.jsonl",
      output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/gpt-with-teacher.jsonl")
-
-    evaluate(input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/gpt-with-wf.jsonl",
-     output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/gpt-with-wf.jsonl")
-
-    evaluate(input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/gpt-without-anything.jsonl",
-     output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/gpt-without-anything.jsonl")
-
-    evaluate(input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen-with-student.jsonl",
-     output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen-with-student.jsonl")
-
-    evaluate(input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen-with-teacher.jsonl",
-     output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen-with-teacher.jsonl")
-
-    evaluate(input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen-with-wf.jsonl",
-     output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen-with-wf.jsonl")
-
-    evaluate(input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen-without-anything.jsonl",
-     output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen-without-anything.jsonl")
+ 

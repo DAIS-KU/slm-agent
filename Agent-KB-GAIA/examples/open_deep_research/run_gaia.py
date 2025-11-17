@@ -91,6 +91,11 @@ logger = logging.getLogger(__name__)
 jsonl_lock = threading.Lock()
 trajectory_lock = threading.Lock()
 
+def append_dict_to_jsonl(file_path, dict_data):
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, "a", encoding="utf-8") as f:
+        json_line = json.dumps(dict_data, ensure_ascii=False)
+        f.write(json_line + "\n")
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -126,7 +131,7 @@ SET = "validation"
 
 custom_role_conversions = {"tool-call": "assistant", "tool-response": "user"}
 
-eval_ds =  datasets.load_dataset("gaia-benchmark/GAIA", "2023_level1", trust_remote_code=True, num_proc=1)[SET] #2023_all
+eval_ds =  datasets.load_dataset("gaia-benchmark/GAIA", "2023_all", trust_remote_code=True, num_proc=1)[SET] 
 eval_ds = eval_ds.rename_columns({"Question": "question", "Final answer": "true_answer", "Level": "task"})
 
 def preprocess_file_paths(row):
@@ -214,8 +219,11 @@ def append_answer(entry: dict, jsonl_file: str, file_lock) -> None:
     logger.info("Answer exported to file: {}".format(jsonl_file.resolve()))
 
 def answer_single_question(example, args, model_id, model_id_search, answers_file, debug=False, retrieval=False, apply_student=False, apply_teacher=False, slm=False, model=None, model_search=None):
+    correction_path= f"/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/reasoning/slm_level1_retrieval_{retrieval}_student_{apply_student}_apply_teacher_{apply_teacher}"
+    correction_data= {}
     if slm:
-        key, url=None, None
+        _, key, url, _ = get_api_model(model_id)
+        _, key_search, url_search, _ = get_api_model(model_id_search)
     else:
         model_name, key, url, model_wrapper = get_api_model(model_id)
         model_name_search, key_search, url_search, model_wrapper_search = get_api_model(model_id_search)
@@ -274,7 +282,9 @@ Here is the task:
             akb_client = AKBClient()
             model_name_retrieval = args.model_name_retrieval
             # import prompts for agent kb
-            with open("./agent_kb/prompts.yaml", "r") as f:
+            # with open("./agent_kb/prompts.yaml", "r") as f:
+            # with open("./agent_kb/prompts_planning.yaml", "r") as f:
+            with open("./agent_kb/prompts_gt.yaml", "r") as f:
                 prompts = yaml.safe_load(f)
             semantic_match_template = prompts["semantic_match_prompt"]
 
@@ -292,6 +302,7 @@ Here is the task:
             print("="*30+"Student Reasoned"+"="*30) 
             print(f"student_summary:{student_summary}")           
             print("="*30+"Student Reasoned"+"="*30)
+            correction_data["student_reason"]=student_summary
 
             retrieval_method = {
                 "hybrid": akb_client.hybrid_search,
@@ -299,16 +310,19 @@ Here is the task:
                 "semantic": akb_client.semantic_search
             }[args.retrieval_type]
 
-            student_retrieval_results = retrieval_method(student_summary, top_k=args.top_k)
-            student_retrieval = ""
-            for result in student_retrieval_results:
-                student_retrieval += "\nSimilar task:\n"
-                student_retrieval += result['query']
-                # student_retrieval += "\nPlannings:\n"
-                # student_retrieval += result['plan']
-                student_retrieval += "\nSuggestions:\n"
-                student_retrieval += result['agent_experience']
-                
+            # student_retrieval_results = retrieval_method(student_summary, top_k=args.top_k)
+            # student_retrieval = ""
+            # for result in student_retrieval_results:
+            #     student_retrieval += "\nSimilar task:\n"
+            #     student_retrieval += result['query']
+            #     student_retrieval += "\n- Plannings:\n"
+            #     student_retrieval += result['plan']
+            #     # student_retrieval += "\n- Suggestions:\n"
+            #     # student_retrieval += result['agent_experience']
+            steps = example['Annotator Metadata']['Steps'].strip().split('\n')
+            steps_without_last = steps[:-1]
+            student_retrieval = '\n'.join(steps_without_last)
+            
             student_refine = populate_template(
                 student_agent_refine_template,
                 variables={"knowledge": student_retrieval}
@@ -319,6 +333,7 @@ Here is the task:
             print(f"student_refine:{student_refine}")
             print(f"student_suggestions:{student_suggestions}")
             print("="*30+"Student Refiened."+"="*30)
+            correction_data["student_correction"]=student_suggestions
 
             final_result = agent.run(augmented_question, additional_knowledge=student_suggestions)
             agent_memory = agent.write_memory_to_messages(summary_mode=True)
@@ -379,17 +394,21 @@ Here is the task:
                 print(f"teacher_reason:{teacher_reason}")    
                 print(f"summary:{summary}")                
                 print("="*30 + "Teacher Reasoned."+"="*30)
+                correction_data["teacher_reason"]=summary
 
-                teacher_retrieval_results = retrieval_method(example["question"] + log_plan + summary, top_k=args.top_k)
-
-                teacher_retrieval = ""
-                for result in teacher_retrieval_results:
-                    teacher_retrieval += "\nSimilar task:\n"
-                    teacher_retrieval += result['query']
-                    # teacher_retrieval += "\nPlannings:\n"
-                    # teacher_retrieval += result['plan']
-                    teacher_retrieval += "\nSuggestions:\n"
-                    teacher_retrieval += result['agent_experience']
+                # teacher_retrieval_results = retrieval_method(example["question"] + log_plan + summary, top_k=args.top_k)
+                # teacher_retrieval = ""
+                # for result in teacher_retrieval_results:
+                #     teacher_retrieval += "\nSimilar task:\n"
+                #     teacher_retrieval += result['query']
+                #     teacher_retrieval += "\n- Plannings:\n"
+                #     teacher_retrieval += result['plan']
+                #     # teacher_retrieval += "\n- Suggestions:\n"
+                #     # teacher_retrieval += result['agent_experience']
+                
+                steps = example['Annotator Metadata']['Steps'].strip().split('\n')
+                steps_without_last = steps[:-1]
+                teacher_retrieval = '\n'.join(steps_without_last)
 
                 teacher_refine = populate_template(
                     teacher_agent_refine_template,
@@ -404,14 +423,15 @@ Here is the task:
                 print(f"teacher_refine:{teacher_refine}")    
                 print(f"teacher_suggestions:{teacher_suggestions}")                
                 print("="*30 + "Teacher Refined."+"="*30)
+                correction_data["teacher_correction"]=teacher_suggestions
 
                 final_result = agent.run(augmented_question, additional_knowledge=teacher_suggestions)
                 agent_memory = agent.write_memory_to_messages(summary_mode=True)
                 final_result = prepare_response(augmented_question, agent_memory, reformulation_model=model)
                 output = str(final_result)
-                print("="*30+"Student Final Output."+"="*30)
+                print("="*30+"Teacher Final Output."+"="*30)
                 print(f"output:{output}")
-                print("="*30+"Student Output."+"="*30)
+                print("="*30+"Teacher Final Output."+"="*30)
         else:
             if retrieval:
                 print("="*30+"Retrieval only without correction."+"="*30)
@@ -424,11 +444,13 @@ Here is the task:
                 }[args.retrieval_type]
                 
                 retrieval_results = retrieval_method(augmented_question, top_k=args.top_k)
-                retrieval = "You must reference below contents.:\n\n"
+                retrieval = "You must refer below similar tasks.:\n\n"
                 for result in retrieval_results:
                     retrieval += "\nSimilar task:\n"
                     retrieval += result['query']
-                    retrieval += "\nSuggestions:\n"
+                    # retrieval += "\n- Plannings:\n"
+                    # retrieval += result['plan']
+                    retrieval += "\n- Suggestions:\n"
                     retrieval += result['agent_experience']
 
                 final_result = agent.run(augmented_question, additional_knowledge=retrieval)
@@ -437,18 +459,31 @@ Here is the task:
                 output = str(final_result)
                 print("="*30+"Retrieval only Final Output."+"="*30)
                 print(f"output:{output}")
-                print("="*30+"Retrieval only Output."+"="*30)
+                print("="*30+"Retrieval only Final Output."+"="*30)
             else:
-                print("="*30+"Nothing Final retrieved."+"="*30)
+                # print("="*30+"Use Annotated Metadata."+"="*30)
+                # steps = example['Annotator Metadata']['Steps'].strip().split('\n')
+                # steps_without_last = steps[:-1]
+                # steps_wo_answer = '\n'.join(steps_without_last)
+
+                # reasoning = f"\n\nYou must refer below answer reasoning.:\n\n {steps_wo_answer}"
+                # augmented_question += reasoning
+                # final_result = agent.run(augmented_question)
+                # agent_memory = agent.write_memory_to_messages(summary_mode=True)
+                # final_result = prepare_response(augmented_question, agent_memory, reformulation_model=model)
+                # print("="*30+"Use Annotated Metadata."+"="*30)
+                # output = str(final_result)
+                # print("="*30+"Annotated Metadata Final Output."+"="*30)
+                # print(f"output:{output}")
+                # print("="*30+"Annotated Metadata Final Output."+"="*30)
+                print("="*30+"Query Only Final Output."+"="*30)
                 final_result = agent.run(augmented_question)
                 agent_memory = agent.write_memory_to_messages(summary_mode=True)
                 final_result = prepare_response(augmented_question, agent_memory, reformulation_model=model)
                 output = str(final_result)
-                print("="*30+"Retrieval Nothing Final Output."+"="*30)
                 print(f"output:{output}")
-                print("="*30+"Retrieval Nothing Output."+"="*30)
-
-
+                print("="*30+"Query Only Final Output."+"="*30)
+        
         intermediate_steps=[]
         for memory_step in agent.memory.steps:
             memory_step.model_input_messages = None
@@ -472,6 +507,7 @@ Here is the task:
 
         iteration_limit_exceeded = True if "Agent stopped due to iteration limit or time limit." in output else False
         raised_exception = False
+        append_dict_to_jsonl(correction_path, correction_data)
 
     except Exception as e:
         logger.error(f"Error on task {example['task_id']}\n{e}")

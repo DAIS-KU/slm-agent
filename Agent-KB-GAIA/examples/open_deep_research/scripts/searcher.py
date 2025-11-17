@@ -93,6 +93,7 @@ class SerpSearcher(BaseSearcher):
 
 
         results = search.get_dict()
+        print(f"SerpSearch results:{results}")
     
         self.page_title = f"{query} - Search"
         if "organic_results" not in results.keys():
