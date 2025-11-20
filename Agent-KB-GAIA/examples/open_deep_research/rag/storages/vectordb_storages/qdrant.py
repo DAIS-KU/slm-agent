@@ -69,7 +69,7 @@ class QdrantStorage(BaseVectorStorage):
           be initialized with an in-memory storage (`":memory:"`).
     """
 
-    @dependencies_required('qdrant_client')
+    @dependencies_required("qdrant_client")
     def __init__(
         self,
         vector_dim: int,
@@ -88,9 +88,7 @@ class QdrantStorage(BaseVectorStorage):
 
         self.vector_dim = vector_dim
         self.distance = distance
-        self.collection_name = (
-            collection_name or self._generate_collection_name()
-        )
+        self.collection_name = collection_name or self._generate_collection_name()
 
         self._check_and_create_collection()
 
@@ -110,16 +108,12 @@ class QdrantStorage(BaseVectorStorage):
                     _count - 1,
                 )
 
-        if (
-            hasattr(self, "delete_collection_on_del")
-            and self.delete_collection_on_del
-        ):
+        if hasattr(self, "delete_collection_on_del") and self.delete_collection_on_del:
             try:
                 self._delete_collection(self.collection_name)
             except RuntimeError as e:
                 logger.error(
-                    f"Failed to delete collection"
-                    f" '{self.collection_name}': {e}"
+                    f"Failed to delete collection" f" '{self.collection_name}': {e}"
                 )
 
     def _create_client(
@@ -152,9 +146,7 @@ class QdrantStorage(BaseVectorStorage):
 
     def _check_and_create_collection(self) -> None:
         if self._collection_exists(self.collection_name):
-            in_dim = self._get_collection_info(self.collection_name)[
-                "vector_dim"
-            ]
+            in_dim = self._get_collection_info(self.collection_name)["vector_dim"]
             if in_dim != self.vector_dim:
                 # The name of collection has to be confirmed by the user
                 raise ValueError(
@@ -215,9 +207,7 @@ class QdrantStorage(BaseVectorStorage):
             collection (str): Name of the collection to be deleted.
             **kwargs (Any): Additional keyword arguments.
         """
-        self._client.delete_collection(
-            collection_name=collection_name, **kwargs
-        )
+        self._client.delete_collection(collection_name=collection_name, **kwargs)
 
     def _collection_exists(self, collection_name: str) -> bool:
         r"""Returns wether the collection exists in the database"""
@@ -243,9 +233,7 @@ class QdrantStorage(BaseVectorStorage):
         from qdrant_client.http.models import VectorParams
 
         # TODO: check more information
-        collection_info = self._client.get_collection(
-            collection_name=collection_name
-        )
+        collection_info = self._client.get_collection(collection_name=collection_name)
         vector_config = collection_info.config.params.vectors
         return {
             "vector_dim": vector_config.size
@@ -286,8 +274,7 @@ class QdrantStorage(BaseVectorStorage):
         )
         if op_info.status != UpdateStatus.COMPLETED:
             raise RuntimeError(
-                "Failed to add vectors in Qdrant, operation info: "
-                f"{op_info}."
+                "Failed to add vectors in Qdrant, operation info: " f"{op_info}."
             )
 
     def update_payload(
@@ -316,8 +303,7 @@ class QdrantStorage(BaseVectorStorage):
         )
         if op_info.status != UpdateStatus.COMPLETED:
             raise RuntimeError(
-                "Failed to update payload in Qdrant, operation info: "
-                f"{op_info}"
+                "Failed to update payload in Qdrant, operation info: " f"{op_info}"
             )
 
     def delete_collection(self) -> None:
@@ -370,22 +356,18 @@ class QdrantStorage(BaseVectorStorage):
 
         if not ids and not payload_filter:
             raise ValueError(
-                "You must provide either `ids` or `payload_filter` to delete "
-                "points."
+                "You must provide either `ids` or `payload_filter` to delete " "points."
             )
 
         if ids:
             op_info = self._client.delete(
                 collection_name=self.collection_name,
-                points_selector=PointIdsList(
-                    points=cast(List[Union[int, str]], ids)
-                ),
+                points_selector=PointIdsList(points=cast(List[Union[int, str]], ids)),
                 **kwargs,
             )
             if op_info.status != UpdateStatus.COMPLETED:
                 raise RuntimeError(
-                    "Failed to delete vectors in Qdrant, operation info: "
-                    f"{op_info}"
+                    "Failed to delete vectors in Qdrant, operation info: " f"{op_info}"
                 )
 
         if payload_filter:
@@ -396,16 +378,13 @@ class QdrantStorage(BaseVectorStorage):
 
             op_info = self._client.delete(
                 collection_name=self.collection_name,
-                points_selector=Filter(
-                    must=cast(List[Condition], filter_conditions)
-                ),
+                points_selector=Filter(must=cast(List[Condition], filter_conditions)),
                 **kwargs,
             )
 
             if op_info.status != UpdateStatus.COMPLETED:
                 raise RuntimeError(
-                    "Failed to delete vectors in Qdrant, operation info: "
-                    f"{op_info}"
+                    "Failed to delete vectors in Qdrant, operation info: " f"{op_info}"
                 )
 
     def status(self) -> VectorDBStatus:

@@ -84,12 +84,8 @@ class BaseMessage:
         meta_dict: Optional[Dict[str, str]] = None,
         video_bytes: Optional[bytes] = None,
         image_list: Optional[List[Image.Image]] = None,
-        image_detail: Union[
-            OpenAIVisionDetailType, str
-        ] = OpenAIVisionDetailType.AUTO,
-        video_detail: Union[
-            OpenAIVisionDetailType, str
-        ] = OpenAIVisionDetailType.LOW,
+        image_detail: Union[OpenAIVisionDetailType, str] = OpenAIVisionDetailType.AUTO,
+        video_detail: Union[OpenAIVisionDetailType, str] = OpenAIVisionDetailType.LOW,
     ) -> "BaseMessage":
         r"""Create a new user message.
 
@@ -129,12 +125,8 @@ class BaseMessage:
         meta_dict: Optional[Dict[str, str]] = None,
         video_bytes: Optional[bytes] = None,
         image_list: Optional[List[Image.Image]] = None,
-        image_detail: Union[
-            OpenAIVisionDetailType, str
-        ] = OpenAIVisionDetailType.AUTO,
-        video_detail: Union[
-            OpenAIVisionDetailType, str
-        ] = OpenAIVisionDetailType.LOW,
+        image_detail: Union[OpenAIVisionDetailType, str] = OpenAIVisionDetailType.AUTO,
+        video_detail: Union[OpenAIVisionDetailType, str] = OpenAIVisionDetailType.LOW,
     ) -> "BaseMessage":
         r"""Create a new assistant message.
 
@@ -258,9 +250,7 @@ class BaseMessage:
         idx = 0
         start_idx = 0
         while idx < len(lines):
-            while idx < len(lines) and (
-                not lines[idx].lstrip().startswith("```")
-            ):
+            while idx < len(lines) and (not lines[idx].lstrip().startswith("```")):
                 idx += 1
             text = "\n".join(lines[start_idx:idx]).strip()
             text_prompts.append(TextPrompt(text))
@@ -318,9 +308,7 @@ class BaseMessage:
         # Check if this is a function-related message
         if message.from_ == "gpt":
             func_info = function_format.extract_tool_calls(message.value)
-            if (
-                func_info and len(func_info) == 1
-            ):  # TODO: Handle multiple tool calls
+            if func_info and len(func_info) == 1:  # TODO: Handle multiple tool calls
                 # Including cleaned content is useful to
                 # remind consumers of non-considered content
                 clean_content = re.sub(
@@ -443,9 +431,7 @@ class BaseMessage:
                     )
                 with io.BytesIO() as buffer:
                     image.save(fp=buffer, format=image.format)
-                    encoded_image = base64.b64encode(buffer.getvalue()).decode(
-                        "utf-8"
-                    )
+                    encoded_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
                 image_prefix = f"data:image/{image_type};base64,"
                 hybird_content.append(
                     {
@@ -469,10 +455,7 @@ class BaseMessage:
 
             for frame in video:
                 frame_count += 1
-                if (
-                    frame_count % Constants.VIDEO_IMAGE_EXTRACTION_INTERVAL
-                    == 0
-                ):
+                if frame_count % Constants.VIDEO_IMAGE_EXTRACTION_INTERVAL == 0:
                     # convert frame to numpy array
                     frame_array = np.asarray(frame)
                     frame_image = Image.fromarray(frame_array)
@@ -491,9 +474,9 @@ class BaseMessage:
                         image_format = OpenAIImageType.JPEG.value
                         image_format = image_format.upper()
                         resized_img.save(fp=buffer, format=image_format)
-                        encoded_image = base64.b64encode(
-                            buffer.getvalue()
-                        ).decode("utf-8")
+                        encoded_image = base64.b64encode(buffer.getvalue()).decode(
+                            "utf-8"
+                        )
 
                     base64Frames.append(encoded_image)
 

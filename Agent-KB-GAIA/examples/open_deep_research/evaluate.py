@@ -4,6 +4,7 @@ import re
 import string
 import warnings
 
+
 def normalize_number_str(number_str: str) -> float:
     # we replace these common units and commas to allow
     # conversion to float
@@ -80,18 +81,23 @@ def get_question_score_gaia(
         ma_elems = split_string(model_answer)
 
         if len(gt_elems) != len(ma_elems):  # check length is the same
-            warnings.warn("Answer lists have different lengths, returning False.", UserWarning)
+            warnings.warn(
+                "Answer lists have different lengths, returning False.", UserWarning
+            )
             return False
 
         comparisons = []
-        for ma_elem, gt_elem in zip(ma_elems, gt_elems):  # compare each element as float or str
+        for ma_elem, gt_elem in zip(
+            ma_elems, gt_elems
+        ):  # compare each element as float or str
             if is_float(gt_elem):
                 normalized_ma_elem = normalize_number_str(ma_elem)
                 comparisons.append(normalized_ma_elem == float(gt_elem))
             else:
                 # we do not remove punct since comparisons can include punct
                 comparisons.append(
-                    normalize_str(ma_elem, remove_punct=False) == normalize_str(gt_elem, remove_punct=False)
+                    normalize_str(ma_elem, remove_punct=False)
+                    == normalize_str(gt_elem, remove_punct=False)
                 )
         return all(comparisons)
 
@@ -101,7 +107,7 @@ def get_question_score_gaia(
 
 def get_correct(pred, true):
     # pred, true가 모두 숫자인 경우
-    if str(true).replace('.', '', 1).isdigit():
+    if str(true).replace(".", "", 1).isdigit():
         numbers_answer = extract_numbers(str(pred))
         if len(numbers_answer) == 0:
             return False
@@ -109,6 +115,7 @@ def get_correct(pred, true):
     else:
         # 숫자가 아닐 경우 다른 스코어 함수 사용
         return get_question_score_gaia(str(pred), str(true))
+
 
 def evaluate(input_path, output_path):
     total = 0
@@ -124,11 +131,9 @@ def evaluate(input_path, output_path):
             total += 1
             correct += int(is_correct)
 
-            results.append({
-                "prediction": pred,
-                "true_answer": true,
-                "is_correct": is_correct
-            })
+            results.append(
+                {"prediction": pred, "true_answer": true, "is_correct": is_correct}
+            )
 
     # 정확도 계산
     accuracy = correct / total if total > 0 else 0
@@ -146,6 +151,7 @@ def evaluate(input_path, output_path):
 
 
 if __name__ == "__main__":
-    evaluate(input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/gpt-with-teacher.jsonl",
-     output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/gpt-with-teacher.jsonl")
- 
+    evaluate(
+        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/gpt-with-teacher.jsonl",
+        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/gpt-with-teacher.jsonl",
+    )

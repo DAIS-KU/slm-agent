@@ -55,9 +55,9 @@ class MinHash:
     def _hash(self, content, seed):
         return mmh3.hash(content, seed)
 
-    def text_to_minhash(self, text:str):
+    def text_to_minhash(self, text: str):
         words = text.split()
-        minhash = [float('inf')] * self.num_perm
+        minhash = [float("inf")] * self.num_perm
 
         for word in words:
             for i in range(self.num_perm):
@@ -78,12 +78,13 @@ class MinHash:
 
         return match / self.num_perm
 
+
 if __name__ == "__main__":
     texts = [
         "The quick brown fox jumps over the lazy dog",
         "A quick brown dog leaps over a lazy fox",
         "The quick brown fox jumps over a lazy dog",
-        "Hello world, this is a test sentence"
+        "Hello world, this is a test sentence",
     ]
 
     minhash = MinHash(num_perm=128)
@@ -97,7 +98,7 @@ if __name__ == "__main__":
         ["the", "quick", "brown", "fox"],
         ["jumps", "over", "the", "lazy", "dog"],
         ["the", "brown", "dog"],
-        ["quick", "fox", "jumps"]
+        ["quick", "fox", "jumps"],
     ]
     bm25 = BM25(snippets)
     query = ["quick", "brown", "fox"]
@@ -107,4 +108,3 @@ if __name__ == "__main__":
     print("BM25 Scores for each snippet:")
     for doc_idx, score in scores.items():
         print(f"Snippet {doc_idx}: {score:.4f}")
-    

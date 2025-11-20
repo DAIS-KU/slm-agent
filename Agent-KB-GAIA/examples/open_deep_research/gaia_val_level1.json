@@ -1,0 +1,1790 @@
+[
+  {
+    "task_id": "e1fc63a2-da7a-432f-be78-7c4a95598703",
+    "Question": "If Eliud Kipchoge could maintain his record-making marathon pace indefinitely, how many thousand hours would it take him to run the distance between the Earth and the Moon its closest approach? Please use the minimum perigee value on the Wikipedia page for the Moon when carrying out your calculation. Round your result to the nearest 1000 hours and do not use any comma separators if necessary.",
+    "Steps": [
+      "Googled Eliud Kipchoge marathon pace to find 4min 37sec/mile",
+      "Converted into fractions of hours.",
+      "Found moon periapsis in miles (225,623 miles).",
+      "Multiplied the two to find the number of hours and rounded to the nearest 100 hours."
+    ],
+    "StepsRationale": [
+      "Finding Eliud Kipchoge's marathon pace is essential to understand the speed required for the calculations related to time and distance.",
+      "Converting the pace into fractions of hours allows for easier calculations when determining total time over long distances.",
+      "Knowing the moon's periapsis in miles is necessary to establish the distance that will be used in conjunction with the pace to calculate time.",
+      "Multiplying the pace by the distance gives the total time taken, and rounding to the nearest 100 hours simplifies the result for easier interpretation."
+    ],
+    "Plannings": [
+      "Find the minimum perigee distance between the Earth and the Moon.",
+      "Determine Eliud Kipchoge's marathon pace in distance per hour.",
+      "Calculate the total time in hours it would take to run the distance to the Moon.",
+      "Convert the total time from hours to thousand hours.",
+      "Round the result to the nearest 1000 hours."
+    ],
+    "PlanningsRationale": [
+      "This distance is necessary to determine how far Eliud Kipchoge would need to run.",
+      "Knowing his pace allows us to calculate how long it would take him to cover the distance.",
+      "This calculation will provide the total time required based on his pace and the distance.",
+      "This conversion is necessary to match the format requested in the question.",
+      "Rounding is required to provide the final answer in the specified format."
+    ]
+  },
+  {
+    "task_id": "8e867cd7-cff9-4e6c-867a-ff5ddc2550be",
+    "Question": "How many studio albums were published by Mercedes Sosa between 2000 and 2009 (included)? You can use the latest 2022 version of english wikipedia.",
+    "Steps": [
+      "I did a search for Mercedes Sosa",
+      "I went to the Wikipedia page for her",
+      "I scrolled down to \"Studio albums\"",
+      "I counted the ones between 2000 and 2009"
+    ],
+    "StepsRationale": [
+      "Searching for Mercedes Sosa is the first step to gather relevant information about her, which is essential for understanding her contributions and works.",
+      "Visiting the Wikipedia page provides a centralized and reliable source of information about Mercedes Sosa, including her biography and discography.",
+      "Scrolling down to the 'Studio albums' section allows for a focused examination of her musical output, which is crucial for identifying her works during a specific time frame.",
+      "Counting the albums released between 2000 and 2009 helps to quantify her productivity and relevance in that decade, which is important for any analysis of her career."
+    ],
+    "Plannings": [
+      "Access the latest version of the English Wikipedia page for Mercedes Sosa.",
+      "Locate the section of the page that lists studio albums.",
+      "Filter the list of studio albums to include only those released between 2000 and 2009.",
+      "Count the number of albums that meet the criteria."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to obtain the most accurate and up-to-date information regarding Mercedes Sosa's discography.",
+      "Identifying the section that specifically lists studio albums will allow for a focused search for the relevant data.",
+      "This step is crucial to ensure that only the albums within the specified date range are considered for the final count.",
+      "Counting the filtered albums will provide the final answer to the question regarding how many studio albums were published in that time frame."
+    ]
+  },
+  {
+    "task_id": "ec09fa32-d03f-4bf8-84b0-1f16922c3ae4",
+    "Question": "Here's a fun riddle that I think you'll enjoy.\n\nYou have been selected to play the final round of the hit new game show \"Pick That Ping-Pong\". In this round, you will be competing for a large cash prize. Your job will be to pick one of several different numbered ping-pong balls, and then the game will commence. The host describes how the game works.\n\nA device consisting of a winding clear ramp and a series of pistons controls the outcome of the game. The ramp feeds balls onto a platform. The platform has room for three ping-pong balls at a time. The three balls on the platform are each aligned with one of three pistons. At each stage of the game, one of the three pistons will randomly fire, ejecting the ball it strikes. If the piston ejects the ball in the first position on the platform the balls in the second and third position on the platform each advance one space, and the next ball on the ramp advances to the third position. If the piston ejects the ball in the second position, the ball in the first position is released and rolls away, the ball in the third position advances two spaces to occupy the first position, and the next two balls on the ramp advance to occupy the second and third positions on the platform. If the piston ejects the ball in the third position, the ball in the first position is released and rolls away, the ball in the second position advances one space to occupy the first position, and the next two balls on the ramp advance to occupy the second and third positions on the platform.\n\nThe ramp begins with 100 numbered ping-pong balls, arranged in ascending order from 1 to 100. The host activates the machine and the first three balls, numbered 1, 2, and 3, advance to the platform. Before the random firing of the pistons begins, you are asked which of the 100 balls you would like to pick. If your pick is ejected by one of the pistons, you win the grand prize, $10,000.\n\nWhich ball should you choose to maximize your odds of winning the big prize? Please provide your answer as the number of the ball selected.",
+    "Steps": [
+      "Step 1: Evaluate the problem statement provided in my user's prompt",
+      "Step 2: Consider the probability of any ball on the platform earning the prize.",
+      "Step 3: Evaluate the ball in position one. The probability of it earning the prize, P1, is 1/3",
+      "Step 4: Using a calculator, evaluate the ball in position two. The probability of it earning the prize, P2, is the difference between 1 and the product of the complementary probabilities for each trial",
+      "P2 = 1 - (2/3)(2/3)",
+      "P2 = 5/9",
+      "Step 5: Using a calculator, evaluate the ball in position three. The probability of it earning the prize, P3, is the difference between 1 and the product of the complementary probabilities for each trial",
+      "P3 = 1 - (2/3)(2/3)(2/3)",
+      "P3 = 19/27",
+      "Step 6: Consider the possible outcomes of numbers higher than 3.",
+      "Step 7: For each trial, either 1 or 2 balls from the ramp will advance to the platform. For any given selection, there is a 50% chance that the ball advances to position 2 or position 3.",
+      "Step 8: As position three holds the highest chance of earning the prize, select the only ball known to occupy position three with certainty, ball 3.",
+      "Step 9: Report the correct answer to my user, \"3\""
+    ],
+    "StepsRationale": [
+      "Evaluating the problem statement is essential to understand the context and requirements of the task at hand.",
+      "Considering the probability of any ball earning the prize helps in assessing the overall chances and informs subsequent calculations.",
+      "Evaluating the probability of the first ball provides a baseline for comparison with other balls and their respective probabilities.",
+      "Using a calculator to evaluate the second ball's probability ensures accuracy in the calculations, which is crucial for determining the best option.",
+      "Calculating P2 explicitly helps in understanding the impact of complementary probabilities on the overall chances of winning.",
+      "Presenting the calculated probability P2 in fractional form clarifies the result and aids in further comparisons.",
+      "Evaluating the third ball's probability is necessary to complete the analysis of all options available.",
+      "Calculating P3 using complementary probabilities provides insight into the likelihood of the third ball winning, which is critical for decision-making.",
+      "Presenting the calculated probability P3 in fractional form allows for easy comparison with the probabilities of the other balls.",
+      "Considering outcomes higher than 3 is important to ensure that all potential options are evaluated for their winning probabilities.",
+      "Understanding the advancement probabilities of the balls helps in assessing the likelihood of each ball reaching the platform.",
+      "Selecting the ball in position three, which has the highest probability of winning, is a logical decision based on the previous evaluations.",
+      "Reporting the final answer to the user is the culmination of the analysis and provides a clear conclusion to the task."
+    ],
+    "Plannings": [
+      "Analyze the mechanics of the pistons and their effects on the balls on the platform.",
+      "Identify the positions of the balls on the platform and how they change with each piston firing.",
+      "Calculate the probabilities of each ball being ejected based on their initial positions.",
+      "Compare the probabilities of the balls in the first, second, and third positions.",
+      "Select the ball with the highest probability of being ejected."
+    ],
+    "PlanningsRationale": [
+      "Understanding how each piston affects the balls is crucial to determine which ball has the highest chance of being ejected.",
+      "Knowing the initial positions and the consequences of each piston firing will help in predicting the outcomes.",
+      "This step is necessary to quantify the chances of winning based on the selected ball.",
+      "By comparing the probabilities, we can determine which ball has the highest likelihood of being ejected.",
+      "Choosing the ball with the highest probability maximizes the chances of winning the grand prize."
+    ]
+  },
+  {
+    "task_id": "5d0080cb-90d7-4712-bc33-848150e917d3",
+    "Question": "What was the volume in m^3 of the fish bag that was calculated in the University of Leicester paper \"Can Hiccup Supply Enough Fish to Maintain a Dragon’s Diet?\"",
+    "Steps": [
+      "Searched '\"Can Hiccup Supply Enough Fish to Maintain a Dragon’s Diet?\"' on Google.",
+      "Opened \"Can Hiccup Supply Enough Fish to Maintain a Dragon’s Diet?\" at https://journals.le.ac.uk/ojs1/index.php/jist/article/view/733.",
+      "Clicked \"PDF\".",
+      "Found the calculations for the volume of the fish bag and noted them."
+    ],
+    "StepsRationale": [
+      "Searching for the article on Google is essential to locate the source material needed for further analysis.",
+      "Opening the article allows for direct access to the content, which is necessary to understand the context and details of the study.",
+      "Clicking on the PDF provides the complete document in a downloadable format, which is useful for detailed examination and reference.",
+      "Finding and noting the calculations for the volume of the fish bag is crucial for understanding the methodology and results of the study."
+    ],
+    "Plannings": [
+      "Locate the University of Leicester paper titled 'Can Hiccup Supply Enough Fish to Maintain a Dragon’s Diet?'",
+      "Read the relevant sections of the paper that discuss the fish bag volume.",
+      "Extract the volume measurement of the fish bag from the text.",
+      "Convert the volume to cubic meters if it is presented in a different unit.",
+      "Summarize the findings in a clear and concise manner."
+    ],
+    "PlanningsRationale": [
+      "Finding the original source is essential to ensure accurate information and context regarding the volume of the fish bag.",
+      "Identifying the specific calculations or data presented in the paper will provide the necessary details to answer the question.",
+      "Directly obtaining the volume figure is crucial for providing a precise answer to the question.",
+      "Ensuring the volume is in the correct unit (m^3) is necessary for clarity and consistency in the answer.",
+      "Presenting the information clearly will help in effectively communicating the answer to the question."
+    ]
+  },
+  {
+    "task_id": "a1e91b78-d3d8-4675-bb8d-62741b4b68a6",
+    "Question": "In the video https://www.youtube.com/watch?v=L1vXCYZAYYM, what is the highest number of bird species to be on camera simultaneously?",
+    "Steps": [
+      "Navigate to the YouTube link.",
+      "Watch the video to see the highest number of bird species.",
+      "Note the number."
+    ],
+    "StepsRationale": [
+      "Navigating to the YouTube link is essential as it is the starting point for accessing the video content that contains the information needed.",
+      "Watching the video allows the annotator to visually identify and count the bird species presented, which is crucial for accurate data collection.",
+      "Noting the number is necessary to document the findings, ensuring that the information can be referenced or analyzed later."
+    ],
+    "Plannings": [
+      "Watch the video carefully to identify the scenes with multiple bird species.",
+      "Take notes on the timestamps where multiple species appear together.",
+      "Count the number of distinct bird species visible in each noted timestamp.",
+      "Compare the counts from all noted timestamps to find the highest number.",
+      "Summarize the findings and present the highest number of species observed."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to gather visual data on the number of bird species present at any given time in the video.",
+      "Documenting the timestamps will help in analyzing specific moments in the video for the highest count of species.",
+      "Counting the species at each timestamp is essential to determine the maximum number of species that appear simultaneously.",
+      "This comparison will allow us to identify the peak moment of bird species presence in the video.",
+      "Summarizing the findings provides a clear answer to the original question regarding the highest number of bird species on camera simultaneously."
+    ]
+  },
+  {
+    "task_id": "46719c30-f4c3-4cad-be07-d5cb21eee6bb",
+    "Question": "Of the authors (First M. Last) that worked on the paper \"Pie Menus or Linear Menus, Which Is Better?\" in 2015, what was the title of the first paper authored by the one that had authored prior papers?",
+    "Steps": [
+      "Searched \"Pie Menus or Linear Menus, Which Is Better?\" on Google.",
+      "Opened \"Pie Menus or Linear Menus, Which Is Better?\" on https://oda.oslomet.no/oda-xmlui/handle/10642/3162.",
+      "Clicked each author's name.",
+      "Noted the name that had no other papers listed.",
+      "Searched \"Murano, Pietro\" on Google.",
+      "Opened http://www.pietromurano.org/.",
+      "Clicked \"Publications\".",
+      "Found the earliest paper he contributed to."
+    ],
+    "StepsRationale": [
+      "Searching for the topic helps to gather initial information and context about the comparison between pie menus and linear menus.",
+      "Opening the specific document allows for a detailed examination of the arguments and findings presented in the paper.",
+      "Clicking each author's name helps to identify their contributions and establish their credibility in the field.",
+      "Noting the author with no other papers listed may indicate a less established researcher, which could be relevant for assessing the paper's reliability.",
+      "Searching for 'Murano, Pietro' aims to gather more information about this specific author and their body of work.",
+      "Opening the author's personal website provides direct access to their professional information and publications.",
+      "Clicking 'Publications' is necessary to locate the author's research output and contributions to the field.",
+      "Finding the earliest paper helps to understand the author's development and influence in their area of research over time."
+    ],
+    "Plannings": [
+      "Identify the authors of the paper 'Pie Menus or Linear Menus, Which Is Better?' published in 2015.",
+      "Check the publication history of each author to find out who has authored prior papers.",
+      "Locate the first paper authored by the identified author with prior publications."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to determine who the authors are so that we can find out more about their publication history.",
+      "This step is needed to identify which author has previous publications, as the question specifically asks for the one with prior work.",
+      "This step is essential to answer the question regarding the title of the first paper authored by that specific author."
+    ]
+  },
+  {
+    "task_id": "4b6bb5f7-f634-410e-815d-e673ab7f8632",
+    "Question": "In Series 9, Episode 11 of Doctor Who, the Doctor is trapped inside an ever-shifting maze. What is this location called in the official script for the episode? Give the setting exactly as it appears in the first scene heading.",
+    "Steps": [
+      "Search the web for “Doctor Who series 9 episode 11 official script”.",
+      "Click result on the BBC website.",
+      "Scroll through the PDF to read the script, noting that it takes place in a mechanical castle location.",
+      "Scroll back to the first scene heading to note the answer, THE CASTLE"
+    ],
+    "StepsRationale": [
+      "Searching the web for the official script is essential to ensure that the information gathered is accurate and comes from a reliable source.",
+      "Clicking on the result from the BBC website is necessary because it is the official source for the script, ensuring authenticity.",
+      "Reading through the PDF allows for a comprehensive understanding of the script's context, including the setting, which is important for answering specific questions.",
+      "Scrolling back to the first scene heading is crucial to directly identify and confirm the specific location mentioned in the script, which is the focus of the inquiry."
+    ],
+    "Plannings": [
+      "Identify the episode title and number.",
+      "Access the official script for Series 9, Episode 11.",
+      "Search for the first scene heading in the script.",
+      "Extract the location name from the scene heading."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to locate the specific episode of Doctor Who that contains the relevant scene.",
+      "Obtaining the official script is essential to find the exact scene heading that describes the location.",
+      "Finding the first scene heading will provide the exact location name as it appears in the script.",
+      "This step is needed to get the specific information requested in the question."
+    ]
+  },
+  {
+    "task_id": "cffe0e32-c9a6-4c52-9877-78ceb4aaa9fb",
+    "Question": "An office held a Secret Santa gift exchange where each of its twelve employees was assigned one other employee in the group to present with a gift. Each employee filled out a profile including three likes or hobbies. On the day of the gift exchange, only eleven gifts were given, each one specific to one of the recipient's interests. Based on the information in the document, who did not give a gift?",
+    "Steps": [
+      "Open the document.",
+      "Look at gifts and recipient interests.",
+      "Match Galileo Galilei biography (could apply to astronomy or books -> Miguel or Micah)",
+      "Match fishing reel (only applies to fishing -> Harry)",
+      "Match Raku programming guide (Perl language, but could also apply to JavaScript enthusiast - > Fred or Jun)",
+      "Match chisel set (could apply to camping or woodworking, but Harry is already fulfilled -> Jun, so Raku guide is for Fred)",
+      "Match custom dice (could apply to board games or tabletop RPGs -> Lucy or Sara)",
+      "Match “War and Peace” American film copy (could apply to old movies or Audrey Hepburn -> Perry or Alex)",
+      "Match yarn (only applies to knitting -> Micah, so the Galileo biography is for Miguel)",
+      "Match \"One Piece\" graphic novel (could apply to books or manga, but Micah already has yarn -> Alex, so the \"War and Peace\" film is for Perry)",
+      "Match \"War and Peace\" novel (could apply to books or historical fiction novels, but Micah has yarn -> Tyson)",
+      "Match Starbucks gift card (only applies to coffee -> Lucy, so the dice are for Sara)",
+      "Match foam exercise mat (only applies to yoga -> Georgette)",
+      "Note which recipients have gifts (Miguel, Harry, Fred, Jun, Sara, Perry, Micah, Alex, Tyson, Lucy, Georgette) and which does not (Rebecca).",
+      "Find who was supposed to give Rebecca a gift (Fred)."
+    ],
+    "StepsRationale": [
+      "Opening the document is essential to access the information needed for the gift matching process.",
+      "Understanding the gifts and recipient interests helps to ensure that the matches made are relevant and personalized.",
+      "Matching the Galileo Galilei biography to Miguel or Micah is important as it aligns with their interests in astronomy or books.",
+      "Identifying the fishing reel for Harry is necessary as it directly corresponds to his interest in fishing.",
+      "Matching the Raku programming guide to Fred or Jun is useful as it relates to their programming interests, ensuring a suitable gift.",
+      "Determining the chisel set for Jun is important to avoid giving multiple gifts to Harry, ensuring each recipient has a unique gift.",
+      "Matching custom dice to Lucy or Sara is necessary as it aligns with their interests in board games or tabletop RPGs.",
+      "Identifying the 'War and Peace' American film copy for Perry or Alex is important as it connects to their interests in old movies or Audrey Hepburn.",
+      "Matching yarn to Micah is crucial as it directly relates to his knitting interest, allowing for a personalized gift.",
+      "Determining the 'One Piece' graphic novel for Alex ensures that Micah's gift is unique and aligns with his interests.",
+      "Matching the 'War and Peace' novel to Tyson is necessary to ensure that each recipient receives a gift that fits their interests.",
+      "Identifying the Starbucks gift card for Lucy is important as it directly relates to her interest in coffee.",
+      "Matching the foam exercise mat to Georgette is necessary as it aligns with her interest in yoga.",
+      "Noting which recipients have gifts is essential for tracking the distribution of gifts and identifying any gaps.",
+      "Finding out who was supposed to give Rebecca a gift is crucial to ensure that she is not left without a present."
+    ],
+    "Plannings": [
+      "List all 12 employees and their assigned gift recipients.",
+      "Identify the 11 gifts that were given and their recipients.",
+      "Cross-reference the list of employees with the list of gift recipients.",
+      "Determine the employee who is not listed as having given a gift."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to understand the structure of the gift exchange and to identify who was supposed to give gifts.",
+      "By knowing who received gifts, we can determine which employee did not give a gift based on the assignments.",
+      "This will help to pinpoint the employee who is missing from the list of those who gave gifts.",
+      "This final step will directly answer the question of who did not participate in giving a gift."
+    ]
+  },
+  {
+    "task_id": "2d83110e-a098-4ebb-9987-066c06fa42d0",
+    "Question": ".rewsna eht sa \"tfel\" drow eht fo etisoppo eht etirw ,ecnetnes siht dnatsrednu uoy fI",
+    "Steps": [
+      "Read the instructions in reverse"
+    ],
+    "StepsRationale": [
+      "Reading the instructions in reverse can help identify any overlooked details or clarify the sequence of tasks, ensuring a comprehensive understanding of the requirements."
+    ],
+    "Plannings": [
+      "Identify the reversed text and reverse it back to its original form.",
+      "Analyze the original text to determine the key components.",
+      "Determine the opposite of the word 'left'.",
+      "Construct a complete sentence using the opposite word."
+    ],
+    "PlanningsRationale": [
+      "Reversing the text will allow us to understand the actual question being asked.",
+      "Understanding the components of the question will help in formulating the correct response.",
+      "Finding the opposite word is the main task of the question.",
+      "The final answer needs to be presented in a complete sentence as per the question's requirement."
+    ]
+  },
+  {
+    "task_id": "5cfb274c-0207-4aa7-9575-6ac0bd95d9b2",
+    "Question": "Each cell in the attached spreadsheet represents a plot of land. The color of the cell indicates who owns that plot. Green cells are plots owned by Earl Smith. Can Earl walk through every plot he owns (and no other plots) and return to his starting plot without backtracking? For this question, consider backtracking to be any instance where Earl would enter a plot of land he had already entered since leaving his starting plot.",
+    "Steps": [
+      "Open the spreadsheet",
+      "Analyze the green cells.",
+      "Note that the shape of Earl’s plots is not a loop. There are dead-ends that can’t be traversed without doubling back to a previously-traversed cell."
+    ],
+    "StepsRationale": [
+      "Opening the spreadsheet is essential as it provides access to the data that needs to be analyzed.",
+      "Analyzing the green cells is necessary to identify key data points or variables that are relevant to the task at hand.",
+      "Noting the shape of Earl’s plots helps in understanding the structure of the data, which is crucial for determining the traversal strategy and identifying potential issues."
+    ],
+    "Plannings": [
+      "Identify all green cells in the spreadsheet.",
+      "Create a graph representation of the green cells, where each cell is a node and edges represent adjacent cells.",
+      "Check if the graph is connected and if it contains any cycles.",
+      "Determine if there is an Eulerian circuit in the graph.",
+      "If an Eulerian circuit exists, outline the path Earl can take."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to determine the specific plots of land owned by Earl Smith that he can walk through.",
+      "Representing the plots as a graph allows us to analyze the connectivity and possible paths between the plots.",
+      "A connected graph ensures that all plots can be reached from one another, and checking for cycles is essential to determine if a path can return to the starting point without backtracking.",
+      "An Eulerian circuit allows for a path that visits every edge exactly once and returns to the starting point, which is the requirement for Earl's walk.",
+      "Providing a specific path will demonstrate how Earl can walk through all his plots without backtracking and return to the start."
+    ]
+  },
+  {
+    "task_id": "27d5d136-8563-469e-92bf-fd103c28b57c",
+    "Question": "¬(A ∧ B) ↔ (¬A ∨ ¬B)\n¬(A ∨ B) ↔ (¬A ∧ ¬B)\n(A → B) ↔ (¬B → ¬A)\n(A → B) ↔ (¬A ∨ B)\n(¬A → B) ↔ (A ∨ ¬B)\n¬(A → B) ↔ (A ∧ ¬B)\n\nWhich of the above is not logically equivalent to the rest? Provide the full statement that doesn't fit.",
+    "Steps": [
+      "Determine the truth values of the first statement: Recognize this is one of De Morgan's Laws showing how to distribute negation over the and conjunction - so it is a tautology.",
+      "Determine the truth values of the second statement: Recognize this is one of De Morgan's Laws showing how to distribute negation over the or - so it is a tautology.",
+      "Determine the truth values of the third statement: Recognize this is the definition of the contrapositive - so it is a tautology.",
+      "Determine the truth values of the fourth statement: Recognize this as an alternative way of stating the conditional - so it is a tautology.",
+      "Determine the truth values of the fifth statement: I don't recognize this, so check its truth values:",
+      "A: True, B: True |  (¬A → B) ↔ (A ∨ ¬B) = (¬T → T) ↔ (T ∨ ¬T) = (F → T) ↔ (T ∨ F) = T ↔ T = T",
+      "A: True, B: False |  (¬A → B) ↔ (A ∨ ¬B) = (¬T → F) ↔ (T ∨ ¬F) = (F → F) ↔ (T ∨ T) = T ↔ T = T",
+      "A: False, B: True |  (¬A → B) ↔ (A ∨ ¬B) = (¬F → T) ↔ (F ∨ ¬T) = (T → T) ↔ (F ∨ ¬T) = T ↔ (F ∨ F) = T ↔ F = F",
+      "The fifth statement is not a tautology so is the statement that is not logically equivalent. We were asked for only one statement, so can stop here."
+    ],
+    "StepsRationale": [
+      "Determining the truth value of the first statement helps establish its validity as a tautology, which is essential for understanding logical equivalences.",
+      "Evaluating the second statement similarly confirms its status as a tautology, reinforcing the principles of De Morgan's Laws.",
+      "Assessing the third statement is crucial as it illustrates the definition of the contrapositive, further solidifying the understanding of logical implications.",
+      "Analyzing the fourth statement is necessary to recognize its alternative expression of a conditional, which is important for logical reasoning.",
+      "Since the fifth statement is not immediately recognizable, checking its truth values is essential to determine its logical status.",
+      "Calculating the truth values for the first case of the fifth statement provides a concrete example of its logical equivalence.",
+      "Evaluating the second case of the fifth statement continues the process of verifying its truth values, ensuring thorough analysis.",
+      "Determining the truth value for the third case of the fifth statement is necessary to complete the evaluation and understand its logical implications.",
+      "Concluding that the fifth statement is not a tautology allows for the identification of the statement that is not logically equivalent, fulfilling the task's requirements."
+    ],
+    "Plannings": [
+      "Identify the logical equivalences among the given statements.",
+      "Use truth tables to evaluate each statement.",
+      "Compare the truth tables of each statement.",
+      "Identify the statement that does not match the others."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to determine which statements are logically equivalent to each other and which one is not.",
+      "Truth tables will provide a clear visual representation of the truth values for each statement under all possible combinations of A and B.",
+      "By comparing the truth tables, we can identify which statements yield different truth values, indicating that they are not logically equivalent.",
+      "This final step will allow us to pinpoint the specific statement that is not logically equivalent to the rest."
+    ]
+  },
+  {
+    "task_id": "dc28cf18-6431-458b-83ef-64b3ce566c10",
+    "Question": "My family reunion is this week, and I was assigned the mashed potatoes to bring. The attendees include my married mother and father, my twin brother and his family, my aunt and her family, my grandma and her brother, her brother's daughter, and his daughter's family. All the adults but me have been married, and no one is divorced or remarried, but my grandpa and my grandma's sister-in-law passed away last year. All living spouses are attending. My brother has two children that are still kids, my aunt has one six-year-old, and my grandma's brother's daughter has three kids under 12. I figure each adult will eat about 1.5 potatoes of mashed potatoes and each kid will eat about 1/2 a potato of mashed potatoes, except my second cousins don't eat carbs. The average potato is about half a pound, and potatoes are sold in 5-pound bags. How many whole bags of potatoes do I need? Just give the number.",
+    "Steps": [
+      "Calculate the number of adults (mother, father, brother, brother's wife, aunt, aunt's husband, grandma, grandma's brother, grandma's brother's daughter, grandma's brother's daughter's husband, me = 11).",
+      "Calculate the number of children (niece, nephew, cousin, grandma's brother's daughter's kids x3 = 6).",
+      "Subtract the number of second cousins (grandma's brother's daughter's kids) (6 - 3 = 3).",
+      "Calculate the adult potatoes (11 * 1.5 = 16.5).",
+      "Calculate the child potatoes (3 * 0.5 = 1.5).",
+      "Add to get the total potatoes (16.5 + 1.5 = 18).",
+      "Multiply to get the pounds of potatoes (18 * 0.5 = 9 pounds).",
+      "Calculate the number of 5-lb bags needed (9 / 5 = 1.8).",
+      "Round up to get total bags (2)."
+    ],
+    "StepsRationale": [
+      "Calculating the number of adults is essential to determine the total potato requirement based on adult consumption.",
+      "Calculating the number of children helps to account for their specific potato consumption needs, which differ from adults.",
+      "Subtracting the number of second cousins ensures that only the relevant children are considered for potato consumption.",
+      "Calculating adult potatoes provides a clear understanding of how much is needed for the adult population based on their consumption rate.",
+      "Calculating child potatoes is necessary to accurately reflect the total potato requirement for the children in the group.",
+      "Adding the adult and child potatoes gives the total amount needed, which is crucial for planning.",
+      "Multiplying the total potatoes by the weight per potato converts the quantity into a more manageable weight measurement.",
+      "Calculating the number of 5-lb bags needed helps in determining how many bags to purchase, ensuring sufficient supply.",
+      "Rounding up to the nearest whole bag ensures that there is enough supply, as partial bags cannot be purchased."
+    ],
+    "Plannings": [
+      "Identify the attendees and their categories (adults and kids).",
+      "Count the number of adults and kids attending.",
+      "Calculate the total amount of mashed potatoes needed based on the number of adults and kids.",
+      "Convert the total amount of mashed potatoes needed into the number of potatoes.",
+      "Determine how many 5-pound bags of potatoes are needed based on the total weight of potatoes."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to determine how many adults and kids will be eating the mashed potatoes, which affects the total amount needed.",
+      "Knowing the exact number of adults and kids allows for accurate calculations of the total amount of mashed potatoes required.",
+      "This calculation is essential to determine how many potatoes are needed based on the eating habits of adults and kids.",
+      "Since potatoes are sold by weight, converting the total amount of mashed potatoes into the number of potatoes helps in understanding how many to buy.",
+      "This final calculation is necessary to know how many bags to purchase, as potatoes are sold in specific bag sizes."
+    ]
+  },
+  {
+    "task_id": "b816bfce-3d80-4913-a07d-69b752ce6377",
+    "Question": "In Emily Midkiff's June 2014 article in a journal named for the one of Hreidmar's sons that guarded his house, what word was quoted from two different authors in distaste for the nature of dragon depictions?",
+    "Steps": [
+      "Searched \"Hreidmar's sons\" on Google.",
+      "Opened https://en.wikipedia.org/wiki/Hrei%C3%B0marr.",
+      "Noted Fafnir guarded his house.",
+      "Searched \"Emily Midkiff June 2014 Fafnir\" on Google.",
+      "Opened \"Fafnir 2/2014 |\" at http://journal.finfar.org/journal/archive/fafnir-22014/.",
+      "Clicked the title '“Dragons are Tricksy”: The Uncanny Dragons of Children’s Literature'.",
+      "Found the word in quotation marks from two different authors (Ruth Stein and Margaret Blount) in the text."
+    ],
+    "StepsRationale": [
+      "Searching for 'Hreidmar's sons' on Google helps to gather initial information and context about the topic.",
+      "Opening the Wikipedia page provides a reliable source of information that can give a comprehensive overview of Hreidmar and his sons.",
+      "Noting that Fafnir guarded his house is crucial as it highlights a key aspect of Fafnir's character and role in the mythology.",
+      "Searching for 'Emily Midkiff June 2014 Fafnir' aims to find specific scholarly discussions or analyses related to Fafnir.",
+      "Opening the specific journal article allows for a deeper exploration of Fafnir's representation in literature, which is essential for understanding his character.",
+      "Clicking on the title of the article indicates a focus on a specific discussion about dragons, which is relevant to the study of Fafnir.",
+      "Finding the word in quotation marks from two different authors provides evidence of varying interpretations or discussions about dragons, enriching the analysis."
+    ],
+    "Plannings": [
+      "Identify the journal named after one of Hreidmar's sons.",
+      "Locate Emily Midkiff's June 2014 article in the identified journal.",
+      "Read the article to find the quoted word from two different authors.",
+      "Verify the context in which the word is used by both authors.",
+      "Compile the findings into a clear answer."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to locate the specific article by Emily Midkiff, as the journal's name is a key identifier.",
+      "Finding the correct article is essential to access the content where the quoted word is mentioned.",
+      "This step is crucial to extract the specific word that reflects distaste for dragon depictions, which is the main focus of the question.",
+      "Understanding the context ensures that the word is accurately interpreted and relevant to the nature of dragon depictions.",
+      "Summarizing the findings will provide a concise response to the original question, ensuring clarity and completeness."
+    ]
+  },
+  {
+    "task_id": "72e110e7-464c-453c-a309-90a95aed6538",
+    "Question": "Under DDC 633 on Bielefeld University Library's BASE, as of 2020, from what country was the unknown language article with a flag unique from the others?",
+    "Steps": [
+      "Searched \"Bielefeld University Library's BASE\" on Google.",
+      "Opened https://www.base-search.net/.",
+      "Clicked \"Browsing\".",
+      "Selected Clicked \"Dewey Decimal Classification (DDC) > 6 > 63 > 633.",
+      "Refined to Unknown Language.",
+      "Found the only article with a flag unique from the others in the search from pre-2020.",
+      "Copied the country name from the institution."
+    ],
+    "StepsRationale": [
+      "Searching for 'Bielefeld University Library's BASE' on Google is essential to locate the official website and access the BASE search tool.",
+      "Opening the BASE website is necessary to begin the process of searching for academic articles and resources available through this platform.",
+      "Clicking 'Browsing' allows the user to explore the available categories and classifications of resources, which is crucial for narrowing down the search.",
+      "Selecting the Dewey Decimal Classification (DDC) helps to categorize the search results, making it easier to find relevant articles in a specific subject area.",
+      "Refining the search to 'Unknown Language' is important to filter results that may not be in a commonly spoken language, focusing on unique or less accessible resources.",
+      "Identifying the only article with a unique flag from pre-2020 is significant as it highlights a potentially valuable resource that stands out from the rest.",
+      "Copying the country name from the institution is necessary for documenting the origin of the article, which can be important for citation and understanding the context of the research."
+    ],
+    "Plannings": [
+      "Access Bielefeld University Library's BASE database.",
+      "Filter articles by DDC 633.",
+      "Identify articles with an unknown language.",
+      "Examine the flags associated with the articles.",
+      "Determine the country of origin for the article with the unique flag."
+    ],
+    "PlanningsRationale": [
+      "To find the relevant articles categorized under DDC 633, we need to access the database where these articles are stored.",
+      "This step is necessary to narrow down the search to only those articles that are relevant to the specific subject area of interest.",
+      "We need to isolate articles that are marked as having an unknown language to focus on the specific criteria of the question.",
+      "This step is crucial to determine which articles have unique flags, as the question specifically asks for an article with a flag that is different from the others.",
+      "To answer the question, we need to identify the country associated with the article that has the unique flag."
+    ]
+  },
+  {
+    "task_id": "42576abe-0deb-4869-8c63-225c2d75a95a",
+    "Question": "In the fictional language of Tizin, basic sentences are arranged with the Verb first, followed by the direct object, followed by the subject of the sentence. I want to express my love for apples to my Tizin friend. \n\nThe word that indicates oneself is \"Pa\" is the nominative form, \"Mato\" is the accusative form, and \"Sing\" is the genitive form. \n\nThe root verb that indicates an intense like for something is \"Maktay\". When it is used in the present, it is used in it's root form, when it is used in the preterit past, it is \"Tay\", and when it is used in the imperfect past, it is \"Aktay\". It is used differently than in English, and is better translated as \"is pleasing to\", meaning that the thing doing the liking is actually the object of the sentence rather than the subject.\n\nThe word for apples is borrowed from English in Tizin, and so it is \"Apple\" is the nominative form, \"Zapple\" is the accusative form, and \"Izapple\" is the genitive form. \n\nPlease translate \"I like apples\" to Tizin.",
+    "Steps": [
+      "Determine the order of words from the prompt (Verb - Object - Subject).",
+      "Determine the present form of Like (\"Maktay\")",
+      "Determined that since the person doing the liking is the object of the sentence, the next word must be the one for oneself in object form.",
+      "Determined the accusative form for onesself (\"mato\").",
+      "Determined the nominative form for apple. (\"apple\").",
+      "Put the words together in the correct order."
+    ],
+    "StepsRationale": [
+      "Determining the order of words is essential for constructing a grammatically correct sentence that conveys the intended meaning.",
+      "Identifying the present form of 'Like' is necessary to ensure that the verb is correctly conjugated for the subject of the sentence.",
+      "Recognizing that the person doing the liking is the object helps clarify the sentence structure and ensures the correct pronoun is used.",
+      "Determining the accusative form for oneself is crucial for accurately representing the object in the sentence.",
+      "Identifying the nominative form for 'apple' is important to ensure that the subject is correctly represented in the sentence.",
+      "Putting the words together in the correct order finalizes the sentence construction, allowing for clear communication of the intended message."
+    ],
+    "Plannings": [
+      "Identify the verb for 'like' in the present tense.",
+      "Determine the accusative form of 'apple'.",
+      "Identify the nominative form for 'I'.",
+      "Construct the sentence in Tizin order: Verb, Direct Object, Subject."
+    ],
+    "PlanningsRationale": [
+      "In Tizin, the verb 'Maktay' is used in the present tense to express liking, which is essential for constructing the sentence.",
+      "Since 'apples' is the direct object of the sentence, we need to use the accusative form 'Zapple' to correctly position it in the sentence structure.",
+      "The subject of the sentence is 'I', which in Tizin is represented by 'Pa' in the nominative form, necessary for indicating the subject.",
+      "Tizin syntax requires the verb to come first, followed by the direct object and then the subject, which is crucial for proper sentence structure."
+    ]
+  },
+  {
+    "task_id": "b415aba4-4b68-4fc6-9b89-2c812e55a3e1",
+    "Question": "In Nature journal's Scientific Reports conference proceedings from 2012, in the article that did not mention plasmons or plasmonics, what nano-compound is studied? Don't use the prefix nano in your answer if there is one.",
+    "Steps": [
+      "Searched \"nature scientific reports\" on Google.",
+      "Opened https://www.nature.com/srep/.",
+      "Selected Explore Content > Research Articles.",
+      "Filtered for Conference Proceedings from 2012.",
+      "Opened each article link.",
+      "Checked for \"plasmon\" or \"plasmonic\".",
+      "Noted the nano-compound in the article that did not include either."
+    ],
+    "StepsRationale": [
+      "Searching for 'nature scientific reports' on Google is essential to locate the official website where relevant research articles are published.",
+      "Opening the specific journal's website allows direct access to the articles published under that journal, ensuring the information is credible and relevant.",
+      "Selecting 'Explore Content > Research Articles' helps narrow down the search to the specific type of content needed for the research.",
+      "Filtering for Conference Proceedings from 2012 ensures that the search is focused on a specific subset of articles that may contain relevant findings from that year.",
+      "Opening each article link is necessary to review the content and determine its relevance to the research topic.",
+      "Checking for 'plasmon' or 'plasmonic' is crucial to identify articles that specifically discuss these topics, which are central to the research focus.",
+      "Noting the nano-compound in articles that do not include either term helps identify gaps in the literature and may reveal alternative research directions."
+    ],
+    "Plannings": [
+      "Search for the 2012 Scientific Reports conference proceedings from Nature journal.",
+      "Identify articles that do not mention plasmons or plasmonics.",
+      "Review the content of the identified articles to find the one that studies a nano-compound.",
+      "Extract the name of the nano-compound studied in the selected article."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to locate the specific volume or issue that contains the articles published in 2012.",
+      "Filtering out articles that mention these terms is crucial to focus on the relevant studies that meet the criteria of the question.",
+      "This step is needed to determine which article specifically discusses a nano-compound, as the question requires identifying that particular study.",
+      "This final step is essential to provide the specific answer to the question regarding the nano-compound being studied."
+    ]
+  },
+  {
+    "task_id": "cca530fc-4052-43b2-b130-b30968d8aa44",
+    "Question": "Review the chess position provided in the image. It is black's turn. Provide the correct next move for black which guarantees a win. Please provide your response in algebraic notation.",
+    "Steps": [
+      "Step 1: Evaluate the position of the pieces in the chess position",
+      "Step 2: Report the best move available for black: \"Rd5\""
+    ],
+    "StepsRationale": [
+      "Evaluating the position of the pieces is essential to understand the current state of the game and to identify potential threats and opportunities.",
+      "Reporting the best move for black provides a concrete action that can be taken based on the evaluation, guiding the player towards an optimal strategy."
+    ],
+    "Plannings": [
+      "Analyze the current position on the board.",
+      "Identify any immediate threats to the opponent's king or pieces.",
+      "Look for checks, captures, and threats that can lead to a forced win.",
+      "Select the move that guarantees a win, ensuring it does not leave any counterplay for the opponent."
+    ],
+    "PlanningsRationale": [
+      "Understanding the position is crucial to identify potential winning moves and threats.",
+      "Finding tactical opportunities can lead to a winning move or a significant advantage.",
+      "These types of moves can often lead to a decisive advantage or checkmate.",
+      "Choosing the best move is essential to secure victory without allowing the opponent any chances."
+    ]
+  },
+  {
+    "task_id": "935e2cff-ae78-4218-b3f5-115589b19dae",
+    "Question": "In the year 2022, and before December, what does \"R\" stand for in the three core policies of the type of content that was violated in the public logs on the Legume Wikipedia page?",
+    "Steps": [
+      "Searched \"legume wikipedia\" on Google.",
+      "Opened \"Legume\" on Wikipedia.",
+      "Clicked \"View history\".",
+      "Clicked \"View logs for this page\".",
+      "Checked all types of logs.",
+      "Set the date to November 2022.",
+      "Followed the BLP link of the violation.",
+      "Noted the meaning of \"R\"."
+    ],
+    "StepsRationale": [
+      "Searching for 'legume wikipedia' on Google is the first step to quickly access the relevant Wikipedia page for legumes.",
+      "Opening the 'Legume' page on Wikipedia provides the foundational information needed for further investigation.",
+      "Clicking 'View history' allows access to the edit history of the page, which is essential for understanding changes made over time.",
+      "Viewing logs for the page helps track specific actions taken on the page, which can reveal patterns of edits or issues.",
+      "Checking all types of logs ensures a comprehensive understanding of all activities related to the page, including edits and discussions.",
+      "Setting the date to November 2022 focuses the investigation on a specific timeframe, which is crucial for identifying relevant changes or violations.",
+      "Following the BLP link of the violation is necessary to understand the context and implications of the violation related to Biographies of Living Persons.",
+      "Noting the meaning of 'R' is important for interpreting the logs correctly, as it may indicate a specific type of edit or status."
+    ],
+    "Plannings": [
+      "Research the three core policies of Wikipedia regarding content violations.",
+      "Identify the specific content violations logged on the Legume Wikipedia page.",
+      "Cross-reference the identified violations with the core policies to find the relevant term starting with 'R'.",
+      "Verify the findings with reliable sources or Wikipedia's official documentation."
+    ],
+    "PlanningsRationale": [
+      "Understanding the core policies will provide context for what 'R' could represent in relation to content violations.",
+      "Analyzing the specific violations will help narrow down the context in which 'R' is used.",
+      "This step is crucial to directly link the content violations to the specific policy term that begins with 'R'.",
+      "Verification ensures the accuracy of the interpretation of 'R' and its relevance to the content violations."
+    ]
+  },
+  {
+    "task_id": "4fc2f1ae-8625-45b5-ab34-ad4433bc21f8",
+    "Question": "Who nominated the only Featured Article on English Wikipedia about a dinosaur that was promoted in November 2016?",
+    "Steps": [
+      "Search \"Wikipedia featured articles promoted in november 2016\"",
+      "Click through to the appropriate page and find the person who nominated Giganotosaurus."
+    ],
+    "StepsRationale": [
+      "Searching for 'Wikipedia featured articles promoted in November 2016' helps to locate the specific context and timeframe for the articles, ensuring that the information gathered is relevant and accurate.",
+      "Clicking through to the appropriate page allows for direct access to the nomination details, which is essential for identifying the individual responsible for nominating Giganotosaurus."
+    ],
+    "Plannings": [
+      "Identify the dinosaur that was promoted to Featured Article status in November 2016 on English Wikipedia.",
+      "Access the article's history and check the 'Talk' page for nomination details.",
+      "Look for the nomination discussion and identify the user who initiated the nomination.",
+      "Verify the information by cross-referencing with Wikipedia's archives or logs if necessary."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to narrow down the specific article we need to investigate regarding nominations.",
+      "The 'Talk' page typically contains discussions about the article's nomination and promotion, including who nominated it.",
+      "Finding the specific user who nominated the article is crucial to answering the question directly.",
+      "Cross-referencing ensures the accuracy of the information obtained from the article's history and 'Talk' page."
+    ]
+  },
+  {
+    "task_id": "5188369a-3bbe-43d8-8b94-11558f909a08",
+    "Question": "What writer is quoted by Merriam-Webster for the Word of the Day from June 27, 2022?",
+    "Steps": [
+      "Search \"merriam-webster word of the day\" on Google search.",
+      "Opened the top \"Word of the Day\" result from the Merriam-Webster dictionary online.",
+      "Clicked \"SEE ALL WORDS OF THE DAY\" at the bottom.",
+      "Scrolled down to June 27, 2022.",
+      "Opened the Word of the Day (\"jingoism\").",
+      "Scrolled down and identified context quote for \"jingoism\".",
+      "Noted the name attributed to the quote."
+    ],
+    "StepsRationale": [
+      "Searching for 'merriam-webster word of the day' on Google is necessary to quickly locate the official source for the daily word.",
+      "Opening the top result ensures that the information accessed is from the authoritative Merriam-Webster dictionary.",
+      "Clicking 'SEE ALL WORDS OF THE DAY' allows for a comprehensive view of past words, which is essential for finding specific entries.",
+      "Scrolling down to a specific date helps in pinpointing the exact word of the day for that date, which is crucial for the task.",
+      "Opening the Word of the Day entry provides detailed information about the word, including its definition and usage.",
+      "Identifying the context quote for 'jingoism' is important for understanding how the word is used in real-life scenarios.",
+      "Noting the name attributed to the quote is necessary for proper citation and to give credit to the original source."
+    ],
+    "Plannings": [
+      "Identify the Word of the Day for June 27, 2022, from Merriam-Webster's website or archives.",
+      "Locate the definition and any associated quotes for the identified Word of the Day.",
+      "Extract the name of the writer quoted for the Word of the Day.",
+      "Verify the accuracy of the information by cross-referencing with reliable sources if necessary."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to determine the specific word that was highlighted on that date, which is essential for finding the associated quote.",
+      "Finding the definition and quotes will provide context and the specific writer who is quoted, which is the main focus of the question.",
+      "This step is crucial as it directly answers the question regarding which writer is quoted by Merriam-Webster.",
+      "Verification ensures that the information is correct and reliable, which is important for providing an accurate answer."
+    ]
+  },
+  {
+    "task_id": "6f37996b-2ac7-44b0-8e68-6d28256631b4",
+    "Question": "Given this table defining * on the set S = {a, b, c, d, e}\n\n|*|a|b|c|d|e|\n|---|---|---|---|---|---|\n|a|a|b|c|b|d|\n|b|b|c|a|e|c|\n|c|c|a|b|b|a|\n|d|b|e|b|e|d|\n|e|d|b|a|d|c|\n\nprovide the subset of S involved in any possible counter-examples that prove * is not commutative. Provide your answer as a comma separated list of the elements in the set in alphabetical order.",
+    "Steps": [
+      "Compile the markdown.",
+      "Look at the table across the diagonal to see if any portions are not symmetrical.",
+      "See that b * e != e * b, but all others are symmetrical."
+    ],
+    "StepsRationale": [
+      "Compiling the markdown is essential as it organizes the information and prepares it for analysis, ensuring that all relevant data is accessible.",
+      "Examining the table across the diagonal helps identify any asymmetries in the data, which is crucial for understanding the relationships between the variables.",
+      "Noting that b * e != e * b highlights a specific asymmetry in the data, which is important for further analysis and understanding the properties of the operations involved."
+    ],
+    "Plannings": [
+      "Identify all pairs of elements in S",
+      "Compute the result of each pair (x, y) and (y, x) using the table",
+      "Collect all pairs where the results differ",
+      "Extract the unique elements from the differing pairs",
+      "Sort the unique elements alphabetically"
+    ],
+    "PlanningsRationale": [
+      "To check for commutativity, we need to evaluate the operation * for all possible pairs of elements in the set S.",
+      "By computing both orders of each pair, we can determine if the results are equal, which is necessary to check for commutativity.",
+      "Any pair where the results of (x * y) and (y * x) are not equal indicates a violation of commutativity.",
+      "To provide the subset of S involved in counter-examples, we need to identify all unique elements that appear in the non-commutative pairs.",
+      "The final answer requires the elements to be presented in alphabetical order as specified in the question."
+    ]
+  },
+  {
+    "task_id": "9318445f-fe6a-4e1b-acbf-c68228c9906a",
+    "Question": "As a comma separated list with no whitespace, using the provided image provide all the fractions that use / as the fraction line and the answers to the sample problems. Order the list by the order in which the fractions appear.",
+    "Steps": [
+      "Find the fractions that use / as the fraction line before the sample problems start: 3/4,1/4,3/4,3/4,2/4,1/2,5/35,7/21,30/5,30/5",
+      "Solve the sample problems:",
+      "Problem 1: 3/4",
+      "Problem 2: 1/15",
+      "Problem 3: 1/3",
+      "Problem 4: 4/9",
+      "Problem 5: 1/8",
+      "Problem 6: 32/23",
+      "Problem 7: 103/170",
+      "10: Add them to the list. There were no more fractions with a / as the fraction line, so they can just be added in order: 3/4,1/4,3/4,3/4,2/4,1/2,5/35,7/21,30/5,30/5,3/4,1/15,1/3,4/9,1/8,32/23,103/170"
+    ],
+    "StepsRationale": [
+      "Identifying the fractions at the beginning is essential to establish a clear list of values that will be used in the subsequent calculations.",
+      "Solving the sample problems is necessary to derive the results that will be added to the list of fractions.",
+      "Problem 1 provides a specific fraction to solve, contributing to the overall understanding of fraction operations.",
+      "Problem 2 introduces another fraction, allowing for practice and application of fraction solving techniques.",
+      "Problem 3 continues the process of solving fractions, reinforcing skills and ensuring a comprehensive approach to the task.",
+      "Problem 4 adds variety to the fractions being solved, which is important for developing a well-rounded understanding of different fraction types.",
+      "Problem 5 presents a new fraction to solve, further diversifying the practice and ensuring thorough engagement with the material.",
+      "Problem 6 introduces a more complex fraction, challenging the solver and enhancing their problem-solving skills.",
+      "Problem 7 continues to build on the complexity of the fractions, providing a deeper understanding of fraction operations.",
+      "Adding the solved fractions to the list is crucial for compiling all results in one place, facilitating easy reference and further calculations."
+    ],
+    "Plannings": [
+      "Analyze the provided image for any fractions that use '/' as the fraction line.",
+      "Extract the fractions from the image in the order they appear.",
+      "Solve any sample problems associated with the identified fractions.",
+      "Format the extracted fractions and their corresponding answers into a comma-separated list with no whitespace.",
+      "Review the final list to ensure accuracy and adherence to the format."
+    ],
+    "PlanningsRationale": [
+      "Identifying the fractions is the first step to extracting the required information.",
+      "Maintaining the order of appearance is crucial for the final output format.",
+      "Calculating the answers to the sample problems is necessary to provide complete information.",
+      "The final output must meet the specified format requirements.",
+      "A final review helps catch any errors before presenting the output."
+    ]
+  },
+  {
+    "task_id": "389793a7-ca17-4e82-81cb-2b3a2391b4b9",
+    "Question": "You are a telecommunications engineer who wants to build cell phone towers on a stretch of road. In the reference file is a layout of the road and nearby houses. Each dash, \"-\", is a marker indicating a mile. Each capital H indicates a house located next to a mile marker, appearing above or below the stretch of road. Each cell phone tower can cover houses located next to the road within a 4-mile radius. Find the minimum number of cell phone towers needed to cover all houses next to the road. Your answer should be a positive numerical integer value.",
+    "Steps": [
+      "Determine the diameter of each cell phone tower's coverage: 2 x 4 miles radius = 8 miles diameter.",
+      "Use the diameter to maximize the coverage of each tower by capturing houses 4 miles to the left and 4 miles to the right.",
+      "Start from the furthest left side of the road at the first house.",
+      "Place the first tower 4 miles in to cover the first house.",
+      "Move forward 4 miles from the first tower. The first tower also covers the house above mile marker 8.",
+      "Find the next uncovered house below mile marker 12.",
+      "Move 4 miles in from the uncovered house and place a second tower. The house is now covered.",
+      "Move forward 4 miles from the second tower. The second tower also covers the house above mile marker 16.",
+      "Find the next uncovered house below mile marker 25.",
+      "Move 4 miles in from the uncovered house and place a third tower. The third tower also covers the house above marker 28.",
+      "Move forward 4 miles from the third tower. The third tower also covers the last house below marker 30.",
+      "The final number of cell phone towers erected is 3."
+    ],
+    "StepsRationale": [
+      "Determining the diameter of each cell phone tower's coverage is essential to understand the area each tower can effectively serve.",
+      "Using the diameter to maximize coverage ensures that the placement of towers is optimized to include as many houses as possible within their range.",
+      "Starting from the furthest left side of the road allows for a systematic approach to coverage, ensuring no area is overlooked.",
+      "Placing the first tower 4 miles in ensures that the first house is covered, establishing a baseline for subsequent placements.",
+      "Moving forward 4 miles from the first tower confirms that the coverage extends to additional houses, maximizing the utility of the first tower.",
+      "Identifying the next uncovered house is crucial for determining where additional towers are needed to ensure complete coverage.",
+      "Placing a second tower 4 miles in from the uncovered house addresses the gap in coverage, ensuring that all houses are served.",
+      "Moving forward from the second tower allows for verification that the coverage is effective and includes additional houses.",
+      "Finding the next uncovered house below mile marker 25 continues the process of ensuring comprehensive coverage along the road.",
+      "Placing a third tower 4 miles in from the uncovered house further extends coverage, ensuring that all houses are included.",
+      "Moving forward from the third tower confirms that the last house is covered, completing the coverage plan.",
+      "Summarizing the total number of towers erected provides a clear understanding of the resources used to achieve the coverage goal."
+    ],
+    "Plannings": [
+      "Analyze the layout of the road and the positions of the houses.",
+      "Identify the coverage area of a single cell phone tower.",
+      "Map out the positions of the houses relative to the mile markers.",
+      "Determine the optimal placement of cell phone towers based on house locations.",
+      "Count the number of towers needed to cover all houses."
+    ],
+    "PlanningsRationale": [
+      "Understanding the distribution of houses along the road is crucial to determine where cell phone towers can be placed for optimal coverage.",
+      "Knowing that each tower covers a 4-mile radius helps in calculating how many houses can be covered by each tower.",
+      "This allows for a visual representation of where the houses are located and how they relate to potential tower placements.",
+      "Strategically placing towers ensures maximum coverage with the minimum number of towers needed.",
+      "This final count will provide the answer to the question of how many towers are necessary to ensure all houses are covered."
+    ]
+  },
+  {
+    "task_id": "4b650a35-8529-4695-89ed-8dc7a500a498",
+    "Question": "If there is anything that doesn't make sense in the instructions, write the word \"Pineapple.\" Do not answer any of the questions in this prompt. Write only the word \"Guava\".\n1. What is 4+4?\n2. What is the complimentary color of red?\n3. How many hours are there in a day?",
+    "Steps": [
+      "Read the instructions and followed them"
+    ],
+    "StepsRationale": [
+      "Reading and following the instructions ensures that the annotator understands the task requirements and criteria, which is essential for producing accurate and consistent results."
+    ],
+    "Plannings": [
+      "Read the instructions carefully.",
+      "Identify the key directive in the instructions.",
+      "Decide on the appropriate response based on the directive.",
+      "Format the response as specified."
+    ],
+    "PlanningsRationale": [
+      "To understand the requirements and identify any potential ambiguities.",
+      "To determine the specific action that needs to be taken based on the instructions.",
+      "To ensure that the response aligns with the instructions provided.",
+      "To comply with the requirement of returning a valid JSON object."
+    ]
+  },
+  {
+    "task_id": "a3fbeb63-0e8c-4a11-bff6-0e3b484c3e9c",
+    "Question": "How many slides in this PowerPoint presentation mention crustaceans?",
+    "Steps": [
+      "Open the provided file.",
+      "Scroll through the presentation, noting the animal names on each slide.",
+      "Search the web for “crayfish” to verify that they are crustaceans.",
+      "Read the results, noting that they are crustaceans.",
+      "Search the web for “isopods” to verify whether they are crustaceans.",
+      "Read the results, noting that they are.",
+      "Since I’m confident that I know whether all of the other animals are crustaceans, I count the ones that are to get the answer, 4."
+    ],
+    "StepsRationale": [
+      "Opening the provided file is essential as it contains the information needed for the task.",
+      "Scrolling through the presentation allows for the identification of all animal names, which is crucial for the subsequent verification steps.",
+      "Searching the web for 'crayfish' helps to confirm their classification as crustaceans, ensuring accurate information.",
+      "Reading the results reinforces the understanding that crayfish are indeed crustaceans, providing a reliable source for the classification.",
+      "Searching for 'isopods' is necessary to verify their classification as crustaceans, similar to the previous step with crayfish.",
+      "Reading the results for isopods confirms their status as crustaceans, ensuring that all relevant animals are accurately classified.",
+      "Counting the confirmed crustaceans provides a final answer to the task, summarizing the findings from the previous steps."
+    ],
+    "Plannings": [
+      "Open the PowerPoint presentation file.",
+      "Iterate through each slide in the presentation.",
+      "Search for the term 'crustaceans' in the text of each slide.",
+      "Count the number of slides that contain the term 'crustaceans'.",
+      "Compile the results and present the count."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to access the content of the presentation in order to analyze it.",
+      "To determine how many slides mention crustaceans, we need to examine each slide individually.",
+      "This step is essential to identify whether the specific term is present in the content of the slides.",
+      "Counting the occurrences will provide the final answer to the question regarding how many slides mention crustaceans.",
+      "This final step is needed to communicate the findings clearly and effectively."
+    ]
+  },
+  {
+    "task_id": "c714ab3a-da30-4603-bacd-d008800188b9",
+    "Question": "You are Van Helsing, a renowned vampire hunter. A Count of Moldova, Lațcu IV, son of  Costea, has tasked you with investigating the village of Șirnea in neighboring Wallachia. The Count's advisors have reported that a vampire was spotted crossing the border near the village, and would like you to investigate it.\n\nYou travel to the village of Șirnea, and you begin your investigation. One night, just before dawn, you catch a glimpse of a man in a long black cape with red lining leaping from roof-top to roof-top with superhuman agility. It's a vampire! You try to chase the creature back to its home, but the creature is too fast. However, because of the remoteness of the village, you know with absolute certainty that the vampire must be a resident of the village. You decide that your best course of action will be to visit all 100 residents of the town during the day. You know something about vampires and humans that will make your investigation possible; humans always tell the truth, but vampires always lie.\n\nIn the afternoon, you go from house to house, speaking with all 100 residents of Șirnea. You ask everyone the same question: \"How many vampires are living in Șirnea\". Everyone in the village gives the same response, \"At least one of us is a human.\"\n\nHow many residents of Șirnea have been turned into vampires?",
+    "Steps": [
+      "Step 1: Evaluate the problem statement posed by my user.",
+      "Step 2: Consider one known possible case: 1 Vampire, 99 humans",
+      "Step 3: Step through the possible case with the answer provided by every resident \"At least one of us is a human.\"",
+      "For humans, who always tell the truth, the answer \"At least one of us is a human.\" is true for the known possible case",
+      "For the vampire, who always lies, the answer \"At least one of us is a human.\" is true, which violates the rule requiring the vampire to lie",
+      "Discount the case 1 Vampire, 99 Humans as possible",
+      "Step 4: Consider the worst case: 100 Vampires, 0 Humans",
+      "Step 5: Step through the worst case with the answer provided by every resident \"At least one of us is a human.\"",
+      "For humans, who always tell the truth, the answer \"At least one of us is a human.\" is false, but 0 humans provide this response, making this statement irrelevant",
+      "For the vampire, who always lies, the answer \"At least one of us is a human.\" is false, which respects the rule requiring vampires to lie",
+      "Confirm the worst case as a provisional answer: 100 Vampires, 0 humans, answer: \"100\"",
+      "Step 6: Consider a case with only one human: 99 Vampires, 1 Human",
+      "Step 7: Step through the case with the answer provided by every resident \"At least one of us is a human.\"",
+      "For humans, who always tell the truth, the answer \"At least one of us is a human.\" is true",
+      "For the vampire, who always lies, the answer \"At least one of us is a human.\" is true, which violates the rule requiring vampires to lie",
+      "Discount the case of 99 Vampires, 1 Human as possible",
+      "Step 8: Report the correct response to my user, \"100\""
+    ],
+    "StepsRationale": [
+      "Evaluating the problem statement is essential to understand the context and requirements of the task at hand.",
+      "Considering a known possible case helps to establish a baseline scenario for analysis.",
+      "Stepping through the possible case allows for a detailed examination of the implications of the residents' statements.",
+      "Verifying the truthfulness of the statement from humans confirms the consistency of their behavior.",
+      "Analyzing the vampire's response highlights the contradiction in their behavior, reinforcing the rules governing their lies.",
+      "Discounting the case of 1 Vampire and 99 Humans eliminates an impossible scenario, narrowing down the possibilities.",
+      "Considering the worst-case scenario is crucial for understanding the limits of the problem and potential outcomes.",
+      "Stepping through the worst case allows for a thorough evaluation of the implications of the residents' statements in that context.",
+      "Assessing the truthfulness of the statement in the worst case helps to clarify the relevance of the responses given the absence of humans.",
+      "Confirming the vampire's response in the worst case validates the consistency of their lying behavior.",
+      "Establishing the worst case as a provisional answer provides a foundation for further analysis and conclusions.",
+      "Considering a case with only one human introduces a new variable that could affect the overall outcome.",
+      "Stepping through this case allows for an examination of how the presence of a single human influences the responses.",
+      "Verifying the human's truthful response reinforces the reliability of their statements in the analysis.",
+      "Identifying the contradiction in the vampire's response further supports the rules governing their behavior.",
+      "Discounting the case of 99 Vampires and 1 Human eliminates another impossible scenario, refining the search for valid cases.",
+      "Reporting the correct response to the user concludes the analysis and provides a definitive answer based on the evaluations."
+    ],
+    "Plannings": [
+      "Identify the implications of the villagers' response.",
+      "Analyze the truth-telling nature of humans and the lying nature of vampires.",
+      "Consider the scenario where there are no vampires.",
+      "Consider the scenario where there is one vampire.",
+      "Consider the scenario where there are two or more vampires.",
+      "Conclude that there is exactly one vampire."
+    ],
+    "PlanningsRationale": [
+      "Understanding that all villagers responded with 'At least one of us is a human' is crucial, as it indicates that at least one person is telling the truth, which can help deduce the number of vampires.",
+      "Since humans always tell the truth and vampires always lie, the response given by the villagers can be used to determine the number of vampires based on the logical implications of their statement.",
+      "If there were no vampires, then all villagers would be human, and the statement 'At least one of us is a human' would be true, which is consistent. However, this scenario contradicts the existence of a vampire seen in the village.",
+      "If there is one vampire, the vampire would lie and say 'At least one of us is a human', which would still be true since the rest are humans. This scenario is consistent with the villagers' response.",
+      "If there were two or more vampires, they would all lie, and their collective response would not be 'At least one of us is a human', leading to a contradiction. Thus, this scenario cannot hold.",
+      "Since the only consistent scenario with the villagers' response is that there is exactly one vampire, we can conclude that one resident of Șirnea has been turned into a vampire."
+    ]
+  },
+  {
+    "task_id": "9d191bce-651d-4746-be2d-7ef8ecadb9c2",
+    "Question": "Examine the video at https://www.youtube.com/watch?v=1htKBjuUWec.\n\nWhat does Teal'c say in response to the question \"Isn't that hot?\"",
+    "Steps": [
+      "Follow the link",
+      "Watch the clip until the question \"Isn't that hot\" is asked",
+      "Take note of the reply."
+    ],
+    "StepsRationale": [
+      "Following the link is essential to access the content that needs to be analyzed.",
+      "Watching the clip until the specific question is asked ensures that the context and timing of the response are accurately captured.",
+      "Taking note of the reply is crucial for understanding the response to the question, which is the focus of the analysis."
+    ],
+    "Plannings": [
+      "Access the video at the provided URL.",
+      "Locate the timestamp where the question 'Isn't that hot?' is asked.",
+      "Listen carefully to Teal'c's response.",
+      "Take note of Teal'c's exact words in response.",
+      "Summarize the findings in a clear format."
+    ],
+    "PlanningsRationale": [
+      "To find the specific moment where Teal'c responds to the question, I need to view the content of the video.",
+      "Identifying the exact moment in the video will allow me to focus on Teal'c's response without distraction.",
+      "To accurately capture what Teal'c says, I need to pay close attention to his dialogue.",
+      "Recording his response verbatim ensures that I provide an accurate answer to the question.",
+      "Presenting the information in a concise manner makes it easier to understand and reference."
+    ]
+  },
+  {
+    "task_id": "65afbc8a-89ca-4ad5-8d62-355bb401f61d",
+    "Question": "You are given this Excel file as a map. You start on the START cell and move toward the END cell. You are allowed to move two cells per turn, and you may move up, down, left, or right. You may not move fewer than two cells, and you may not move backward. You must avoid moving onto any blue cells. On the eleventh turn, what is the 6-digit hex code (without prefix) of the color of the cell where you land after moving?",
+    "Steps": [
+      "Opened Map.xlsx.",
+      "Counted 11 turns of 2 spaces each (22 spaces) along the path of non-blue cells.",
+      "Opened cell formatting for the cell.",
+      "Clicked the \"Fill\" tab.",
+      "Clicked \"More Colors...\"",
+      "Noted the hex code of the color."
+    ],
+    "StepsRationale": [
+      "Opening the Map.xlsx file is essential as it provides the necessary data and context for the subsequent steps.",
+      "Counting the turns and spaces helps quantify the layout of the non-blue cells, which is crucial for understanding the structure of the data.",
+      "Opening cell formatting allows access to the properties of the cells, which is necessary for making visual adjustments.",
+      "Clicking the 'Fill' tab is a necessary step to access the color options for modifying the cell's appearance.",
+      "Selecting 'More Colors...' enables the user to explore a wider range of color options beyond the default palette.",
+      "Noting the hex code of the color is important for precise color identification and consistency in future applications."
+    ],
+    "Plannings": [
+      "Analyze the Excel map to identify the positions of the START and END cells.",
+      "Identify all blue cells on the map that cannot be traversed.",
+      "Determine all possible moves from the START cell, considering the two-cell movement rule.",
+      "Create a pathfinding algorithm to explore valid paths towards the END cell while avoiding blue cells.",
+      "Simulate the movement for eleven turns, keeping track of the current cell after each move.",
+      "Identify the color of the cell where you land after the eleventh turn.",
+      "Convert the identified color to a 6-digit hex code format."
+    ],
+    "PlanningsRationale": [
+      "Understanding the starting and ending points is crucial for planning the path.",
+      "Knowing the obstacles helps in planning a valid route that avoids these cells.",
+      "This step is necessary to explore the immediate options for movement and to ensure compliance with the movement constraints.",
+      "A systematic approach is needed to find a valid route that adheres to the movement rules and avoids obstacles.",
+      "Tracking the position after each turn is essential to determine the final cell color after eleven moves.",
+      "This is the final goal of the task, as we need to report the color of the cell after the specified number of moves.",
+      "The output requires the color in a specific format, so conversion is necessary to meet the requirements."
+    ]
+  },
+  {
+    "task_id": "cabe07ed-9eca-40ea-8ead-410ef5e83f91",
+    "Question": "What is the surname of the equine veterinarian mentioned in 1.E Exercises from the chemistry materials licensed by Marisa Alviar-Agnew & Henry Agnew under the CK-12 license in LibreText's Introductory Chemistry materials as compiled 08/21/2023?",
+    "Steps": [
+      "Search for \"1.E Exercises LibreText Introductory Chemistry\"",
+      "Read to see the horse doctor mentioned."
+    ],
+    "StepsRationale": [
+      "Searching for '1.E Exercises LibreText Introductory Chemistry' is essential to locate the specific educational material needed for the task.",
+      "Reading to see the horse doctor mentioned helps to identify relevant content or examples that may be important for understanding the context of the exercises."
+    ],
+    "Plannings": [
+      "Access the chemistry materials licensed by Marisa Alviar-Agnew & Henry Agnew under the CK-12 license.",
+      "Navigate to the 1.E Exercises section of the materials.",
+      "Read through the exercises to identify any mention of an equine veterinarian.",
+      "Extract the surname of the equine veterinarian from the text."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to locate the specific content that contains the information about the equine veterinarian.",
+      "This step is needed to find the relevant exercises where the equine veterinarian is mentioned.",
+      "This step is crucial to gather the specific information regarding the veterinarian's surname.",
+      "This step is the final action needed to answer the question by providing the required surname."
+    ]
+  },
+  {
+    "task_id": "3cef3a44-215e-4aed-8e3b-b1e3f08063b7",
+    "Question": "I'm making a grocery list for my mom, but she's a professor of botany and she's a real stickler when it comes to categorizing things. I need to add different foods to different categories on the grocery list, but if I make a mistake, she won't buy anything inserted in the wrong category. Here's the list I have so far:\n\nmilk, eggs, flour, whole bean coffee, Oreos, sweet potatoes, fresh basil, plums, green beans, rice, corn, bell pepper, whole allspice, acorns, broccoli, celery, zucchini, lettuce, peanuts\n\nI need to make headings for the fruits and vegetables. Could you please create a list of just the vegetables from my list? If you could do that, then I can figure out how to categorize the rest of the list into the appropriate categories. But remember that my mom is a real stickler, so make sure that no botanical fruits end up on the vegetable list, or she won't get them when she's at the store. Please alphabetize the list of vegetables, and place each item in a comma separated list.",
+    "Steps": [
+      "Step 1: Evaluate the list provided by my user, eliminating objects which are neither fruits nor vegetables:",
+      "sweet potatoes, fresh basil, plums, green beans, rice, corn, bell pepper, whole allspice, acorns, broccoli, celery, zucchini, lettuce, peanuts",
+      "Step 2: Remove all items from the list which are botanical fruits, leaving a list of vegetables:",
+      "sweet potatoes, fresh basil, broccoli, celery, lettuce",
+      "Step 3: Alphabetize the remaining list as requested by my user:",
+      "broccoli, celery, fresh basil, lettuce, sweet potatoes",
+      "Step 4: Provide the correct response in the requested format:",
+      "\"broccoli",
+      "celery",
+      "fresh basil",
+      "lettuce",
+      "sweet potatoes\""
+    ],
+    "StepsRationale": [
+      "This step is essential to filter out irrelevant items from the user's list, ensuring that only fruits and vegetables are considered for further processing.",
+      "This list contains only the items that are either fruits or vegetables, which is necessary for the next step of distinguishing between them.",
+      "Removing botanical fruits is crucial to focus solely on vegetables, aligning the list with the user's specific request.",
+      "This step organizes the remaining vegetables, making it easier for the user to read and understand the final output.",
+      "Providing the response in the requested format ensures that the user receives the information in a clear and accessible manner.",
+      "This step presents the final list of vegetables in a structured format, fulfilling the user's request for clarity and organization.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "Plannings": [
+      "Identify all items in the provided grocery list.",
+      "Classify each item as either a vegetable or not based on botanical definitions.",
+      "Extract only the items classified as vegetables.",
+      "Alphabetize the list of vegetables.",
+      "Format the list as a comma-separated string."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to ensure that we have a complete understanding of what needs to be categorized.",
+      "Since the mom is a professor of botany, it's crucial to accurately categorize items to avoid including botanical fruits in the vegetable list.",
+      "This step focuses on isolating the vegetables from the rest of the items to create a specific list for the grocery shopping.",
+      "Alphabetizing the list will make it easier for the mom to read and find items while shopping.",
+      "This formatting is required to meet the specific output format requested."
+    ]
+  },
+  {
+    "task_id": "99c9cc74-fdc8-46c6-8f8d-3ce2d3bfeea3",
+    "Question": "Hi, I'm making a pie but I could use some help with my shopping list. I have everything I need for the crust, but I'm not sure about the filling. I got the recipe from my friend Aditi, but she left it as a voice memo and the speaker on my phone is buzzing so I can't quite make out what she's saying. Could you please listen to the recipe and list all of the ingredients that my friend described? I only want the ingredients for the filling, as I have everything I need to make my favorite pie crust. I've attached the recipe as Strawberry pie.mp3.\n\nIn your response, please only list the ingredients, not any measurements. So if the recipe calls for \"a pinch of salt\" or \"two cups of ripe strawberries\" the ingredients on the list would be \"salt\" and \"ripe strawberries\".\n\nPlease format your response as a comma separated list of ingredients. Also, please alphabetize the ingredients.",
+    "Steps": [
+      "Step 1: Load the file supplied to me by my user.",
+      "Step 2: Using speech-to-text tools, convert the audio file to plain text and store it for the candidate word list:",
+      "\"In a saucepan, combine ripe strawberries, granulated sugar, freshly squeezed lemon juice, and cornstarch. Cook the mixture over medium heat, stirring constantly, until it thickens to a smooth consistency. Remove from heat and stir in a dash of pure vanilla extract. Allow the strawberry pie filling to cool before using it as a delicious and fruity filling for your pie crust.\"",
+      "Step 3: Evaluate the candidate word list and process it, stripping each ingredient encountered to a provisional response list:",
+      "ripe strawberries",
+      "granulated sugar",
+      "freshly squeezed lemon juice",
+      "cornstarch",
+      "pure vanilla extract",
+      "Step 4: Alphabetize the list of ingredients as requested by my user to create a finalized response:",
+      "cornstarch",
+      "freshly squeezed lemon juice",
+      "granulated sugar",
+      "pure vanilla extract",
+      "ripe strawberries",
+      "Step 5: Report the correct response to my user:",
+      "\"cornstarch",
+      "freshly squeezed lemon juice",
+      "granulated sugar",
+      "pure vanilla extract",
+      "ripe strawberries\""
+    ],
+    "StepsRationale": [
+      "Loading the file is essential as it provides the necessary input data for the subsequent processing steps.",
+      "Converting the audio file to text allows for easier manipulation and extraction of relevant information, such as ingredients.",
+      "This step provides the actual content from the audio, which is crucial for identifying the ingredients needed for the task.",
+      "Evaluating and processing the candidate word list helps to isolate the relevant ingredients from the text, ensuring accuracy in the final output.",
+      "Identifying 'ripe strawberries' as an ingredient is necessary for compiling a complete list of items needed for the recipe.",
+      "Recognizing 'granulated sugar' is important as it is a key ingredient in many recipes, including the one being processed.",
+      "Including 'freshly squeezed lemon juice' is vital as it contributes to the flavor profile of the dish.",
+      "Identifying 'cornstarch' is necessary as it serves as a thickening agent in the recipe.",
+      "Recognizing 'pure vanilla extract' is important as it enhances the overall flavor of the filling.",
+      "Alphabetizing the list of ingredients helps to organize the information clearly, making it easier for the user to read and understand.",
+      "Listing 'cornstarch' in the final output ensures that all necessary ingredients are included for the user.",
+      "Including 'freshly squeezed lemon juice' in the final output is important for completeness of the ingredient list.",
+      "Listing 'granulated sugar' is essential as it is a fundamental ingredient in the recipe.",
+      "Including 'pure vanilla extract' in the final output is necessary to provide the user with a complete ingredient list.",
+      "Listing 'ripe strawberries' is crucial as it is the primary ingredient in the recipe.",
+      "Reporting the correct response to the user is the final step that delivers the processed information they requested.",
+      "Including 'cornstarch' in the response ensures that the user has all the necessary ingredients listed.",
+      "Listing 'freshly squeezed lemon juice' in the response is important for the user to have a complete understanding of the recipe.",
+      "Including 'granulated sugar' in the response is essential for the user to know all the ingredients required.",
+      "Listing 'pure vanilla extract' in the response is necessary to provide a complete ingredient list for the user.",
+      "Including 'ripe strawberries' in the response is crucial as it is the main ingredient for the recipe."
+    ],
+    "Plannings": [
+      "Listen to the audio file 'Strawberry pie.mp3'",
+      "Identify and transcribe the ingredients mentioned in the audio",
+      "Remove any measurements or extraneous details from the list",
+      "Alphabetize the list of ingredients",
+      "Format the final list as a comma-separated string"
+    ],
+    "PlanningsRationale": [
+      "To extract the ingredients for the pie filling as described by Aditi.",
+      "To create a clear list of ingredients needed for the filling.",
+      "To ensure the response only includes the ingredients without any additional information.",
+      "To present the ingredients in a clear and organized manner.",
+      "To meet the specific formatting requirements of the response."
+    ]
+  },
+  {
+    "task_id": "d0633230-7067-47a9-9dbf-ee11e0a2cdd6",
+    "Question": "In the Scikit-Learn July 2017 changelog, what other predictor base command received a bug fix? Just give the name, not a path.",
+    "Steps": [
+      "Searched \"Scikit-Learn July 2017 changelog\" on Google.",
+      "Opened \"Release History\" from the Scikit-Learn website.",
+      "Clicked \"Other versions\" in the upper left.",
+      "Opened the links, starting from the bottom, until one was found that included the \"July 2017\" changelog under the News.",
+      "Looked for the \"Bug fixes\" section.",
+      "Looked under \"Other predictors\" in that section."
+    ],
+    "StepsRationale": [
+      "Searching for the changelog on Google is a necessary first step to locate the official documentation and ensure the information is accurate and up-to-date.",
+      "Opening the 'Release History' from the Scikit-Learn website provides direct access to the official records of changes, ensuring reliability.",
+      "Clicking 'Other versions' allows the user to explore different releases, which is essential for finding the specific changelog for July 2017.",
+      "Opening links from the bottom ensures a thorough search through the available versions, increasing the chances of finding the correct changelog.",
+      "Looking for the 'Bug fixes' section is important to identify specific improvements and corrections made in that release.",
+      "Checking under 'Other predictors' in the 'Bug fixes' section helps to find targeted information about enhancements or fixes related to that specific feature."
+    ],
+    "Plannings": [
+      "Locate the Scikit-Learn July 2017 changelog.",
+      "Identify the section related to predictor base commands.",
+      "Look for mentions of bug fixes within that section.",
+      "Extract the name of the other predictor base command that received a bug fix."
+    ],
+    "PlanningsRationale": [
+      "The changelog contains the necessary information about updates and bug fixes, which is essential to answer the question.",
+      "Focusing on the relevant section will help narrow down the search to find the specific bug fix related to predictor base commands.",
+      "Identifying bug fixes is crucial to determine which commands were affected and to find the specific one that received a fix.",
+      "This is the final step to directly answer the question by providing the required information."
+    ]
+  },
+  {
+    "task_id": "305ac316-eef6-4446-960a-92d80d542f82",
+    "Question": "Who did the actor who played Ray in the Polish-language version of Everybody Loves Raymond play in Magda M.? Give only the first name.",
+    "Steps": [
+      "Search \"Polish-language version of Everybody Loves Raymond\" and pull up the Wiki page for Wszyscy kochają Romana.",
+      "See that Bartłomiej Kasprzykowski is marked as playing Ray and go to his Wiki page.",
+      "See that he is stated to have played Wojciech Płaska in Magda M."
+    ],
+    "StepsRationale": [
+      "Searching for the Polish-language version of the show provides context and ensures that the information gathered is relevant to the specific adaptation.",
+      "Visiting Bartłomiej Kasprzykowski's Wiki page allows for verification of his role and provides additional information about his career and other works.",
+      "Noting his role in Magda M. helps to understand the actor's range and previous performances, which can be relevant for comparisons or further research."
+    ],
+    "Plannings": [
+      "Identify the actor who played Ray in the Polish-language version of Everybody Loves Raymond.",
+      "Research the character played by that actor in the show Magda M.",
+      "Extract the first name of the character from the research."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to establish the correct individual whose roles we need to investigate.",
+      "This step is essential to find the specific role associated with the identified actor in the context of the other show.",
+      "This step is required to provide the answer in the format requested, which specifies only the first name."
+    ]
+  },
+  {
+    "task_id": "0383a3ee-47a7-41a4-b493-519bdefe0488",
+    "Question": "On the BBC Earth YouTube video of the Top 5 Silliest Animal Moments, what species of bird is featured?",
+    "Steps": [
+      "Search \"top 5 silliest animal moments bbc earth youtube\" on Google search.",
+      "Open the top link to \"Top 5 Silliest Animal Moments! | BBC Earth - YouTube\".",
+      "Listen to the video until the species is named."
+    ],
+    "StepsRationale": [
+      "Searching for the specific phrase helps to locate relevant content quickly and ensures that the results are focused on the desired topic.",
+      "Opening the top link allows access to the most relevant and likely high-quality content, which is essential for gathering accurate information.",
+      "Listening to the video until the species is named is necessary to identify the specific animals being discussed, which is crucial for understanding the context of the moments."
+    ],
+    "Plannings": [
+      "Search for the BBC Earth YouTube channel",
+      "Find the video titled 'Top 5 Silliest Animal Moments'",
+      "Watch the video or read the description",
+      "Take notes on the bird species mentioned",
+      "Verify the information with additional sources if necessary"
+    ],
+    "PlanningsRationale": [
+      "To locate the specific video that features the Top 5 Silliest Animal Moments.",
+      "To ensure that I am looking at the correct content that contains the information needed.",
+      "To identify the species of bird featured in the video.",
+      "To have a clear record of the information for reference.",
+      "To ensure accuracy and confirm the species of bird featured in the video."
+    ]
+  },
+  {
+    "task_id": "f918266a-b3e0-4914-865d-4faa564f1aef",
+    "Question": "What is the final numeric output from the attached Python code?",
+    "Steps": [
+      "Run the attached Python code"
+    ],
+    "StepsRationale": [
+      "Running the attached Python code is essential as it executes the necessary algorithms or functions that will process the data or perform the required analysis."
+    ],
+    "Plannings": [
+      "Read and analyze the provided Python code.",
+      "Identify the main function or logic that produces the output.",
+      "Trace the execution flow of the code, including variable assignments and calculations.",
+      "Evaluate any loops or conditional statements to understand their impact on the output.",
+      "Run the code in a Python environment if necessary to verify the output.",
+      "Summarize the final output based on the analysis and/or execution."
+    ],
+    "PlanningsRationale": [
+      "Understanding the code is essential to determine its functionality and the final output.",
+      "Focusing on the core logic will help in tracing how the final result is computed.",
+      "Following the execution flow will allow us to see how intermediate values are derived and how they contribute to the final output.",
+      "Loops and conditionals can significantly alter the flow and final result, so it's crucial to analyze them.",
+      "Executing the code will provide the most accurate confirmation of the final numeric output.",
+      "Consolidating the findings will provide a clear answer to the original question regarding the final numeric output."
+    ]
+  },
+  {
+    "task_id": "11af4e1a-5f45-467d-9aeb-46f4bb0bf034",
+    "Question": "How many more blocks (also denoted as layers) in BERT base encoder than the encoder from the architecture proposed in Attention is All You Need?",
+    "Steps": [
+      "Search the internet for \"blocks in bert base\"",
+      "Examine the search results page to locate the answer (12)",
+      "Search the internet for \"attention is all you need layers\"",
+      "4, Navigate to https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf from the search results page",
+      "Examine the architecture section of the PDF to locate the answer (12)",
+      "Calculate the difference between the two numbers"
+    ],
+    "StepsRationale": [
+      "Searching the internet for 'blocks in bert base' initiates the process of gathering relevant information about the architecture of the BERT model.",
+      "Examining the search results page helps to quickly identify credible sources that provide the specific information needed regarding the number of blocks in BERT.",
+      "Searching for 'attention is all you need layers' is necessary to find information about the architecture of the Transformer model, which is foundational to understanding attention mechanisms.",
+      "Navigating to the NeurIPS paper provides direct access to the original research that details the architecture of the Transformer model, ensuring accurate information.",
+      "Examining the architecture section of the PDF allows for the extraction of precise details regarding the number of layers in the Transformer model.",
+      "Calculating the difference between the two numbers is essential to compare the architectures of BERT and the Transformer model quantitatively."
+    ],
+    "Plannings": [
+      "Identify the number of layers in the BERT base encoder.",
+      "Identify the number of layers in the encoder from the Attention is All You Need architecture.",
+      "Calculate the difference in the number of layers between BERT and the transformer encoder."
+    ],
+    "PlanningsRationale": [
+      "To determine how many more blocks BERT has, we first need to know the exact number of layers it contains.",
+      "We need to know the number of layers in the original transformer encoder to make a comparison with BERT.",
+      "This step will provide the exact number of additional layers in BERT compared to the original transformer architecture."
+    ]
+  },
+  {
+    "task_id": "e142056d-56ab-4352-b091-b56054bd1359",
+    "Question": "Bob was invited to participate in a game show, and he advanced to the final round. The final round offered Bob the chance to win a large sum by playing a game against the host. The host has 30 shiny prop coins, each of which is worth $1,000 if Bob manages to win them by playing the game. The host hides the coins in three different prize boxes and then shuffles their order. The only rule restricting the host's coin placement is that one box must contain at least 2 coins, and one box must contain 6 more coins than another box. In order to play, Bob must submit three guesses, one guess for the number of coins in each box. The box is then opened and the number of coins is revealed. If Bob's guess is a number greater than the number of coins in the box, Bob earns no coins. If Bob guesses a number equal to or less than the number of coins in the box, Bob wins a number of coins equal to his guess.\n\nIf Bob plays uses the optimal strategy, what's the minimum amount of money he can win from the game?",
+    "Steps": [
+      "Step 1: Evaluate the problem statement provided by my user, storing the relevant information:",
+      "30 coins with a value of $1,000 distributed between 3 boxes.",
+      "Each box must contain at least 2 coins",
+      "One box must contain 6 more coins than another",
+      "Step 2: Evaluate the base distribution: 2-8-20, noting that two boxes must contain at least 8 coins",
+      "Step 3: Evaluate the most even allowable distribution: 8,8,14, noting that two boxes must contain at least 8 coins",
+      "Step 4: Evaluate a case where Bob guesses 8 for each box in the outlier distributions.",
+      "Step 5: For the worst case 2-8-20 distribution, Bob wins 0+8+8 = 16 coins",
+      "Step 6: For the 8-8-14 distribution, Bob wins 8+8+8 = 24 coins",
+      "Step 7: Convert the worst-case coin count to a prize value, 16*$1,000 = $16,000",
+      "Step 8: Report the correct answer to my user: \"$16,000\""
+    ],
+    "StepsRationale": [
+      "Evaluating the problem statement is crucial to understand the requirements and constraints of the task, ensuring that all relevant information is captured.",
+      "Identifying the total number of coins and their value helps in setting the foundation for the distribution analysis.",
+      "Establishing the minimum number of coins per box is necessary to ensure compliance with the problem's constraints.",
+      "Determining the relationship between the boxes' coin counts is essential for finding a valid distribution that meets all conditions.",
+      "Evaluating a base distribution allows for a starting point to analyze how the coins can be allocated while adhering to the constraints.",
+      "Finding the most even allowable distribution helps in maximizing fairness and understanding the implications of the constraints on the distribution.",
+      "Considering Bob's guess in the outlier distributions provides insight into how different distributions affect the outcome.",
+      "Calculating the total coins Bob wins in the worst-case scenario is important for understanding the potential outcomes of the distribution.",
+      "Calculating the total coins Bob wins in the most even distribution helps to compare different scenarios and their impacts.",
+      "Converting the coin count to a prize value is necessary to provide a meaningful answer that reflects the monetary implications of the distribution.",
+      "Reporting the correct answer to the user is the final step that communicates the results of the analysis clearly and effectively."
+    ],
+    "Plannings": [
+      "Determine the possible distributions of coins in the boxes based on the given constraints.",
+      "List all valid combinations of coin distributions that satisfy the constraints.",
+      "Evaluate the optimal guessing strategy for each valid distribution.",
+      "Calculate the minimum winnings for Bob based on the optimal guesses for each distribution.",
+      "Identify the distribution that yields the minimum winnings."
+    ],
+    "PlanningsRationale": [
+      "Understanding the constraints (one box must have at least 2 coins and one box must have 6 more coins than another) is essential to identify valid distributions of the 30 coins.",
+      "By listing all valid combinations, we can analyze the outcomes of Bob's guesses based on these distributions.",
+      "Bob needs to maximize his winnings by guessing numbers that are equal to or less than the actual number of coins in each box, so evaluating the best guesses is crucial.",
+      "This step will help determine the worst-case scenario for Bob's winnings, which is necessary to find the minimum amount he can win.",
+      "Finding the distribution that results in the lowest winnings will provide the final answer to the question regarding the minimum amount of money Bob can win."
+    ]
+  },
+  {
+    "task_id": "50ad0280-0819-4bd9-b275-5de32d3b5bcb",
+    "Question": "Pull out the sentence in the following 5x7 block of text. Read from left to right and use all of the letters in order:\n\nTHESE\nAGULL\nGLIDE\nDPEAC\nEFULL\nYTOMY\nCHAIR",
+    "Steps": [
+      "I start with the first line, \"T H E S E\" and proceed to the next, \"A G U L L\". At this point, I am able to discern that \"A G U L L\" is probably meant to be \"A GULL\". However, I continue to read through the rest of the lines to get a sense of any other words that might jump out that would substantiate \"A GULL\" being accurate both semantically and syntactically. 2. So now I am on the last line and decide to work backwards. \"CHAIR\" is on the last line all by itself and this does seem a plausible fit as a full word rather than a fragment of another word. When I look to the line directly above \"Y T O M Y\", the word \"my\" jumps out and this is a natural accompaniment to the noun often used to indicate possession.",
+      "Eliminating the \"MY\" at the end of \"Y T O MY\" leaves \"Y T O\" remaining in the line and I immediately recognize the preposition \"TO\". It is a this point I am fairly confident that \"TO MY CHAIR\" is most likely accurate. Given that there is only a \"Y\" left, I discern it is more than likely the end of a word located in the row above.",
+      "I am now on the fifth row down and am looking at the letters \"E F U L L\" Attaching the \"Y\" left over from the sixth row below I see \"E F U L L Y\"  I recognize the word \"FULLY\" I know it can stand alone as an adverb or it can serve as a suffix to a larger adverb.",
+      "Detaching the \"FULLY\", leaves the \"E\" alone on the line. Knowing it does not represent a word on its own in the English language, I look to attach it to the line above (row 4).",
+      "The fourth row reads \"D P E A C\". Adding the \"E\" to the end, the first word I can separate out is \"ACE\". However \"ACEFULLY\" is not a word nor does \"ACE FULLY TO MY CHAIR\" make sense. When working my way left through the line, continuing to attach each letter as I go, I land on the \"P\" and am fairly confident that the word is \"PEACEFULLY\".",
+      "Eliminating the \"PEAC\" from the row leaves me left with a \"D\". Now I look at the row above, row 3 and see that the row comprises the word \"GLIDE\" Adding the \"D\" to the end of the word would not only be permissible in terms of a displaying appropriate tense but it also makes sense as I add it to the fragment I have so far. I now can read \"GLIDED PEACEFULLY TO MY CHAIR\".",
+      "Now, I am on the second line and if I were to read it from there on down it would read \"A GULL GLIDED PEACEFULLY TO MY CHAIR\".  While this reads well and makes sense semantically and syntactically on its own, it does not make sense when I add the first row. THESE A GULL GLIDED PEACEFULLY TO MY CHAIR.  So now I am left with the conclusion that  \"A GULL\" is not correct. Either it is part of a larger word or the letters need to be broken down further. At a quick glace, I can see that they don't make sense being broken down further so I leave \"GULL\" and add the \"A\" to the string above. Immediately my eye sees that \"A can be added to \"SE\" to make \"SEA\" and that the remaining",
+      "letters spell the word \"THE\"  I now know the sentence reads \"The seagull glided peacefully to my chair."
+    ],
+    "StepsRationale": [
+      "Starting with the first line allows for an initial understanding of the text structure, and recognizing 'A GULL' helps establish a potential subject for the sentence.",
+      "Eliminating 'MY' and identifying 'TO' helps clarify the prepositional phrase, which is crucial for understanding the relationship between the subject and the object.",
+      "Recognizing 'FULLY' from 'E F U L L' is important as it contributes to the adverbial description of the action, enhancing the sentence's meaning.",
+      "Attaching 'E' to the previous line helps in forming complete words, which is essential for constructing coherent phrases.",
+      "Identifying 'PEACEFULLY' is key to understanding the manner of the action, which adds depth to the sentence and ensures grammatical correctness.",
+      "Adding 'D' to 'GLIDE' to form 'GLIDED' ensures the verb is in the correct tense, which is necessary for grammatical accuracy in the sentence.",
+      "Reassessing 'A GULL' in the context of the entire sentence helps to refine the understanding of the subject, leading to the correct identification of 'SEAGULL'.",
+      "Finalizing the sentence as 'The seagull glided peacefully to my chair' provides a complete and coherent thought, fulfilling the task of reconstructing the intended message."
+    ],
+    "Plannings": [
+      "Read the text block row by row from top to bottom.",
+      "Extract letters from each row sequentially, moving from left to right.",
+      "Combine the extracted letters into a single string.",
+      "Review the combined string for coherence and meaning."
+    ],
+    "PlanningsRationale": [
+      "This ensures that all letters are considered in the correct order as they appear in the block.",
+      "This maintains the order of letters as they are presented in the text block.",
+      "This forms the complete sentence or phrase that is hidden within the block.",
+      "This step ensures that the final output is a valid sentence or phrase."
+    ]
+  },
+  {
+    "task_id": "7673d772-ef80-4f0f-a602-1bf4485c9b43",
+    "Question": "On Cornell Law School website's legal information institute, under the fifth section of federal rules alphabetically, what word was deleted in the last amendment to the first rule in the article that has \"witnesses\" in the most titles as of 2021?",
+    "Steps": [
+      "Searched \"Cornell Law School legal information institute\" on Google.",
+      "Opened https://www.law.cornell.edu/.",
+      "Clicked Get The Law > Federal Rules > Federal Rules of Evidence (fourth section down).",
+      "Found the article that has \"witnesses\" in the most titles (VII).",
+      "Opened the first rule (701).",
+      "Scrolled to the last amendment as of 2021 (2011 amendment).",
+      "Found the word that was deleted (inference)."
+    ],
+    "StepsRationale": [
+      "Searching for the Cornell Law School legal information institute is essential to locate a reliable source of legal information.",
+      "Opening the official website ensures access to accurate and authoritative legal resources.",
+      "Navigating to the Federal Rules of Evidence is necessary to focus on the specific legal framework relevant to the task.",
+      "Identifying the article with 'witnesses' in the most titles helps to pinpoint the most relevant section of the rules for the topic at hand.",
+      "Opening the first rule (701) allows for a detailed examination of the specific legal provisions regarding witnesses.",
+      "Scrolling to the last amendment provides context on the most recent changes to the rule, which is crucial for understanding its current application.",
+      "Finding the deleted word 'inference' is important to understand the implications of the amendment on the interpretation of the rule."
+    ],
+    "Plannings": [
+      "Access the Cornell Law School website's Legal Information Institute.",
+      "Navigate to the section of federal rules that is organized alphabetically.",
+      "Identify the first rule in the fifth section.",
+      "Check the amendment history of the identified rule.",
+      "Determine which word was deleted in the last amendment.",
+      "Search for articles that contain 'witnesses' in their titles.",
+      "Cross-reference the identified article with the first rule from the fifth section."
+    ],
+    "PlanningsRationale": [
+      "This is necessary to locate the federal rules and amendments relevant to the question.",
+      "To find the fifth section, I need to ensure I am in the correct alphabetical order of the federal rules.",
+      "This step is crucial to focus on the specific rule that has undergone amendments.",
+      "To find out what changes were made, including any deletions, I need to review the amendment history.",
+      "This is the final goal of the question, requiring specific information about the last amendment.",
+      "To identify the article with the most titles containing 'witnesses', I need to conduct a search across relevant articles.",
+      "This ensures that the word deletion is relevant to the article that has 'witnesses' in the most titles."
+    ]
+  },
+  {
+    "task_id": "c365c1c7-a3db-4d5e-a9a1-66f56eae7865",
+    "Question": "Of the cities within the United States where U.S. presidents were born, which two are the farthest apart from the westernmost to the easternmost going east, giving the city names only? Give them to me in alphabetical order, in a comma-separated list",
+    "Steps": [
+      "Searched \"cities where us presidents are born\" on Google.",
+      "Opened \"List of presidents of the United States by home state\" on Wikipedia.",
+      "Searched the eastern cities to find the easternmost one (Braintree, MA).",
+      "Checked the westernmost city (Honolulu, HI)."
+    ],
+    "StepsRationale": [
+      "Searching for 'cities where US presidents are born' provides a foundational understanding of the locations relevant to the task.",
+      "Opening the Wikipedia page allows for a comprehensive list of presidents and their home states, which is essential for identifying their birth cities.",
+      "Searching for the eastern cities helps to pinpoint the easternmost city, which is a key part of determining the geographical extremes of presidential birthplaces.",
+      "Checking the westernmost city ensures that the analysis includes the full range of geographical locations where presidents were born."
+    ],
+    "Plannings": [
+      "Identify all U.S. cities where presidents were born.",
+      "Determine the geographical coordinates (longitude) of each city.",
+      "Find the city with the westernmost longitude and the city with the easternmost longitude.",
+      "Sort the two identified cities alphabetically.",
+      "Format the final answer as a comma-separated list."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to establish the dataset of cities relevant to the question.",
+      "Knowing the longitude is essential to assess the westernmost and easternmost locations.",
+      "This step will help identify the two cities that are farthest apart in the east-west direction.",
+      "The question specifically asks for the cities in alphabetical order.",
+      "This is the required format for the final response."
+    ]
+  },
+  {
+    "task_id": "7d4a7d1d-cac6-44a8-96e8-ea9584a70825",
+    "Question": "According to Girls Who Code, how long did it take in years for the percentage of computer scientists that were women to change by 13% from a starting point of 37%?",
+    "Steps": [
+      "Searched \"Girls Who Code\" on Google.",
+      "Opened https://girlswhocode.com/.",
+      "Clicked \"About Us\".",
+      "Noted that the chart started at 37% and declined to 24%.",
+      "Subtracted the marked years to find the number of years (2017 - 1995 = 22)."
+    ],
+    "StepsRationale": [
+      "Searching for 'Girls Who Code' on Google is essential to gather initial information and context about the organization.",
+      "Opening the official website provides direct access to accurate and authoritative information about Girls Who Code.",
+      "Clicking 'About Us' allows for a deeper understanding of the organization's mission, history, and impact.",
+      "Noting the chart's decline from 37% to 24% is crucial for analyzing trends and understanding the organization's effectiveness over time.",
+      "Subtracting the years helps quantify the duration over which the changes occurred, providing context for the data observed."
+    ],
+    "Plannings": [
+      "Identify the starting percentage of women computer scientists.",
+      "Determine the target percentage after the change.",
+      "Calculate the new percentage of women computer scientists.",
+      "Research historical data on the percentage of women in computer science over the years.",
+      "Analyze the data to find the number of years it took for the percentage to change from the starting point to the new percentage."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to establish the baseline from which the change will be measured.",
+      "Knowing the target percentage allows us to calculate the difference needed to achieve the 13% increase.",
+      "This calculation is essential to understand the final percentage after the increase.",
+      "This data will help us understand the rate of change over time and how long it took to reach the new percentage.",
+      "This analysis will provide the answer to the question regarding the time taken for the percentage change."
+    ]
+  },
+  {
+    "task_id": "dc22a632-937f-4e6a-b72f-ba0ff3f5ff97",
+    "Question": "What was the complete title of the book in which two James Beard Award winners recommended the restaurant where Ali Khan enjoyed a New Mexican staple in his cost-conscious TV show that started in 2015? Write the numbers in plain text if there are some in the title.",
+    "Steps": [
+      "Searched \"Ali Khan New Mexico staple TV show\" on Google.",
+      "Opened \"Albuquerque | Cheap Eats\" at https://www.cookingchanneltv.com/shows/cheap-eats/episodes/albuquerque.",
+      "Noted the New Mexico staple and the list of restaurants.",
+      "Searched \"Albuquerque Cheap Eats carne avodava\" on Google.",
+      "Confirmed the restaurant name (Papa Felipe's) from the results.",
+      "Searched \"James Beard Award winners Papa Felipe's\" on Google.",
+      "Opened \"Papa Felipe's Mexican Restaurant - Albuquerque, New ...\" at https://www.nmgastronome.com/?p=4572.",
+      "Clicked the link on the book title.",
+      "Copied the full book title from Amazon."
+    ],
+    "StepsRationale": [
+      "Searching for 'Ali Khan New Mexico staple TV show' helps to identify relevant content and context about the show and its focus on New Mexico cuisine.",
+      "Opening the 'Albuquerque | Cheap Eats' page provides specific information about local restaurants featured in the show, which is essential for understanding the culinary landscape.",
+      "Noting the New Mexico staple and the list of restaurants is crucial for compiling a comprehensive overview of the local food scene highlighted in the show.",
+      "Searching for 'Albuquerque Cheap Eats carne avodava' narrows down the focus to a specific dish, which is important for detailed research on local specialties.",
+      "Confirming the restaurant name (Papa Felipe's) ensures accuracy in identifying the establishment associated with the dish, which is vital for credibility.",
+      "Searching for 'James Beard Award winners Papa Felipe's' helps to establish the restaurant's reputation and significance in the culinary world.",
+      "Opening the specific page about Papa Felipe's provides in-depth information and reviews that can enhance understanding of the restaurant's offerings.",
+      "Clicking the link on the book title allows access to additional resources or references that may provide further context or details about the restaurant.",
+      "Copying the full book title from Amazon is necessary for accurate citation and reference in any subsequent documentation or discussion."
+    ],
+    "Plannings": [
+      "Identify the two James Beard Award winners and their recommended restaurant.",
+      "Research the TV show hosted by Ali Khan that started in 2015.",
+      "Find the title of the book that includes the recommendations from the James Beard Award winners.",
+      "Verify the title for accuracy and ensure it includes the necessary details."
+    ],
+    "PlanningsRationale": [
+      "This step is necessary to find the specific book that contains the recommendations, as the question centers around their endorsement.",
+      "Understanding the context of Ali Khan's show will help in identifying the New Mexican staple he enjoyed and its connection to the restaurant.",
+      "This step is crucial to answer the question directly, as it asks for the complete title of the book.",
+      "Ensuring the title is accurate and complete is essential to provide a correct answer to the question."
+    ]
+  },
+  {
+    "task_id": "3f57289b-8c60-48be-bd80-01f8099ca449",
+    "Question": "How many at bats did the Yankee with the most walks in the 1977 regular season have that same season?",
+    "Steps": [
+      "Search \"yankee stats\" to find their MLB stats page.",
+      "Set the data to the 1977 regular season.",
+      "Sort to find the most walks.",
+      "See how many at bats the player had."
+    ],
+    "StepsRationale": [
+      "Searching for 'yankee stats' is essential to locate the specific MLB stats page that contains the relevant data for the team.",
+      "Setting the data to the 1977 regular season focuses the analysis on a specific timeframe, ensuring that the statistics are relevant to that year.",
+      "Sorting to find the most walks allows for the identification of players who excelled in this particular statistic, which is crucial for understanding their performance.",
+      "Seeing how many at bats the player had provides context to the number of walks, helping to evaluate the player's overall performance and opportunities."
+    ],
+    "Plannings": [
+      "Research the 1977 New York Yankees roster and statistics.",
+      "Find the player with the most walks in the 1977 regular season.",
+      "Look up the at bats statistic for the identified player.",
+      "Compile the findings into a final answer."
+    ],
+    "PlanningsRationale": [
+      "To identify the players on the team and their performance metrics, including walks and at bats.",
+      "This is the key information needed to answer the question about the player with the most walks.",
+      "To obtain the specific number of at bats for the player who had the most walks.",
+      "To present the information clearly and concisely as the answer to the original question."
+    ]
+  },
+  {
+    "task_id": "23dd907f-1261-4488-b21c-e9185af91d5e",
+    "Question": "In Audre Lorde’s poem “Father Son and Holy Ghost”, what is the number of the stanza in which some lines are indented?",
+    "Steps": [
+      "Search the web for “Audre Lorde Father Son and Holy Ghost”.",
+      "Click on Poetry Foundation result.",
+      "Note the stanza that appears to have lines indented, the second one.",
+      "Return to search results to confirm.",
+      "Click on second result.",
+      "Confirm that the indentation appears in the second stanza here as well."
+    ],
+    "StepsRationale": [
+      "Searching the web for the specific title allows the annotator to gather relevant information and context about the poem.",
+      "Clicking on the Poetry Foundation result is necessary to access a reputable source that likely contains the full text of the poem.",
+      "Noting the stanza with indented lines is crucial for identifying specific formatting elements that may be significant in the analysis of the poem.",
+      "Returning to the search results to confirm ensures that the annotator is verifying the information and not relying solely on one source.",
+      "Clicking on the second result allows for cross-referencing the information to ensure accuracy and consistency in the findings.",
+      "Confirming the indentation in the second stanza here reinforces the validity of the observations made in the first source."
+    ],
+    "Plannings": [
+      "Read the poem 'Father Son and Holy Ghost' by Audre Lorde carefully.",
+      "Analyze the formatting of each stanza in the poem.",
+      "Count the stanzas sequentially to find the specific number of the stanza with indented lines.",
+      "Document the findings, including the stanza number and a brief description of the indented lines."
+    ],
+    "PlanningsRationale": [
+      "To identify the stanza with indented lines, I need to have a clear understanding of the poem's structure and content.",
+      "This step is necessary to visually locate the stanzas and determine which ones contain indented lines.",
+      "Counting the stanzas will allow me to accurately identify and reference the correct stanza number.",
+      "Recording the findings ensures that I have a clear answer to the question and can provide context if needed."
+    ]
+  },
+  {
+    "task_id": "1f975693-876d-457b-a649-393859e79bf3",
+    "Question": "Hi, I was out sick from my classes on Friday, so I'm trying to figure out what I need to study for my Calculus mid-term next week. My friend from class sent me an audio recording of Professor Willowbrook giving out the recommended reading for the test, but my headphones are broken :(\n\nCould you please listen to the recording for me and tell me the page numbers I'm supposed to go over? I've attached a file called Homework.mp3 that has the recording. Please provide just the page numbers as a comma-delimited list. And please provide the list in ascending order.",
+    "Steps": [
+      "Step 1: Load the file supplied by my user.",
+      "Step 2: Using audio processing tools, convert the text of the audio file to speech:",
+      "\"Before you all go, I want to remind you that the midterm is next week. Here's a little hint; you should be familiar with the differential equations on page 245, problems that are very similar to problems 32, 33, and 44 from that page might be on the test. And also some of you might want to brush up on the last page in the integration section, page 197. I know some of you struggled on last week's quiz. I foresee problem 22 from page 197 being on your midterm. Oh, and don't forget to brush up on the section on related rates, on pages 132, 133, and 134.\"",
+      "Step 3: Evaluate the converted audio, recording each instance of page numbers: 245, 197, 197, 132, 133, 134",
+      "Step 4: Sort the page numbers in ascending order, omitting duplicates, and store this list as the correct answer to my user's request: 132, 133, 134, 197, 245",
+      "Step 5: Report the correct response to my user: \"132, 133, 134, 197, 245\""
+    ],
+    "StepsRationale": [
+      "Loading the file is essential as it provides the necessary data for further processing and analysis.",
+      "Converting the text of the audio file to speech allows for the extraction of meaningful information that can be analyzed.",
+      "This step captures the relevant content from the audio, specifically the hints about the midterm, which includes important page numbers.",
+      "Evaluating the converted audio to record page numbers is crucial for identifying the specific references that the user needs to focus on.",
+      "Sorting the page numbers and omitting duplicates ensures that the final answer is concise and easy to understand, providing the user with a clear list.",
+      "Reporting the correct response to the user delivers the processed information in a user-friendly format, fulfilling the user's request."
+    ],
+    "Plannings": [
+      "Obtain the audio file Homework.mp3",
+      "Transcribe the audio recording",
+      "Identify the page numbers mentioned in the transcription",
+      "Compile the page numbers into a list",
+      "Sort the page numbers in ascending order",
+      "Format the page numbers as a comma-delimited list"
+    ],
+    "PlanningsRationale": [
+      "To access the content of the recording, I need to have the audio file available for processing.",
+      "I need to convert the spoken content of the recording into text to extract the relevant information about the page numbers.",
+      "To provide the required information, I must locate the specific page numbers that Professor Willowbrook recommends for study.",
+      "I need to organize the identified page numbers into a structured format for clarity and ease of understanding.",
+      "Sorting the page numbers will ensure that they are presented in a logical and easy-to-follow sequence.",
+      "The final output needs to be in a specific format as requested, which is a comma-delimited list."
+    ]
+  },
+  {
+    "task_id": "840bfca7-4f7b-481a-8794-c560c340185d",
+    "Question": "On June 6, 2023, an article by Carolyn Collins Petersen was published in Universe Today. This article mentions a team that produced a paper about their observations, linked at the bottom of the article. Find this paper. Under what NASA award number was the work performed by R. G. Arendt supported by?",
+    "Steps": [
+      "Google \"June 6, 2023 Carolyn Collins Petersen Universe Today\"",
+      "Find the relevant link to the scientific paper and follow that link",
+      "Open the PDF.",
+      "Search for NASA award number"
+    ],
+    "StepsRationale": [
+      "Searching for the specific date and author helps to locate the most relevant and accurate information related to Carolyn Collins Petersen's work.",
+      "Following the relevant link ensures that the information accessed is directly from a credible source, which is essential for verifying the scientific paper.",
+      "Opening the PDF is necessary to access the full content of the scientific paper, allowing for a thorough review of the material.",
+      "Searching for the NASA award number is crucial for identifying specific funding or recognition related to the research, which can provide context and credibility to the findings."
+    ],
+    "Plannings": [
+      "Locate the article by Carolyn Collins Petersen published on June 6, 2023, in Universe Today.",
+      "Read the article to identify the team and the paper they produced.",
+      "Follow the link provided in the article to access the paper.",
+      "Examine the paper for acknowledgments or funding information.",
+      "Extract the NASA award number associated with R. G. Arendt's work."
+    ],
+    "PlanningsRationale": [
+      "Finding the original article is essential to access the information about the team and their observations.",
+      "Understanding the content of the article will help in locating the specific paper mentioned.",
+      "The link will direct us to the actual paper that contains the necessary details about the research.",
+      "This section typically includes details about the NASA award number that supported the work.",
+      "This is the specific information requested in the question, and it is crucial to provide a complete answer."
+    ]
+  },
+  {
+    "task_id": "a0068077-79f4-461a-adfe-75c1a4148545",
+    "Question": "What was the actual enrollment count of the clinical trial on H. pylori in acne vulgaris patients from Jan-May 2018 as listed on the NIH website?",
+    "Steps": [
+      "Searched \"nih\" on Google search.",
+      "Clicked the top link to nih.gov.",
+      "Searched \"h pylori acne\" in the search box.",
+      "Clicked \"More\" and selected \"Clinical Trials\".",
+      "Clicked the result about H. Pylori and acne.",
+      "Checked the date to confirm it was January to May 2018.",
+      "Opened \"Tabular View\".",
+      "Scrolled down to Actual Enrollment and recorded the number."
+    ],
+    "StepsRationale": [
+      "Searching for 'nih' on Google is the first step to access reliable information from the National Institutes of Health, a trusted source for health-related research.",
+      "Clicking the top link to nih.gov ensures that the user is directed to the official website, which provides authoritative and accurate information.",
+      "Searching for 'h pylori acne' helps to narrow down the information to a specific topic of interest, facilitating targeted research.",
+      "Selecting 'Clinical Trials' allows the user to find relevant studies that specifically investigate the relationship between H. Pylori and acne.",
+      "Clicking the result about H. Pylori and acne is necessary to access detailed information about the specific clinical trial being referenced.",
+      "Checking the date ensures that the information is current and relevant, as clinical trials can have significant time-sensitive implications.",
+      "Opening 'Tabular View' provides a structured format that makes it easier to read and analyze the data presented in the clinical trial.",
+      "Recording the Actual Enrollment number is crucial for understanding the scale of the study and its potential impact on the findings."
+    ],
+    "Plannings": [
+      "Access the NIH Clinical Trials database",
+      "Search for the clinical trial using relevant keywords",
+      "Locate the trial record and review the details",
+      "Identify the enrollment count from the trial details",
+      "Verify the information for accuracy"
+    ],
+    "PlanningsRationale": [
+      "This is necessary to locate the specific clinical trial related to H. pylori and acne vulgaris.",
+      "Using keywords like 'H. pylori', 'acne vulgaris', and the date range 'Jan-May 2018' will help narrow down the search to the specific trial of interest.",
+      "Finding the correct trial record is essential to ensure that the information retrieved pertains to the right study.",
+      "The enrollment count is a specific piece of data that needs to be extracted from the trial record to answer the question.",
+      "Cross-checking the enrollment count ensures that the data is reliable and accurate before finalizing the answer."
+    ]
+  },
+  {
+    "task_id": "bda648d7-d618-4883-88f4-3466eabd860e",
+    "Question": "Where were the Vietnamese specimens described by Kuznetzov in Nedoshivina's 2010 paper eventually deposited? Just give me the city name without abbreviations.",
+    "Steps": [
+      "Search \"Kuznetzov Nedoshivina 2010\"",
+      "Find the 2010 paper \"A catalogue of type specimens of the Tortricidae described by V. I. Kuznetzov from Vietnam and deposited in the Zoological Institute, St. Petersburg\""
+    ],
+    "StepsRationale": [
+      "Searching for 'Kuznetzov Nedoshivina 2010' is essential to locate relevant academic literature and ensure that the search is focused on the correct author and year.",
+      "Finding the specific 2010 paper is necessary to gather detailed information about the type specimens of Tortricidae, which is crucial for understanding the taxonomy and biodiversity of this group."
+    ],
+    "Plannings": [
+      "Identify the paper by Nedoshivina from 2010",
+      "Locate the section in the paper that discusses specimen deposition",
+      "Extract the city name mentioned in the deposition details"
+    ],
+    "PlanningsRationale": [
+      "To find the specific details regarding the Vietnamese specimens described by Kuznetzov, I need to locate the correct paper.",
+      "This section will provide information on where the specimens were deposited, which is crucial for answering the question.",
+      "The final answer requires only the city name, so I need to focus on extracting that specific information."
+    ]
+  },
+  {
+    "task_id": "50ec8903-b81f-4257-9450-1085afd2c319",
+    "Question": "A standard Rubik’s cube has been broken into cubes making up its sides. The cubes are jumbled, and one is removed. There are 6 cubes with one colored face, 12 edge cubes with two colored faces, and 8 corner cubes with three colored faces. All blue cubes have been found. All cubes directly left, right, above, and below the orange center cube have been found, along with the center cube. The green corners have all been found, along with all green that borders yellow. For all orange cubes found, the opposite face’s cubes have been found. The removed cube has two colors on its faces. What are they? Answer using a comma separated list, with the colors ordered alphabetically.",
+    "Steps": [
+      "Set up a standard Rubik's cube (red opposite orange, white opposite yellow, green opposite blue).",
+      "Eliminated blue cubes, along with adjacent colors.",
+      "Eliminated orange cubes, along with adjacent colors.",
+      "Eliminated green corners and the green/yellow edge.",
+      "Eliminated red, opposite of orange, cubes and adjacent colors.",
+      "Identified the last possible two-face cube."
+    ],
+    "StepsRationale": [
+      "Setting up a standard Rubik's cube provides a consistent reference point for all subsequent steps, ensuring that the colors and positions are universally understood.",
+      "Eliminating blue cubes and adjacent colors helps to simplify the cube's configuration, making it easier to focus on the remaining colors and their relationships.",
+      "By eliminating orange cubes and adjacent colors, the process continues to reduce complexity, allowing for clearer analysis of the remaining pieces.",
+      "Removing green corners and the green/yellow edge further narrows down the options, facilitating a more straightforward approach to solving the cube.",
+      "Eliminating red cubes, which are opposite to orange, and their adjacent colors helps to isolate the remaining colors, streamlining the problem-solving process.",
+      "Identifying the last possible two-face cube is crucial as it represents the final step in determining the configuration needed to solve the cube."
+    ],
+    "Plannings": [
+      "Identify the colors of the cubes that have been found.",
+      "Determine the colors of the center cube and its adjacent cubes.",
+      "Analyze the relationships between the found cubes and the colors they represent.",
+      "Consider the constraints given about the removed cube having two colors.",
+      "List all possible color combinations for the removed cube based on the findings.",
+      "Select the combination of colors that fits all the constraints."
+    ],
+    "PlanningsRationale": [
+      "Understanding which cubes are accounted for will help narrow down the possibilities for the removed cube.",
+      "Since the center cube's color influences the adjacent cubes, knowing this will help in identifying the colors of the removed cube.",
+      "This will help in deducing which colors are still missing and which colors are likely to be on the removed cube.",
+      "This will help in filtering out the possible color combinations for the removed cube.",
+      "This will provide a clear view of the potential colors that could be on the removed cube.",
+      "This final step will lead to the correct identification of the colors on the removed cube."
+    ]
+  },
+  {
+    "task_id": "cf106601-ab4f-4af9-b045-5295fe67b37d",
+    "Question": "What country had the least number of athletes at the 1928 Summer Olympics? If there's a tie for a number of athletes, return the first in alphabetical order. Give the IOC country code as your answer.",
+    "Steps": [
+      "Look up the 1928 Summer Olympics on Wikipedia",
+      "Look at a table of athletes from countries.",
+      "See that two countries had 1 and 2 athletes, so disregard those and choose the Cuba as CUB."
+    ],
+    "StepsRationale": [
+      "Looking up the 1928 Summer Olympics on Wikipedia provides a comprehensive overview of the event, including key details about participating countries and athletes.",
+      "Examining a table of athletes from various countries helps to identify the representation and performance of different nations in the Olympics.",
+      "Disregarding countries with very few athletes ensures that the analysis focuses on nations with a more significant presence, making the selection of Cuba as CUB more relevant for comparison."
+    ],
+    "Plannings": [
+      "Gather data on the number of athletes from each country that participated in the 1928 Summer Olympics.",
+      "Organize the data in a structured format, such as a list or dictionary, with country names and their corresponding athlete counts.",
+      "Identify the minimum number of athletes from the organized data.",
+      "Filter the list to find all countries that have the minimum number of athletes.",
+      "Sort the filtered list of countries alphabetically.",
+      "Return the IOC country code of the first country from the sorted list."
+    ],
+    "PlanningsRationale": [
+      "This data is essential to determine which country had the least number of athletes.",
+      "Organizing the data allows for easier comparison and retrieval of the country with the least number of athletes.",
+      "Finding the minimum value is crucial to pinpoint the country with the least representation.",
+      "This step is necessary to handle cases where there may be a tie for the least number of athletes.",
+      "Sorting alphabetically allows us to easily select the first country in case of a tie.",
+      "The final output needs to be the IOC country code of the country with the least athletes, as specified in the question."
+    ]
+  },
+  {
+    "task_id": "a0c07678-e491-4bbc-8f0b-07405144218f",
+    "Question": "Who are the pitchers with the number before and after Taishō Tamai's number as of July 2023? Give them to me in the form Pitcher Before, Pitcher After, use their last names only, in Roman characters.",
+    "Steps": [
+      "Look up Taishō Tamai on Wikipedia",
+      "See the pitcher with the number 18 (before) is Kōsei Yoshida and number 20 (after) is Kenta Uehara"
+    ],
+    "StepsRationale": [
+      "Looking up Taishō Tamai on Wikipedia provides essential background information about the individual, which is crucial for understanding their significance and context.",
+      "Identifying the pitchers associated with specific numbers helps to clarify the timeline and transitions in the team roster, which is important for analyzing player performance and team dynamics."
+    ],
+    "Plannings": [
+      "Identify Taishō Tamai's jersey number as of July 2023.",
+      "Access a database or resource that lists pitchers and their jersey numbers.",
+      "Locate the pitcher with the number immediately before Tamai's number.",
+      "Locate the pitcher with the number immediately after Tamai's number.",
+      "Format the results to include only the last names of the identified pitchers.",
+      "Return the results in the specified format: Pitcher Before, Pitcher After."
+    ],
+    "PlanningsRationale": [
+      "To find the pitchers before and after his number, I need to know his current jersey number.",
+      "This is necessary to find the relevant pitchers who have jersey numbers adjacent to Tamai's.",
+      "This will provide the first part of the answer, identifying the pitcher who precedes Tamai.",
+      "This will provide the second part of the answer, identifying the pitcher who follows Tamai.",
+      "The question specifically requests the last names in Roman characters, so formatting is essential.",
+      "To meet the requirements of the question, the final output must be structured correctly."
+    ]
+  },
+  {
+    "task_id": "7bd855d8-463d-4ed5-93ca-5fe35145f733",
+    "Question": "The attached Excel file contains the sales of menu items for a local fast-food chain. What were the total sales that the chain made from food (not including drinks)? Express your answer in USD with two decimal places.",
+    "Steps": [
+      "Open the attached file.",
+      "Read the columns representing different menu items. Note that they all appear to be food except for the “soda” column.",
+      "Write a function to sum the relevant columns.",
+      "Ensure the answer follows the specified formatting."
+    ],
+    "StepsRationale": [
+      "Opening the attached file is essential as it provides the necessary data needed for analysis.",
+      "Reading the columns helps identify which items are relevant for the task, ensuring that only food items are considered in the calculations.",
+      "Writing a function to sum the relevant columns automates the calculation process, making it efficient and reducing the risk of human error.",
+      "Ensuring the answer follows the specified formatting is important for consistency and clarity, making the results easier to understand and use."
+    ],
+    "Plannings": [
+      "Open the Excel file containing the sales data.",
+      "Identify the columns that represent food sales and exclude drinks.",
+      "Sum the values in the food sales columns.",
+      "Format the total sales amount to two decimal places.",
+      "Report the final total sales figure."
+    ],
+    "PlanningsRationale": [
+      "Accessing the file is necessary to retrieve the sales data for analysis.",
+      "To calculate total food sales, we need to focus only on the relevant data and ignore any drink sales.",
+      "Calculating the total sales requires aggregating the sales figures for all food items.",
+      "Presenting the total in USD with two decimal places ensures clarity and adherence to currency formatting standards.",
+      "Providing the final answer is the goal of the analysis, allowing for a clear understanding of food sales performance."
+    ]
+  },
+  {
+    "task_id": "5a0c1adf-205e-4841-a666-7c3ef95def9d",
+    "Question": "What is the first name of the only Malko Competition recipient from the 20th Century (after 1977) whose nationality on record is a country that no longer exists?",
+    "Steps": [
+      "Look at the Malko Competition page on Wikipedia",
+      "Scan the winners to see that the 1983 winner, Claus Peter Flor is stated to be from East Germany."
+    ],
+    "StepsRationale": [
+      "Reviewing the Malko Competition page on Wikipedia provides a comprehensive overview of the competition's history, structure, and significance.",
+      "Identifying the 1983 winner and noting his origin is crucial for understanding the historical context and implications of the competition during the Cold War era."
+    ],
+    "Plannings": [
+      "Research the Malko Competition and its recipients",
+      "Filter recipients by nationality and time period",
+      "Identify countries that no longer exist",
+      "Cross-reference the filtered recipients with the list of defunct countries",
+      "Extract the first name of the identified recipient"
+    ],
+    "PlanningsRationale": [
+      "To identify the recipients of the Malko Competition, especially those awarded after 1977, which is crucial for narrowing down the candidates.",
+      "This step is necessary to focus on recipients from the 20th Century after 1977 and to gather information about their nationalities.",
+      "To determine which of the identified recipients' nationalities correspond to countries that have been dissolved or changed status since their award.",
+      "This will help in pinpointing the specific recipient whose nationality matches a country that no longer exists.",
+      "To provide the final answer to the question, which specifically asks for the first name of the recipient."
+    ]
+  }
+]
