@@ -8,6 +8,9 @@ import json
 from exa_py import Exa
 from reflectors import SearchReflector
 
+from urllib.parse import urlparse
+from tavily import TavilyClient
+
 
 class BaseSearcher:
     def __init__(self):
@@ -43,6 +46,124 @@ class BaseSearcher:
 
     def search(self):
         NotImplemented
+
+
+class TavilySearcher(BaseSearcher):
+    def __init__(
+        self,
+        engine: str = "google",
+        api_key: str = None,
+        max_results: int = 10,
+        search_depth: str = "basic",  # "basic" or "advanced"
+    ):
+        super().__init__()
+        self.name = f"tavily_{engine}_search"
+        self.description = (
+            "Perform a web search query using Tavily and return the search results."
+        )
+
+        self.tavily_key = api_key or os.getenv("TAVILY_API_KEY")
+        if self.tavily_key is None:
+            raise ValueError("Missing Tavily API key (TAVILY_API_KEY).")
+
+        self.max_results = max_results
+        self.search_depth = search_depth
+        self.client = TavilyClient(api_key=self.tavily_key)
+
+    def _results_to_snippets(self, results: List[Dict]) -> List[Dict]:
+        """
+        Tavily 결과를 BaseSearcher._to_content 에서 쓰는 형태로 변환.
+        각 item 예시:
+        {
+            "title": "...",
+            "url": "...",
+            "content": "...",
+            "score": ...
+        }
+        """
+        snippets: List[Dict] = []
+        for item in results:
+            url = item.get("url", "") or ""
+            parsed = urlparse(url)
+            # domain 을 source 처럼 표시
+            source_domain = parsed.netloc
+            source_str = f"\nSource: {source_domain}" if source_domain else ""
+
+            snippet_text = ""
+            if item.get("content"):
+                snippet_text = "\n" + item["content"]
+
+            snippets.append(
+                {
+                    "title": item.get("title", "") or url or "No title",
+                    "link": url,
+                    "date": "",  # Tavily 기본 응답엔 날짜 없음
+                    "source": source_str,
+                    "snippet": snippet_text,
+                }
+            )
+        return snippets
+
+    def search(
+        self,
+        query: str,
+        filter_year: Optional[int] = None,
+        return_markdown: bool = True,
+    ):
+        """
+        - filter_year 가 있으면 쿼리에 연도를 추가해서 힌트만 주는 방식으로 사용.
+        - return_markdown=True 이면 BaseSearcher._to_content() 로 마크다운 문자열을 리턴.
+          False 이면 _to_content 에서 사용하는 dict 리스트(스니펫)만 리턴.
+        """
+        # 검색 히스토리 (query 기준) 저장
+        self.history.append((query, time.time()))
+
+        effective_query = query
+        if filter_year is not None:
+            effective_query = f"{query} {filter_year}"
+
+        # Tavily API 호출
+        res = self.client.search(
+            query=effective_query,
+            search_depth=self.search_depth,
+            max_results=self.max_results,
+            include_answer=False,
+            include_images=False,
+            include_raw_content=False,
+        )
+
+        results = res.get("results", [])
+
+        # 결과가 없을 때 처리
+        if not results:
+            year_filter_message = (
+                f" with filter year={filter_year}" if filter_year is not None else ""
+            )
+            msg = (
+                f"No results found for '{query}'{year_filter_message}. "
+                f"Try with a more general query, or remove the year filter."
+            )
+
+            no_result_snippets = [
+                {
+                    "title": "No results",
+                    "link": "",
+                    "date": "",
+                    "source": "",
+                    "snippet": msg,
+                }
+            ]
+
+            if return_markdown:
+                return self._to_content(query, no_result_snippets)
+            return no_result_snippets
+
+        # Tavily 결과를 BaseSearcher 포맷으로 변환
+        snippets = self._results_to_snippets(results)
+
+        if return_markdown:
+            return self._to_content(query, snippets)
+        return snippets
 
 
 class SerpSearcher(BaseSearcher):
@@ -449,9 +570,14 @@ class SearchTool(Tool):
             )
 
         if search_type in ["google", "bing", "baidu", "yahoo"]:
-            self.searcher = SerpSearcher(
+            # self.searcher = SerpSearcher(
+            #     engine=search_type,
+            #     api_key=os.getenv("SERP_API_KEY"),
+            #     max_results=serp_num,
+            # )
+            self.searcher = TavilySearcher(
                 engine=search_type,
-                api_key=os.getenv("SERP_API_KEY"),
+                api_key=os.getenv("TAVILY_API_KEY"),
                 max_results=serp_num,
             )
         elif search_type == "wiki":

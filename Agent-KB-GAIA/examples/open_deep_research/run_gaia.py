@@ -49,6 +49,8 @@ from scripts.automodel import (
 
 from agent_kb.agent_kb_utils import AKBClient, call_model
 
+from planner_kb import decompose_task, subtask_planning
+
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
 from smolagents.agents import populate_template
 
@@ -108,18 +110,24 @@ jsonl_lock = threading.Lock()
 trajectory_lock = threading.Lock()
 
 
-def load_task_dict_from_jsonl(path: str) -> dict:
+def load_task_dict_from_jsonl(path: str):
     task_dict = {}
     with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            record = json.loads(line)
-            task_id = record.get("task_id")
-            if task_id is None:
-                continue
-            task_dict[task_id] = record
+        text = f.read().strip()
+    try:
+        data = json.loads(text)
+        if isinstance(data, list):
+            for record in data:
+                task_dict[record["task_id"]] = record
+            return task_dict
+    except json.JSONDecodeError:
+        pass  # JSON 배열이 아니면 아래 JSONL 모드로
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        record = json.loads(line)
+        task_dict[record["task_id"]] = record
     return task_dict
 
 
@@ -409,7 +417,7 @@ def answer_single_question(
             lines.append(f"{i}. {step}")
             lines.append(f"reason: {rationale}")
         step_and_rationales = "\n".join(lines)
-        augmented_question = (
+        augmented_question += (
             """
             Here is the solution steps and rationale for each step:
             """
@@ -423,7 +431,7 @@ def answer_single_question(
             lines.append(f"{i}. {plan}")
             lines.append(f"reason: {rationale}")
         plan_and_rationales = "\n".join(lines)
-        augmented_question = (
+        augmented_question += (
             """
             Here is the plan steps and rationale for each step:
             """
@@ -853,7 +861,7 @@ def main():
                 args.slm,
                 model,
                 model_search,
-                args.q_decomp,
+                args.qdecomp,
                 args.s_rationale,
                 args.p_rationale,
             )
