@@ -570,16 +570,16 @@ class SearchTool(Tool):
             )
 
         if search_type in ["google", "bing", "baidu", "yahoo"]:
-            # self.searcher = SerpSearcher(
-            #     engine=search_type,
-            #     api_key=os.getenv("SERP_API_KEY"),
-            #     max_results=serp_num,
-            # )
-            self.searcher = TavilySearcher(
+            self.searcher = SerpSearcher(
                 engine=search_type,
-                api_key=os.getenv("TAVILY_API_KEY"),
+                api_key=os.getenv("SERP_API_KEY"),
                 max_results=serp_num,
             )
+            # self.searcher = TavilySearcher(
+            #     engine=search_type,
+            #     api_key=os.getenv("TAVILY_API_KEY"),
+            #     max_results=serp_num,
+            # )
         elif search_type == "wiki":
             self.searcher = WikiSearcher()
         elif search_type == "exa":

@@ -28,15 +28,42 @@ def load_prompts(path):
         prompts = yaml.safe_load(f)
 
 
-def build_step_rationale_examples(entity, step_field, rationale_field):
-    lines = []
-    for i, (step, rationale) in enumerate(
-        zip(entity[step_field], entity[rationale_field]), start=1
-    ):
-        lines.append(f"{i}. {plan}")
-        lines.append(f"reason: {rationale}")
-    step_and_rationales = "\n".join(lines)
-    return step_and_rationales
+def build_subtask_rationale_examples(entities, step_field, rationale_field):
+    step_and_rationaleses = []
+    for entity in entities:
+        lines = []
+        lines.append(f"Similar task:{entity['question']}")
+        for i, (step, rationale) in enumerate(
+            zip(entity[step_field], entity[rationale_field]), start=1
+        ):
+            lines.append(f"{i}. {plan}")
+            lines.append(f"reason: {rationale}")
+        step_and_rationales = "\n".join(lines)
+        step_and_rationaleses.append(step_and_rationales)
+    step_and_rationaleses_text = "\n".join(step_and_rationaleses)
+    return step_and_rationaleses_text
+
+
+def build_subtask_planning_rationale_examples(
+    entities, subtask_number, step_field, rationale_field
+):
+    step_and_rationaleses = []
+    for entit in entities:
+        lines = []
+        lines.append(f"Similar task:{entity['question']}")
+        for i, (step, rationale) in enumerate(
+            zip(
+                entity[step_field][subtask_number],
+                entity[rationale_field][subtask_number],
+            ),
+            start=1,
+        ):
+            lines.append(f"{i}. {plan}")
+            lines.append(f"reason: {rationale}")
+        step_and_rationales = "\n".join(lines)
+        step_and_rationaleses.append(step_and_rationales)
+    step_and_rationaleses_text = "\n".join(step_and_rationaleses)
+    return step_and_rationaleses_text
 
 
 def decompose_task(
@@ -46,11 +73,11 @@ def decompose_task(
     url,
     model,
     slm,
-    use_kb=False,
-    with_examples=False,
+    retrieval_method,
+    topk,
     return_as_str=False,
 ):
-    if not with_examples:
+    if retrieval_method is None:
         task_decomposition_prompt_template = load_prompts(
             path="./rationale_planner_prompts.yaml"
         )["task_decomposition_prompt"]
@@ -59,15 +86,13 @@ def decompose_task(
             variables={"task": example["question"]},
         )
     else:
+        rationale_retrieval_results = retrieval_method(example["question"], top_k=top_k)
         task_decomposition_prompt_template = load_prompts(
             path="./rationale_planner_prompts.yaml"
         )["task_decomposition_with_examples_prompt"]
-        if not use_kb:
-            step_rationale_examples = build_step_rationale_examples(
-                example, "SubTasks", "SubTaskRationale"
-            )
-        else:
-            raise NotImplementedError("task decompositonk kb is not constructed yet.")
+        step_rationale_examples = build_subtask_rationale_examples(
+            rationale_retrieval_results, "Steps", "StepRationales"
+        )
         task_decomposition_prompt = populate_template(
             task_decomposition_prompt_template,
             variables={
@@ -112,13 +137,13 @@ def subtask_planning(
     url,
     model,
     slm,
-    use_kb=False,
-    with_examples=False,
+    retrieval_method,
+    topk,
     return_as_str=False,
 ):
     subtask_plannings = []
-    for curruent_sub_task in extracted_step_list:
-        if not with_examples:
+    for curruent_sub_task_number, curruent_sub_task in enumerate(extracted_step_list):
+        if retrieval_method is None:
             subtask_planning_prompt_template = load_prompts(
                 path="./rationale_planner_prompts.yaml"
             )["subtask_planning_prompt"]
@@ -134,14 +159,15 @@ def subtask_planning(
             subtask_planning_with_examples_prompt_template = load_prompts(
                 path="./rationale_planner_prompts.yaml"
             )["subtask_planning_with_examples_prompt"]
-            if not use_kb:
-                step_rationale_examples = build_step_rationale_examples(
-                    example, "Plannings", "PlanningRationale"
-                )
-            else:
-                raise NotImplementedError(
-                    "task decompositonk kb is not constructed yet."
-                )
+            rationale_retrieval_results = retrieval_method(
+                curruent_sub_task, top_k=top_k
+            )
+            step_rationale_examples = build_subtask_planning_rationale_examples(
+                rationale_retrieval_results,
+                curruent_sub_task_number,
+                "Steps",
+                "StepRationales",
+            )
             task_decomposition = populate_template(
                 task_decomposition_prompt_template,
                 variables={

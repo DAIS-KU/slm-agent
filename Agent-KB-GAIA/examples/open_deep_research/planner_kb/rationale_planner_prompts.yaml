@@ -1,10 +1,10 @@
 task_decomposition_prompt: |
-    You have one question to answer. Break it down into sub-tasks to reach the goal.
+    You have one question to answer. Break it down into sub-tasks(sub-queries) to reach the goal.
     Here is the task:
     {{task}}
 
 task_decomposition_with_examples_prompt: |
-    You have one question to answer. Break it down into sub-tasks to reach the goal.
+    You have one question to answer. Break it down into sub-tasks(sub-queries) to reach the goal.
     Here is the task:
     {{task}}
     You must decompose the above task with reference to the similar task-decomposition rationales below.
@@ -15,18 +15,18 @@ subtask_planning_prompt: |
     You have to make a step-by-step plan. Do not skip any necessary steps, and do not add any unnecessary steps.
     Here is the final task:
     {{task}}
-    Here are the sub-tasks for the final task:
+    Here are the sub-tasks(sub-queries) for the final task:
     {{sub_tasks}}
-    Here is the sub-task that you have to plan now:
+    Here is the sub-task(sub-query) that you have to plan now:
     {{curruent_sub_task}}
 
 subtask_planning_with_examples_prompt: |
     You have to make a step-by-step plan. Do not skip any necessary steps, and do not add any unnecessary steps.
     Here is the final task:
     {{task}}
-    Here are the sub-tasks for the final task:
+    Here are the sub-tasks(sub-queries) for the final task:
     {{sub_tasks}}
-    Here is the sub-task that you have to plan now:
+    Here is the sub-task(sub-query) that you have to plan now:
     {{curruent_sub_task}}
 
     You must plan the above task by referring to the similar task planning rationales below.

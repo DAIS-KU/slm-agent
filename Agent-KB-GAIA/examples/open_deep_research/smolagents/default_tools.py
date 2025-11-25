@@ -168,104 +168,104 @@ class UserInputTool(Tool):
 #         return "## Search Results\n\n" + "\n\n".join(postprocessed_results)
 
 
-class GoogleSearchTool(Tool):
-    name = "web_search"
-    description = """Performs a Tavily web search for your query then returns a string of the top search results."""
-    inputs = {
-        "query": {"type": "string", "description": "The search query to perform."},
-        "filter_year": {
-            "type": "integer",
-            "description": "Optionally restrict results to a certain year (best-effort, via query hint)",
-            "nullable": True,
-        },
-    }
-    output_type = "string"
+# class GoogleSearchTool(Tool):
+#     name = "web_search"
+#     description = """Performs a Tavily web search for your query then returns a string of the top search results."""
+#     inputs = {
+#         "query": {"type": "string", "description": "The search query to perform."},
+#         "filter_year": {
+#             "type": "integer",
+#             "description": "Optionally restrict results to a certain year (best-effort, via query hint)",
+#             "nullable": True,
+#         },
+#     }
+#     output_type = "string"
 
-    def __init__(self, max_results: int = 10, **kwargs):
-        # 원래 코드 패턴 유지
-        super().__init__(self)
-        try:
-            from tavily import TavilyClient
-        except ImportError as e:
-            raise ImportError(
-                "You must install package `tavily-python` to run this tool: for instance run `pip install tavily-python`."
-            ) from e
+#     def __init__(self, max_results: int = 10, **kwargs):
+#         # 원래 코드 패턴 유지
+#         super().__init__(self)
+#         try:
+#             from tavily import TavilyClient
+#         except ImportError as e:
+#             raise ImportError(
+#                 "You must install package `tavily-python` to run this tool: for instance run `pip install tavily-python`."
+#             ) from e
 
-        import os
+#         import os
 
-        api_key = os.getenv("TAVILY_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "Missing Tavily API key. Make sure you have 'TAVILY_API_KEY' in your env variables."
-            )
+#         api_key = os.getenv("TAVILY_API_KEY")
+#         if not api_key:
+#             raise ValueError(
+#                 "Missing Tavily API key. Make sure you have 'TAVILY_API_KEY' in your env variables."
+#             )
 
-        self.client = TavilyClient(api_key=api_key)
-        self.max_results = max_results
-        # 추가 search 옵션 (search_depth, topic, days 등)을 넘기고 싶으면 kwargs 로 받게 함
-        self.search_kwargs = kwargs
+#         self.client = TavilyClient(api_key=api_key)
+#         self.max_results = max_results
+#         # 추가 search 옵션 (search_depth, topic, days 등)을 넘기고 싶으면 kwargs 로 받게 함
+#         self.search_kwargs = kwargs
 
-    def forward(self, query: str, filter_year: Optional[int] = None) -> str:
-        """
-        Tavily는 정확한 '연도 필터' 파라미터는 없어서,
-        filter_year 가 주어지면 쿼리에 연도를 붙여 best-effort 로 필터링 힌트를 주는 방식입니다.
-        (예: 'LLM benchmarks' -> 'LLM benchmarks 2023')
-        """
-        effective_query = query
-        if filter_year is not None:
-            effective_query = f"{query} {filter_year}"
+#     def forward(self, query: str, filter_year: Optional[int] = None) -> str:
+#         """
+#         Tavily는 정확한 '연도 필터' 파라미터는 없어서,
+#         filter_year 가 주어지면 쿼리에 연도를 붙여 best-effort 로 필터링 힌트를 주는 방식입니다.
+#         (예: 'LLM benchmarks' -> 'LLM benchmarks 2023')
+#         """
+#         effective_query = query
+#         if filter_year is not None:
+#             effective_query = f"{query} {filter_year}"
 
-        # 기본 search 옵션 구성
-        search_kwargs = dict(self.search_kwargs)
-        search_kwargs.setdefault("search_depth", "basic")
-        search_kwargs.setdefault("include_answer", False)
-        search_kwargs.setdefault("include_raw_content", False)
-        search_kwargs.setdefault("include_images", False)
+#         # 기본 search 옵션 구성
+#         search_kwargs = dict(self.search_kwargs)
+#         search_kwargs.setdefault("search_depth", "basic")
+#         search_kwargs.setdefault("include_answer", False)
+#         search_kwargs.setdefault("include_raw_content", False)
+#         search_kwargs.setdefault("include_images", False)
 
-        response = self.client.search(
-            query=effective_query,
-            max_results=self.max_results,
-            **search_kwargs,
-        )
+#         response = self.client.search(
+#             query=effective_query,
+#             max_results=self.max_results,
+#             **search_kwargs,
+#         )
 
-        results = response.get("results", [])
+#         results = response.get("results", [])
 
-        if "results" not in response or len(results) == 0:
-            year_filter_message = (
-                f" with filter year={filter_year}" if filter_year is not None else ""
-            )
-            return (
-                f"No results found for '{query}'{year_filter_message}. "
-                f"Try with a more general query, or remove the year filter."
-            )
+#         if "results" not in response or len(results) == 0:
+#             year_filter_message = (
+#                 f" with filter year={filter_year}" if filter_year is not None else ""
+#             )
+#             return (
+#                 f"No results found for '{query}'{year_filter_message}. "
+#                 f"Try with a more general query, or remove the year filter."
+#             )
 
-        web_snippets = []
-        for idx, item in enumerate(results):
-            title = item.get("title", "No title")
-            url = item.get("url", "")
-            content = item.get("content", "") or ""
+#         web_snippets = []
+#         for idx, item in enumerate(results):
+#             title = item.get("title", "No title")
+#             url = item.get("url", "")
+#             content = item.get("content", "") or ""
 
-            # domain 을 source 처럼 표시
-            source = ""
-            if url:
-                domain = urlparse(url).netloc
-                if domain:
-                    source = f"\nSource: {domain}"
+#             # domain 을 source 처럼 표시
+#             source = ""
+#             if url:
+#                 domain = urlparse(url).netloc
+#                 if domain:
+#                     source = f"\nSource: {domain}"
 
-            date_published = ""  # Tavily 기본 응답에는 날짜 정보가 없음
+#             date_published = ""  # Tavily 기본 응답에는 날짜 정보가 없음
 
-            snippet = ""
-            if content:
-                snippet = "\n" + content
+#             snippet = ""
+#             if content:
+#                 snippet = "\n" + content
 
-            redacted_version = (
-                f"{idx}. [{title}]({url}){date_published}{source}\n{snippet}"
-            )
-            redacted_version = redacted_version.replace(
-                "Your browser can't play this video.", ""
-            )
-            web_snippets.append(redacted_version)
+#             redacted_version = (
+#                 f"{idx}. [{title}]({url}){date_published}{source}\n{snippet}"
+#             )
+#             redacted_version = redacted_version.replace(
+#                 "Your browser can't play this video.", ""
+#             )
+#             web_snippets.append(redacted_version)
 
-        return "## Search Results\n" + "\n\n".join(web_snippets)
+#         return "## Search Results\n" + "\n\n".join(web_snippets)
 
 
 class DuckDuckGoSearchTool(Tool):
@@ -298,79 +298,89 @@ class DuckDuckGoSearchTool(Tool):
         return "## Search Results\n\n" + "\n\n".join(postprocessed_results)
 
 
-# class GoogleSearchTool(Tool):
-#     name = "web_search"
-#     description = """Performs a google web search for your query then returns a string of the top search results."""
-#     inputs = {
-#         "query": {"type": "string", "description": "The search query to perform."},
-#         "filter_year": {
-#             "type": "integer",
-#             "description": "Optionally restrict results to a certain year",
-#             "nullable": True,
-#         },
-#     }
-#     output_type = "string"
+class GoogleSearchTool(Tool):
+    name = "web_search"
+    description = """Performs a google web search for your query then returns a string of the top search results."""
+    inputs = {
+        "query": {"type": "string", "description": "The search query to perform."},
+        "filter_year": {
+            "type": "integer",
+            "description": "Optionally restrict results to a certain year",
+            "nullable": True,
+        },
+    }
+    output_type = "string"
 
-#     def __init__(self):
-#         super().__init__(self)
-#         import os
+    def __init__(self):
+        super().__init__(self)
+        import os
 
-#         self.serpapi_key = os.getenv("SERPAPI_API_KEY")
+        self.serpapi_key = os.getenv("SERPAPI_API_KEY")
 
-#     def forward(self, query: str, filter_year: Optional[int] = None) -> str:
-#         import requests
+    def forward(self, query: str, filter_year: Optional[int] = None) -> str:
+        import requests
 
-#         if self.serpapi_key is None:
-#             raise ValueError("Missing SerpAPI key. Make sure you have 'SERPAPI_API_KEY' in your env variables.")
+        if self.serpapi_key is None:
+            raise ValueError(
+                "Missing SerpAPI key. Make sure you have 'SERPAPI_API_KEY' in your env variables."
+            )
 
-#         params = {
-#             "engine": "google",
-#             "q": query,
-#             "api_key": self.serpapi_key,
-#             "google_domain": "google.com",
-#         }
-#         if filter_year is not None:
-#             params["tbs"] = f"cdr:1,cd_min:01/01/{filter_year},cd_max:12/31/{filter_year}"
+        params = {
+            "engine": "google",
+            "q": query,
+            "api_key": self.serpapi_key,
+            "google_domain": "google.com",
+        }
+        if filter_year is not None:
+            params[
+                "tbs"
+            ] = f"cdr:1,cd_min:01/01/{filter_year},cd_max:12/31/{filter_year}"
 
-#         response = requests.get("https://serpapi.com/search.json", params=params)
+        response = requests.get("https://serpapi.com/search.json", params=params)
 
-#         if response.status_code == 200:
-#             results = response.json()
-#         else:
-#             raise ValueError(response.json())
+        if response.status_code == 200:
+            results = response.json()
+        else:
+            raise ValueError(response.json())
 
-#         if "organic_results" not in results.keys():
-#             if filter_year is not None:
-#                 raise Exception(
-#                     f"No results found for query: '{query}' with filtering on year={filter_year}. Use a less restrictive query or do not filter on year."
-#                 )
-#             else:
-#                 raise Exception(f"No results found for query: '{query}'. Use a less restrictive query.")
-#         if len(results["organic_results"]) == 0:
-#             year_filter_message = f" with filter year={filter_year}" if filter_year is not None else ""
-#             return f"No results found for '{query}'{year_filter_message}. Try with a more general query, or remove the year filter."
+        if "organic_results" not in results.keys():
+            if filter_year is not None:
+                raise Exception(
+                    f"No results found for query: '{query}' with filtering on year={filter_year}. Use a less restrictive query or do not filter on year."
+                )
+            else:
+                raise Exception(
+                    f"No results found for query: '{query}'. Use a less restrictive query."
+                )
+        if len(results["organic_results"]) == 0:
+            year_filter_message = (
+                f" with filter year={filter_year}" if filter_year is not None else ""
+            )
+            return f"No results found for '{query}'{year_filter_message}. Try with a more general query, or remove the year filter."
 
-#         web_snippets = []
-#         if "organic_results" in results:
-#             for idx, page in enumerate(results["organic_results"]):
-#                 date_published = ""
-#                 if "date" in page:
-#                     date_published = "\nDate published: " + page["date"]
+        web_snippets = []
+        if "organic_results" in results:
+            for idx, page in enumerate(results["organic_results"]):
+                date_published = ""
+                if "date" in page:
+                    date_published = "\nDate published: " + page["date"]
 
-#                 source = ""
-#                 if "source" in page:
-#                     source = "\nSource: " + page["source"]
+                source = ""
+                if "source" in page:
+                    source = "\nSource: " + page["source"]
 
-#                 snippet = ""
-#                 if "snippet" in page:
-#                     snippet = "\n" + page["snippet"]
+                snippet = ""
+                if "snippet" in page:
+                    snippet = "\n" + page["snippet"]
 
-#                 redacted_version = f"{idx}. [{page['title']}]({page['link']}){date_published}{source}\n{snippet}"
+                redacted_version = f"{idx}. [{page['title']}]({page['link']}){date_published}{source}\n{snippet}"
 
-#                 redacted_version = redacted_version.replace("Your browser can't play this video.", "")
-#                 web_snippets.append(redacted_version)
+                redacted_version = redacted_version.replace(
+                    "Your browser can't play this video.", ""
+                )
+                web_snippets.append(redacted_version)
 
-#         return "## Search Results\n" + "\n\n".join(web_snippets)
+        return "## Search Results\n" + "\n\n".join(web_snippets)
 
 
 class VisitWebpageTool(Tool):

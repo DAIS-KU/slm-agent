@@ -152,10 +152,10 @@ def evaluate(input_path, output_path):
 
 if __name__ == "__main__":
     evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/gpt-without-tool-example.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/gpt-without-tool-example.jsonl",
+        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4b-without-tool-example.jsonl",
+        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4b-without-tool-example.jsonl",
     )
     evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/gpt-witout-anything.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/gpt-without-anything.jsonl",
+        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4b-without-anything.jsonl",
+        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4b-without-anything.jsonl",
     )
