@@ -445,9 +445,16 @@ def answer_single_question(
                 top_k=None,
                 return_as_str=not p_rationale,
             )
+        print(
+            f"## ============================== QUERY DECOMPOSITION ============================== ##"
+        )
+        print(subtasks)
+        print(
+            f"## ================================================================================= ##"
+        )
         if p_rationale:
             if p_rationale_ex:
-                augmented_question = subtask_planning(
+                subtask_plannings = subtask_planning(
                     example=example,
                     extracted_step_list=subtasks,
                     model_name=model_name,
@@ -460,7 +467,7 @@ def answer_single_question(
                     return_as_str=True,
                 )
             else:
-                augmented_question = subtask_planning(
+                subtask_plannings = subtask_planning(
                     example=example,
                     extracted_step_list=subtasks,
                     model_name=model_name,
@@ -472,6 +479,14 @@ def answer_single_question(
                     topk=None,
                     return_as_str=True,
                 )
+            print(
+                f"## ============================== RATIONALE-BASED PLANNING ============================== ##"
+            )
+            print(subtask_plannings)
+            print(
+                f"## ====================================================================================== ##"
+            )
+            augmented_question = subtask_plannings
         else:
             augmented_question = subtasks
 
