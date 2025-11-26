@@ -203,9 +203,3 @@ opencv-python==4.11.0.86
 apify_client==1.10.0
 json_repair==0.44.1
 sentence_transformers==4.1.0
-exa-py
-crawl4ai
-langchain-text-splitters
-tavily-python
-torchaudio
-matplotlib

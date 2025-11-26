@@ -19,7 +19,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-manager = AKB_Manager(json_file_paths=["./agent_kb/agent_kb_database.json"])
+manager = AKB_Manager(json_file_paths=["./agent_kb/distillated_kb.json"])
+# manager = AKB_Manager(json_file_paths=["./agent_kb/agent_kb_database.json"])
 
 performance_stats = {
     "total_requests": 0,
@@ -44,6 +45,8 @@ class WorkflowResponse(BaseModel):
     search_plan: Optional[str] = None
     agent_experience: Optional[str]
     search_agent_experience: Optional[str]
+    steps: Optional[List[str]]
+    step_rationales: Optional[List[str]]
 
 
 class PerformanceStats(BaseModel):
@@ -86,6 +89,8 @@ async def hybrid_search(request: SearchRequest):
                 search_plan=item["search_plan"],
                 agent_experience=item["agent_experience"],
                 search_agent_experience=item["search_agent_experience"],
+                steps=item["steps"],
+                step_rationales=item["step_rationales"],
             )
             for item in results
         ]

@@ -388,64 +388,13 @@ def answer_single_question(
 
     agent = create_agent_hierarchy(model, model_search, args, debug)
 
-    ## ============================== QUERY DECOMPOSITION / RATIONALE-BASED PLANNING ==============================##
     retrieval_method = {
         "hybrid": akb_client.hybrid_search,
         "text": akb_client.text_search,
         "semantic": akb_client.semantic_search,
     }[args.retrieval_type]
-    if q_decomp:
-        if q_decomp_ex:
-            sub_tasks = decompose_task(
-                example=example,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method,
-                top_k=args.top_k,
-                return_as_str=not p_rationale,
-            )
-        else:
-            sub_tasks = decompose_task(
-                example=example,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=None,
-                top_k=None,
-                return_as_str=not p_rationale,
-            )
-    if p_rationale:
-        if p_rationale_ex:
-            planning_result = subtask_planning(
-                example=example,
-                extracted_step_list=sub_tasks,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method,
-                topk=args.topk,
-                return_as_str=True,
-            )
-        else:
-            planning_result = subtask_planning(
-                example=example,
-                extracted_step_list=sub_tasks,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=None,
-                topk=None,
-                return_as_str=True,
-            )
+
+    augmented_question = "Here is the task:" + example["question"]
 
     if example["file_name"]:
         if ".zip" in example["file_name"]:
@@ -470,11 +419,65 @@ def answer_single_question(
             )
         augmented_question += prompt_use_files
 
+    ## ============================== QUERY DECOMPOSITION / RATIONALE-BASED PLANNING ==============================##
+    if q_decomp:
+        if q_decomp_ex:
+            subtasks = decompose_task(
+                example=example,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=args.top_k,
+                return_as_str=not p_rationale,
+            )
+        else:
+            subtasks = decompose_task(
+                example=example,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=None,
+                top_k=None,
+                return_as_str=not p_rationale,
+            )
+        if p_rationale:
+            if p_rationale_ex:
+                augmented_question = subtask_planning(
+                    example=example,
+                    extracted_step_list=subtasks,
+                    model_name=model_name,
+                    key=key,
+                    url=url,
+                    model=model,
+                    slm=slm,
+                    retrieval_method=retrieval_method,
+                    topk=args.topk,
+                    return_as_str=True,
+                )
+            else:
+                augmented_question = subtask_planning(
+                    example=example,
+                    extracted_step_list=subtasks,
+                    model_name=model_name,
+                    key=key,
+                    url=url,
+                    model=model,
+                    slm=slm,
+                    retrieval_method=None,
+                    topk=None,
+                    return_as_str=True,
+                )
+        else:
+            augmented_question = subtasks
+
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
-        final_result = agent.run(
-            augmented_question, additional_knowledge=teacher_suggestions
-        )
+        final_result = agent.run(augmented_question)
         agent_memory = agent.write_memory_to_messages(summary_mode=True)
         final_result = prepare_response(
             augmented_question, agent_memory, reformulation_model=model

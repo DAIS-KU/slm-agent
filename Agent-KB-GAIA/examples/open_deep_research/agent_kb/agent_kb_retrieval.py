@@ -24,6 +24,8 @@ class WorkflowInstance:
     query_embedding: Optional[np.ndarray] = None
     plan_embedding: Optional[np.ndarray] = None
     search_plan_embedding: Optional[np.ndarray] = None
+    steps: Optional[List[str]] = None
+    step_rationales: Optional[Dict] = None
 
 
 class AgenticKnowledgeBase:
@@ -74,6 +76,8 @@ class AgenticKnowledgeBase:
                             search_agent_planning=item.get("search_agent_planning"),
                             agent_experience=item.get("agent_experience"),
                             search_agent_experience=item.get("search_agent_experience"),
+                            steps=item.get("Steps"),
+                            step_rationales=item.get("StepsRationale"),
                         )
                         batch.append(instance)
                     except KeyError as e:
@@ -260,6 +264,8 @@ class AKB_Manager:
                     "search_plan": workflow.search_agent_planning,
                     "agent_experience": workflow.agent_experience,
                     "search_agent_experience": workflow.search_agent_experience,
+                    "steps": workflow.steps,
+                    "step_rationales": workflow.step_rationales,
                 }
             )
 
