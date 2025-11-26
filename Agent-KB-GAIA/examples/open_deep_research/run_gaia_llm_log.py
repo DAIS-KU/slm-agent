@@ -63,6 +63,7 @@ from smolagents import (
     TransformersModel,
 )
 from dotenv import load_dotenv
+from datasets import load_dataset
 
 load_dotenv()
 
@@ -224,21 +225,25 @@ logger.warning(
 
 USE_OPEN_MODELS = False
 
-SET = "validation"
+SET = "test"
+# SET = "validation"
 
 custom_role_conversions = {"tool-call": "assistant", "tool-response": "user"}
 
-eval_ds = datasets.load_dataset(
-    "gaia-benchmark/GAIA", "2023_all", trust_remote_code=True, num_proc=1
-)[SET]
+# eval_ds = datasets.load_dataset(
+#     "gaia-benchmark/GAIA", "2023_all", trust_remote_code=True, num_proc=1
+# )[SET]
+eval_ds = load_dataset("cais/hle", split="test")
 eval_ds = eval_ds.rename_columns(
-    {"Question": "question", "Final answer": "true_answer", "Level": "task"}
+    {"answer": "true_answer", "image": "file_name", "id": "task_id"}
+    # {"Question": "question", "Final answer": "true_answer", "Level": "task", }
 )
 
 
 def preprocess_file_paths(row):
     if len(row["file_name"]) > 0:
-        row["file_name"] = f"data/gaia/{SET}/" + row["file_name"]
+        # row["file_name"] = f"data/gaia/{SET}/" + row["file_name"]
+        row["file_name"] = f"data/hle/{SET}/" + row["file_name"]
     return row
 
 
@@ -383,60 +388,18 @@ def answer_single_question(
 
     agent = create_agent_hierarchy(model, model_search, args, debug)
 
-    ## ============================== QUERY DECOMPOSITION ==============================##
-    # if not q_decomp:
-    #     augmented_question = (
-    #         """You have one question to answer. It is paramount that you provide a correct answer.
-    #         Give it all you can: I know for a fact that you have access to all the relevant tools to solve it and find the correct answer (the answer does exist).
-    #         Failure or 'I cannot answer' or 'None found' will not be tolerated, success will be rewarded.
-    #         Run verification steps if that's needed, you must make sure you find the correct answer!
-    #         Here is the task:
-    #         """
-    #         + example["question"]
-    #     )
-    # else:
-    #     augmented_question = (
-    #         """
-    #         Turn complex goal into an actionable, coherent plan.
-    #         1. Accurately understand the final goal provided by the user, and, if necessary, refine and clarify it by making reasonable assumptions.
-    #         2. Decompose the goal into the required work, from high-level tasks down to lower-level subtasks.
-    #         3. For each task, create a concrete execution plan.
-    #         4. Integrate all task plans into a single, consistent final plan, ordered by time and task dependencies.
+    augmented_question = (
+        """
+        Turn complex goal into an actionable, coherent plan.
+        1. Accurately understand the final goal provided by the user, and, if necessary, refine and clarify it by making reasonable assumptions.
+        2. Decompose the goal into the required work, from high-level tasks down to lower-level subtasks.
+        3. For each task, create a concrete execution plan.
+        4. Integrate all task plans into a single, consistent final plan, ordered by time and task dependencies.
 
-    #         Here is the task:
-    #         """
-    #         + example["question"]
-    #     )
-
-    ## ============================== RATIONALE-BASED PLANNING ==============================##
-    # if s_rationale:
-    #     lines = []
-    #     for i, (step, rationale) in enumerate(
-    #         zip(example["Steps"], example["StepsRationale"]), start=1
-    #     ):
-    #         lines.append(f"{i}. {step}")
-    #         lines.append(f"reason: {rationale}")
-    #     step_and_rationales = "\n".join(lines)
-    #     augmented_question += (
-    #         """
-    #         Here is the solution steps and rationale for each step:
-    #         """
-    #         + step_and_rationales
-    #     )
-    # if p_rationale:
-    #     lines = []
-    #     for i, (plan, rationale) in enumerate(
-    #         zip(example["Plannings"], example["PlanningsRationale"]), start=1
-    #     ):
-    #         lines.append(f"{i}. {plan}")
-    #         lines.append(f"reason: {rationale}")
-    #     plan_and_rationales = "\n".join(lines)
-    #     augmented_question += (
-    #         """
-    #         Here is the plan steps and rationale for each step:
-    #         """
-    #         + plan_and_rationales
-    #     )
+        Here is the task:
+        """
+        + example["question"]
+    )
 
     if example["file_name"]:
         if ".zip" in example["file_name"]:
@@ -468,9 +431,9 @@ def answer_single_question(
             akb_client = AKBClient()
             model_name_retrieval = args.model_name_retrieval
             # import prompts for agent kb
-            # with open("./agent_kb/prompts.yaml", "r") as f:
-            # with open("./agent_kb/prompts_planning.yaml", "r") as f:
-            with open("./agent_kb/prompts_gt.yaml", "r") as f:
+            with open("./agent_kb/prompts.yaml", "r") as f:
+                # with open("./agent_kb/prompts_planning.yaml", "r") as f:
+                # with open("./agent_kb/prompts_gt.yaml", "r") as f:
                 prompts = yaml.safe_load(f)
             semantic_match_template = prompts["semantic_match_prompt"]
 
@@ -502,18 +465,20 @@ def answer_single_question(
                 "semantic": akb_client.semantic_search,
             }[args.retrieval_type]
 
-            # student_retrieval_results = retrieval_method(student_summary, top_k=args.top_k)
-            # student_retrieval = ""
-            # for result in student_retrieval_results:
-            #     student_retrieval += "\nSimilar task:\n"
-            #     student_retrieval += result['query']
-            #     student_retrieval += "\n- Plannings:\n"
-            #     student_retrieval += result['plan']
-            #     # student_retrieval += "\n- Suggestions:\n"
-            #     # student_retrieval += result['agent_experience']
-            steps = example["Annotator Metadata"]["Steps"].strip().split("\n")
-            steps_without_last = steps[:-1]
-            student_retrieval = "\n".join(steps_without_last)
+            student_retrieval_results = retrieval_method(
+                student_summary, top_k=args.top_k
+            )
+            student_retrieval = ""
+            for result in student_retrieval_results:
+                student_retrieval += "\nSimilar task:\n"
+                student_retrieval += result["query"]
+                student_retrieval += "\n- Plannings:\n"
+                student_retrieval += result["plan"]
+                # student_retrieval += "\n- Suggestions:\n"
+                # student_retrieval += result['agent_experience']
+            # steps = example["Annotator Metadata"]["Steps"].strip().split("\n")
+            # steps_without_last = steps[:-1]
+            # student_retrieval = "\n".join(steps_without_last)
 
             student_refine = populate_template(
                 student_agent_refine_template,
@@ -790,10 +755,11 @@ def get_examples_to_answer(
         logger.info("No usable records! ▶️ Starting new.")
         done_questions = []
 
-    if level == "all":
-        filtered_df = eval_df
-    else:
-        filtered_df = eval_df[eval_df["task"] == level]
+    # if level == "all":
+    #     filtered_df = eval_df
+    # else:
+    #     filtered_df = eval_df[eval_df["task"] == level]
+    filtered_df = eval_df
 
     if selected_tasks:
         if isinstance(selected_tasks[0], int):

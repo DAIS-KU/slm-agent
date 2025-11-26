@@ -420,6 +420,7 @@ def answer_single_question(
         augmented_question += prompt_use_files
 
     ## ============================== QUERY DECOMPOSITION / RATIONALE-BASED PLANNING ==============================##
+    additional_knowledge = None
     if q_decomp:
         if q_decomp_ex:
             subtasks = decompose_task(
@@ -486,13 +487,15 @@ def answer_single_question(
             print(
                 f"## ====================================================================================== ##"
             )
-            augmented_question = subtask_plannings
+            additional_knowledge = subtask_plannings
         else:
-            augmented_question = subtasks
+            additional_knowledge = subtasks
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
-        final_result = agent.run(augmented_question)
+        final_result = agent.run(
+            augmented_question, additional_knowledge=additional_knowledge
+        )
         agent_memory = agent.write_memory_to_messages(summary_mode=True)
         final_result = prepare_response(
             augmented_question, agent_memory, reformulation_model=model
