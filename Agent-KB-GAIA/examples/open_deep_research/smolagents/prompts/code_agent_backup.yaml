@@ -356,9 +356,6 @@ planning:
     ```
     {{task}}
     ```
-    ```
-    {{knowledge_data}}
-    ```
 
     Find below the record of what has been tried so far to solve it. Then you will be asked to make an updated plan to solve the task.
     If the previous tries so far have met some success, you can make an updated plan based on these actions.
@@ -367,9 +364,6 @@ planning:
     You're still working towards solving this task:
     ```
     {{task}}
-    ```
-    ```
-    {{knowledge_data}}
     ```
 
     You can leverage these tools:

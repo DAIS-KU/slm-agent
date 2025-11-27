@@ -297,6 +297,12 @@ class AdvancedMultiStepAgent:
         agent_kb: bool = False,
         top_k: Optional[int] = 3,
         retrieval_type: Optional[str] = "hybrid",
+        q_decomp=False,
+        q_decomp_ex=False,
+        p_rationale=False,
+        p_rationale_ex=False,
+        action_planning=False,
+        action_planning_ex=False,
     ):
         if tool_parser is None:
             tool_parser = parse_json_tool_call
@@ -362,6 +368,13 @@ class AdvancedMultiStepAgent:
         self.agent_kb = agent_kb
         self.top_k = top_k
         self.retrieval_type = retrieval_type
+        # advanced planning args
+        self.q_decomp = (q_decomp,)
+        self.q_decomp_ex = (q_decomp_ex,)
+        self.p_rationale = (p_rationale,)
+        self.p_rationale_ex = (p_rationale_ex,)
+        self.action_planning = (action_planning,)
+        self.action_planning_ex = (action_planning_ex,)
 
     @property
     def logs(self):
@@ -693,100 +706,150 @@ You have been provided with these additional arguments, that you can access usin
         )
         return reflection_step
 
-    # def advanced_planning_step(
-    #     self,
-    #     task_and_current_state,
-    #     q_decomp=False,,
-    #     q_decomp_ex=False,,
-    #     p_rationale=False,,
-    #     p_rationale_ex=False,,
-    #     action_planning=False,,
-    #     action_planning_ex=False,
-    # ):
-    #     if q_decomp:
-    #         if q_decomp_ex:
-    #             subtasks = decompose_task(
-    #                 example=example,
-    #                 model_name=model_name,
-    #                 key=key,
-    #                 url=url,
-    #                 model=model,
-    #                 slm=slm,
-    #                 retrieval_method=retrieval_method,
-    #                 top_k=args.top_k,
-    #                 return_as_str=not p_rationale,
-    #             )
-    #         else:
-    #             subtasks = decompose_task(
-    #                 example=example,
-    #                 model_name=model_name,
-    #                 key=key,
-    #                 url=url,
-    #                 model=model,
-    #                 slm=slm,
-    #                 retrieval_method=None,
-    #                 top_k=None,
-    #                 return_as_str=not p_rationale,
-    #             )
-    #         print(
-    #             f"## ============================== AdancedAgent - QUERY DECOMPOSITION ============================== ##"
-    #         )
-    #         print(subtasks)
-    #         print(
-    #             f"## ================================================================================================ ##"
-    #         )
-    #         if p_rationale:
-    #             if p_rationale_ex:
-    #                 subtask_plannings = subtask_planning(
-    #                     example=example,
-    #                     extracted_step_list=subtasks,
-    #                     model_name=model_name,
-    #                     key=key,
-    #                     url=url,
-    #                     model=model,
-    #                     slm=slm,
-    #                     retrieval_method=retrieval_method,
-    #                     topk=args.topk,
-    #                     return_as_str=True,
-    #                 )
-    #             else:
-    #                 subtask_plannings = subtask_planning(
-    #                     example=example,
-    #                     extracted_step_list=subtasks,
-    #                     model_name=model_name,
-    #                     key=key,
-    #                     url=url,
-    #                     model=model,
-    #                     slm=slm,
-    #                     retrieval_method=None,
-    #                     topk=None,
-    #                     return_as_str=True,
-    #                 )
-    #             print(
-    #                 f"## ============================== AdancedAgent - RATIONALE-BASED PLANNING ============================== ##"
-    #             )
-    #             print(subtask_plannings)
-    #             print(
-    #                 f"## ===================================================================================================== ##"
-    #             )
-    #             additional_knowledge = subtask_plannings
-    #         else:
-    #             additional_knowledge = subtasks
-    #     message_prompt_plan = {
-    #         "role": MessageRole.USER,
-    #         "content": [
-    #             {
-    #                 "type": "text",
-    #                 "text": initial_plan_template,
-    #             }
-    #         ],
-    #     }
-    #     chat_message_plan: ChatMessage = self.model(
-    #         [message_prompt_plan],
-    #         stop_sequences=["<end_plan>"],
-    #     )
-    #     answer_plan = chat_message_plan.content
-    #     return answer_plan
+    def advanced_planning_step(
+        self,
+        task,
+        facts,
+        is_first_step,
+    ):
+        retrieval_method = akb_client.hybrid_search
+        # {
+        #     "hybrid": akb_client.hybrid_search,
+        #     "text": akb_client.text_search,
+        #     "semantic": akb_client.semantic_search,
+        # }
+
+        if self.q_decomp:
+            if self.q_decomp_ex:
+                subtasks = decompose_task(
+                    task=task,
+                    facts=facts,
+                    model=self.model,
+                    retrieval_method=retrieval_method,
+                    top_k=self.top_k,
+                    return_as_str=not p_rationale,
+                )
+            else:
+                subtasks = decompose_task(
+                    task=task,
+                    facts=facts,
+                    model=self.model,
+                    retrieval_method=retrieval_method,
+                    retrieval_method=None,
+                    top_k=None,
+                    return_as_str=not p_rationale,
+                )
+            print(
+                f"## ============================== AdancedAgent - QUERY DECOMPOSITION ============================== ##"
+            )
+            print(subtasks)
+            print(
+                f"## ================================================================================================ ##"
+            )
+            if self.p_rationale:
+                if self.p_rationale_ex:
+                    subtask_plannings = subtask_planning(
+                        task=task,
+                        facts=facts,
+                        extracted_step_list=subtasks,
+                        model=model,
+                        retrieval_method=retrieval_method,
+                        topk=args.topk,
+                        return_as_str=True,
+                    )
+                else:
+                    subtask_plannings = subtask_planning(
+                        task=task,
+                        facts=facts,
+                        extracted_step_list=subtasks,
+                        model=model,
+                        retrieval_method=None,
+                        topk=None,
+                        return_as_str=True,
+                    )
+                print(
+                    f"## ============================== AdancedAgent - RATIONALE-BASED PLANNING ============================== ##"
+                )
+                print(subtask_plannings)
+                print(
+                    f"## ===================================================================================================== ##"
+                )
+                additional_knowledge = subtask_plannings
+            else:
+                additional_knowledge = subtasks
+
+        if is_first_step:
+            initial_plan_template = populate_template(
+                self.prompt_templates["planning"]["initial_plan_with_knowledge"],
+                variables={
+                    "task": task,
+                    "tools": self.tools,
+                    "managed_agents": self.managed_agents,
+                    "answer_facts": facts,
+                    "knowledge_data": additional_knowledge,
+                },
+            )
+            message_prompt_plan = {
+                "role": MessageRole.USER,
+                "content": [
+                    {
+                        "type": "text",
+                        "text": initial_plan_template,
+                    }
+                ],
+            }
+            chat_message_plan: ChatMessage = self.model(
+                [message_prompt_plan],
+                stop_sequences=["<end_plan>"],
+            )
+            answer_plan = chat_message_plan.content
+            return answer_plan
+        else:
+            pdate_plan_pre_messages = {
+                "role": MessageRole.SYSTEM,
+                "content": [
+                    {
+                        "type": "text",
+                        "text": populate_template(
+                            self.prompt_templates["planning"][
+                                "update_plan_pre_messages"
+                            ],
+                            variables={
+                                "task": task,
+                                "knowledge_data": additional_knowledge,
+                            },
+                        ),
+                    }
+                ],
+            }
+            update_plan_post_messages = {
+                "role": MessageRole.USER,
+                "content": [
+                    {
+                        "type": "text",
+                        "text": populate_template(
+                            self.prompt_templates["planning"][
+                                "update_plan_post_messages"
+                            ],
+                            variables={
+                                "task": task,
+                                "tools": self.tools,
+                                "managed_agents": self.managed_agents,
+                                "facts_update": facts,
+                                "remaining_steps": (self.max_steps - step),
+                                "knowledge_data": additional_knowledge,
+                            },
+                        ),
+                    }
+                ],
+            }
+            chat_message_plan: ChatMessage = self.model(
+                [update_plan_pre_messages]
+                + memory_messages
+                + [update_plan_post_messages],
+                stop_sequences=["<end_plan>"],
+            )
+            return chat_message_plan
 
     def planning_step(
         self,
@@ -821,53 +884,9 @@ You have been provided with these additional arguments, that you can access usin
 
             chat_message_facts: ChatMessage = self.model(input_messages)
             answer_facts = chat_message_facts.content
-
-            if self.agent_kb and additional_knowledge != None:
-                knowledge_data_all = "Please strictly follow the suggestions below:\n"
-                knowledge_data_all += additional_knowledge
-                final_facts_knowledge = textwrap.dedent(
-                    f"""Here are the similar tasks, plans and relevant experience that I should follow:
-                    ```
-                    {knowledge_data_all}
-                    ```""".strip()
-                )
-                initial_plan_template = populate_template(
-                    self.prompt_templates["planning"]["initial_plan_with_knowledge"],
-                    variables={
-                        "task": task,
-                        "tools": self.tools,
-                        "managed_agents": self.managed_agents,
-                        "answer_facts": answer_facts,
-                        "knowledge_data": knowledge_data_all,
-                    },
-                )
-            else:
-                initial_plan_template = populate_template(
-                    self.prompt_templates["planning"]["initial_plan"],
-                    variables={
-                        "task": task,
-                        "tools": self.tools,
-                        "managed_agents": self.managed_agents,
-                        "answer_facts": answer_facts,
-                    },
-                )
-                final_facts_knowledge = textwrap.dedent(f"""No retrieval process""")
-
-            message_prompt_plan = {
-                "role": MessageRole.USER,
-                "content": [
-                    {
-                        "type": "text",
-                        "text": initial_plan_template,
-                    }
-                ],
-            }
-            chat_message_plan: ChatMessage = self.model(
-                [message_prompt_plan],
-                stop_sequences=["<end_plan>"],
+            answer_plan = self.advanced_planning_step(
+                task=task, facts=answer_facts, is_first_step=True
             )
-            answer_plan = chat_message_plan.content
-            # answer_plan = self.advanced_planning_step(...)
 
             final_plan_redaction = textwrap.dedent(
                 f"""Here is the plan of action that I will follow to solve the task:
@@ -932,48 +951,9 @@ You have been provided with these additional arguments, that you can access usin
             )
             chat_message_facts: ChatMessage = self.model(input_messages)
             facts_update = chat_message_facts.content
-
-            update_plan_pre_messages = {
-                "role": MessageRole.SYSTEM,
-                "content": [
-                    {
-                        "type": "text",
-                        "text": populate_template(
-                            self.prompt_templates["planning"][
-                                "update_plan_pre_messages"
-                            ],
-                            variables={"task": task},
-                        ),
-                    }
-                ],
-            }
-            update_plan_post_messages = {
-                "role": MessageRole.USER,
-                "content": [
-                    {
-                        "type": "text",
-                        "text": populate_template(
-                            self.prompt_templates["planning"][
-                                "update_plan_post_messages"
-                            ],
-                            variables={
-                                "task": task,
-                                "tools": self.tools,
-                                "managed_agents": self.managed_agents,
-                                "facts_update": facts_update,
-                                "remaining_steps": (self.max_steps - step),
-                            },
-                        ),
-                    }
-                ],
-            }
-            chat_message_plan: ChatMessage = self.model(
-                [update_plan_pre_messages]
-                + memory_messages
-                + [update_plan_post_messages],
-                stop_sequences=["<end_plan>"],
+            chat_message_plan = self.advanced_planning_step(
+                task=task, facts=facts_update, is_first_step=False
             )
-            # chat_message_plan = self.advanced_planning_step(...)
 
             final_plan_redaction = textwrap.dedent(
                 f"""I still need to solve the task I was given:
