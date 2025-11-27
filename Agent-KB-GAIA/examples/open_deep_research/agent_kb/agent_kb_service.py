@@ -45,8 +45,8 @@ class WorkflowResponse(BaseModel):
     search_plan: Optional[str] = None
     agent_experience: Optional[str]
     search_agent_experience: Optional[str]
-    steps: Optional[List[str]]
-    step_rationales: Optional[List[str]]
+    steps: Optional[List[str]] = None
+    step_rationales: Optional[Dict] = None
 
 
 class PerformanceStats(BaseModel):
@@ -102,6 +102,7 @@ async def hybrid_search(request: SearchRequest):
         return response_data
 
     except Exception as e:
+        print(f"Search failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 

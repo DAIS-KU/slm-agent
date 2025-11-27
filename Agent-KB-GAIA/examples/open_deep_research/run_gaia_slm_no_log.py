@@ -353,8 +353,8 @@ def answer_single_question(
     p_rationale_ex=False,
 ):
     if slm:
-        _, key, url, _ = get_api_model(model_id)
-        _, key_search, url_search, _ = get_api_model(model_id_search)
+        model_name, key, url, _ = get_api_model(model_id)
+        model_name, key_search, url_search, _ = get_api_model(model_id_search)
     else:
         model_name, key, url, model_wrapper = get_api_model(model_id)
         model_name_search, key_search, url_search, model_wrapper_search = get_api_model(
@@ -387,7 +387,9 @@ def answer_single_question(
     visual_inspection_tool = VisualInspectorTool(model, 100000)
 
     agent = create_agent_hierarchy(model, model_search, args, debug)
+    akb_client = AKBClient()
 
+    model_name_retrieval = args.model_name_retrieval
     retrieval_method = {
         "hybrid": akb_client.hybrid_search,
         "text": akb_client.text_search,
@@ -464,7 +466,7 @@ def answer_single_question(
                     model=model,
                     slm=slm,
                     retrieval_method=retrieval_method,
-                    topk=args.topk,
+                    top_k=args.top_k,
                     return_as_str=True,
                 )
             else:
@@ -477,7 +479,7 @@ def answer_single_question(
                     model=model,
                     slm=slm,
                     retrieval_method=None,
-                    topk=None,
+                    top_k=None,
                     return_as_str=True,
                 )
             print(
