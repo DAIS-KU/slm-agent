@@ -1,0 +1,56 @@
+[
+    {
+        "macro_type": "probabilistic modeling",
+        "macro_description": "Bayesian A/B Test: 전환율 비교",
+        "actions": [
+          {
+            "action_description": "A/B 테스트 전환율(p_A, p_B)에 대해 정보가 없다는 가정을 반영하는 Beta(1,1) 균일 사전분포를 설정한다.",
+            "tool_name": "inference",
+            "tool_skeleton": "def inference(query)",
+            "tool_parameter": "{\"alpha\":1, \"beta\":1, \"name\":\"p_A,p_B\"}",
+            "observation": "Set Beta(1,1) priors for p_A and p_B."
+          },
+          {
+            "action_description": "실험군 A와 B의 관측 전환 데이터(성공 건수와 전체 노출 수)를 로드하여 이후 베이지안 업데이트에 사용할 수 있도록 준비한다.",
+            "tool_name": "inference",
+            "tool_skeleton": "def inference(query)",
+            "tool_parameter": "{\"A\":{\"success\":120, \"total\":300}, \"B\":{\"success\":150, \"total\":300}}",
+            "observation": "Loaded A: 120/300, B: 150/300."
+          },
+          {
+            "action_description": "Beta-이항 모형을 사용해 사전분포와 관측 데이터를 결합하여 각 그룹 A,B의 전환율 사후분포를 계산하고, 그에 따른 평균 전환율을 산출한다.",
+            "tool_name": "inference",
+            "tool_skeleton": "def inference(query)",
+            "tool_parameter": "{\"A\":{\"alpha0\":1, \"beta0\":1}, \"B\":{\"alpha0\":1, \"beta0\":1}}",
+            "observation": "Posteriors — A: Beta(121,181), mean≈0.4006; B: Beta(151,151), mean≈0.5000."
+          },
+          {
+            "action_description": "사후분포에서 대량 샘플링을 수행하여 p_B > p_A일 확률과 전환율 차이 Δ = p_B - p_A의 분포(중앙값, 95% 신뢰구간)를 추정한다.",
+             "tool_name": "inference",
+            "tool_skeleton": "def inference(query)",
+            "tool_parameter": "{\"samples\":2000000, \"metric\":\"P(p_B > p_A)\"}",
+            "observation": "P(p_B > p_A) ≈ 0.993. Δ = p_B - p_A median ≈ 0.099; 95% CI ≈ [0.020, 0.178]."
+          },
+          {
+            "action_description": "비즈니스 의사결정 기준(전환율 향상 확률 0.95 이상)을 적용해 p_B > p_A일 확률을 평가하고, 기준을 만족하므로 B를 선택하며 예상 전환율 리프트를 보고한다.",
+            "tool_name": "inference",
+            "tool_skeleton": "def inference(query)",
+            "tool_parameter": "{\"threshold\":0.95, \"objective\":\"maximize_conversion\"}",
+            "observation": "Since 0.993 > 0.95, choose variant B. Expected relative lift ≈ 24.8%."
+          }
+        ]
+      },
+      {
+        "macro_type": "web_search",
+        "description": "Search for the actor who plays B in 'A'",
+        "actions": [
+          {
+            "action_description": "'A'라는 작품에서 캐릭터 B를 연기한 배우가 누구인지 검색 엔진을 통해 조회한다.",
+            "tool_name": "search",
+            "tool_skeleton": "def search(engine, query)",
+            "tool_parameter": "{\"engine\":\"google\",\"query\":\"the actor who plays B in 'A'\"}",
+            "observation": "{\"result\":\"C\"}"
+          }
+        ]
+      }      
+]

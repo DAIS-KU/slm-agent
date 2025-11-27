@@ -98,7 +98,7 @@ from .utils import (
     parse_json_tool_call,
     truncate_content,
 )
-from .planner import decompose_task, subtask_planning
+from .planner import decompose_task, subtask_planning, action_level_planning
 
 logger = getLogger(__name__)
 
@@ -110,13 +110,18 @@ class AKBClient:
         self.session.headers.update({"Content-Type": "application/json"})
 
     def hybrid_search(
-        self, query: str, top_k: int = 5, weights: Dict[str, float] = None
+        self,
+        query: str,
+        top_k: int = 5,
+        weights: Dict[str, float] = None,
+        is_action=False,
     ) -> List[Dict]:
         endpoint = f"{self.base_url}/search/hybrid"
         payload = {
             "query": query,
             "top_k": top_k,
             "weights": weights or {"text": 0.5, "semantic": 0.5},
+            "is_action": is_action,
         }
 
         try:
@@ -302,7 +307,6 @@ class AdvancedMultiStepAgent:
         p_rationale=False,
         p_rationale_ex=False,
         action_planning=False,
-        action_planning_ex=False,
     ):
         if tool_parser is None:
             tool_parser = parse_json_tool_call
@@ -374,7 +378,6 @@ class AdvancedMultiStepAgent:
         self.p_rationale = (p_rationale,)
         self.p_rationale_ex = (p_rationale_ex,)
         self.action_planning = (action_planning,)
-        self.action_planning_ex = (action_planning_ex,)
 
     @property
     def logs(self):
@@ -754,7 +757,7 @@ You have been provided with these additional arguments, that you can access usin
                         extracted_step_list=subtasks,
                         model=model,
                         retrieval_method=retrieval_method,
-                        topk=args.topk,
+                        topk=self.topk,
                         return_as_str=True,
                     )
                 else:
@@ -775,6 +778,15 @@ You have been provided with these additional arguments, that you can access usin
                     f"## ===================================================================================================== ##"
                 )
                 additional_knowledge = subtask_plannings
+                if self.action_planning:
+                    action_plannings = action_level_planning(
+                        task=task,
+                        curruent_plan=subtask_plannings,
+                        model=self.model,
+                        retrieval_method=retrieval_method,
+                        top_k=self.top_k,
+                    )
+                    additional_knowledge = action_plannings
             else:
                 additional_knowledge = subtasks
 

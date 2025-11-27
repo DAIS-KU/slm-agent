@@ -19,8 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-decision_manager = AKB_decision_manager(json_file_paths=["./agent_kb/decision_kb.json"])
-action_manager = AKB_decision_manager(json_file_paths=["./agent_kb/action_kb.json"])
+manager = AKB_Manager(json_file_paths=["./agent_kb/agent_kb_database.json"])
 
 performance_stats = {
     "total_requests": 0,
@@ -35,7 +34,6 @@ class SearchRequest(BaseModel):
     query: str
     top_k: int = 1
     weights: Optional[Dict[str, float]] = {"text": 0.5, "semantic": 0.5}
-    is_action: bool = False
 
 
 class WorkflowResponse(BaseModel):
@@ -77,7 +75,7 @@ async def hybrid_search(request: SearchRequest):
             if time.time() - response_cache[cache_key]["timestamp"] < CACHE_TTL:
                 return response_cache[cache_key]["data"]
 
-        results = decision_manager.hybrid_search(
+        results = manager.hybrid_search(
             query=request.query, top_k=request.top_k, weights=request.weights
         )
 
@@ -117,9 +115,7 @@ async def text_search(request: SearchRequest):
             if time.time() - response_cache[cache_key]["timestamp"] < CACHE_TTL:
                 return response_cache[cache_key]["data"]
 
-        raw_results = decision_manager.search_by_text(
-            request.query, "query", request.top_k
-        )
+        raw_results = manager.search_by_text(request.query, "query", request.top_k)
 
         response_data = [
             WorkflowResponse(
@@ -153,9 +149,7 @@ async def semantic_search(request: SearchRequest):
             if time.time() - response_cache[cache_key]["timestamp"] < CACHE_TTL:
                 return response_cache[cache_key]["data"]
 
-        raw_results = decision_manager.search_by_semantic(
-            request.query, "query", request.top_k
-        )
+        raw_results = manager.search_by_semantic(request.query, "query", request.top_k)
 
         response_data = [
             WorkflowResponse(

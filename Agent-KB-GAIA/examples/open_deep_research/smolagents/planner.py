@@ -25,7 +25,7 @@ def call_model(model, text):
     return response.content
 
 
-def parse_steps(output: str) -> List[str]:
+def parse_str_to_list(output: str) -> List[str]:
     """
     Supported patterns (앞뒤에 잡소리 텍스트가 있어도 허용):
 
@@ -151,19 +151,40 @@ def build_subtask_planning_rationale_examples(
     return step_and_rationaleses_text
 
 
+def build_action_level_planning_subseq_examples(entities):
+    step_and_rationaleses = []
+    for entity in entities:
+        lines = []
+        action_description = entity.get("macro_description")
+        lines.append(f"Similar actions: {action_description}")
+        for i, (step, rationale) in enumerate(
+            zip(
+                entity[step_field][subtask_number],
+                entity[rationale_field][str(subtask_number)],
+            ),
+            start=1,
+        ):
+            lines.append(f"{i}. {action_description}")
+        step_and_rationales = "\n".join(lines)
+        step_and_rationaleses.append(step_and_rationales)
+    step_and_rationaleses_text = "\n".join(step_and_rationaleses)
+    return step_and_rationaleses_text
+
+
 def decompose_task(
-    task=task,
-    facts=facts,
-    model=self.model,
-    retrieval_method=retrieval_method,
-    top_k=self.top_k,
-    return_as_str=not p_rationale,
+    task,
+    facts,
+    model,
+    retrieval_method,
+    top_k,
+    return_as_str=False,
 ):
+    prompt = load_prompts(
+        path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/smolagents/prompts/rationale_planner_prompts.yaml"
+    )
     if retrieval_method is None:
         print(f"decompose_task - retrieval_method is None")
-        task_decomposition_prompt_template = load_prompts(
-            path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-        )["task_decomposition_prompt"]
+        task_decomposition_prompt_template = prompt["task_decomposition_prompt"]
         task_decomposition_prompt = populate_template(
             task_decomposition_prompt_template,
             variables={"task": example["question"]},
@@ -171,9 +192,9 @@ def decompose_task(
     else:
         print(f"decompose_task - retrieval_method is not None")
         rationale_retrieval_results = retrieval_method(example["question"], top_k=top_k)
-        task_decomposition_prompt_template = load_prompts(
-            path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-        )["task_decomposition_with_examples_prompt"]
+        task_decomposition_prompt_template = prompt[
+            "task_decomposition_with_examples_prompt"
+        ]
         step_rationale_examples = build_subtask_rationale_examples(
             rationale_retrieval_results, "steps", "step_rationales"
         )
@@ -189,35 +210,34 @@ def decompose_task(
     if return_as_str:
         return task_decomposition_result
     else:
-        extract_step_list_template = load_prompts(
-            path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-        )["extract_step_list"]
+        extract_step_list_template = ["extract_step_list"]
         extract_step_list_prompt = populate_template(
             extract_step_list_template, variables={"steps": task_decomposition_result}
         )
         extracted_steps = call_model(model, extract_step_list_prompt)
-        extracted_step_list = parse_steps(extracted_steps)
+        extracted_step_list = parse_str_to_list(extracted_steps)
         return extracted_step_list
 
 
 def subtask_planning(
-    task=task,
-    facts=facts,
-    extracted_step_list=subtasks,
-    model=model,
-    retrieval_method=None,
-    topk=None,
+    task,
+    facts,
+    extracted_step_list,
+    model,
+    retrieval_method,
+    top_k,
     return_as_str=True,
 ):
+    prompt = load_prompts(
+        path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/smolagents/prompts/rationale_planner_prompts.yaml"
+    )
     subtask_plannings = []
     for curruent_sub_task_number, curruent_sub_task in enumerate(
         extracted_step_list[:1]
     ):
         print(f"subtask planning #{curruent_sub_task_number}")
         if retrieval_method is None:
-            subtask_planning_prompt_template = load_prompts(
-                path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-            )["subtask_planning_prompt"]
+            subtask_planning_prompt_template = prompt["subtask_planning_prompt"]
             subtask_planning_prompt = populate_template(
                 subtask_planning_prompt_template,
                 variables={
@@ -227,9 +247,9 @@ def subtask_planning(
                 },
             )
         else:
-            subtask_planning_with_examples_prompt_template = load_prompts(
-                path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-            )["subtask_planning_with_examples_prompt"]
+            subtask_planning_with_examples_prompt_template = prompt[
+                "subtask_planning_with_examples_prompt"
+            ]
             rationale_retrieval_results = retrieval_method(
                 curruent_sub_task, top_k=top_k
             )
@@ -255,3 +275,37 @@ def subtask_planning(
         return subtask_plannings_str
     else:
         return subtask_plannings
+
+
+def action_level_planning(task, curruent_plan, model, retrieval_method, top_k):
+    prompt = load_prompts(
+        path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/smolagents/prompts/action_planner_prompts.yaml"
+    )
+    generate_tag_prompt_template = prompt["generate_tag_prompt"]
+    generate_tag_prompt = populate_template(
+        generate_tag_prompt_template,
+        variables={"task": task, "curruent_plan": curruent_plan, "top_k": top_k},
+    )
+    action_tags = call_model(model, generate_tag_prompt)
+    action_tag_list = parse_str_to_list(action_tags)
+    retrieval_results = []
+    for action_tag in action_tag_list[:top_k]:
+        retrieval_result = retrieval_method(action_tag, top_k=1, is_action=True)
+        retrieval_results.append(retrieval_result)
+    action_sequence_examples = build_action_level_planning_subseq_examples(
+        retrieval_results
+    )
+
+    action_planning_with_examples_prompt_template = prompt[
+        "action_planning_with_examples_prompt"
+    ]
+    action_planning_with_examples_prompt = populate_template(
+        action_planning_with_examples_prompt_template,
+        variables={
+            "task": task,
+            "curruent_plan": curruent_plan,
+            "action_sequence_examples": action_sequence_examples,
+        },
+    )
+    action_planning_result = call_model(model, action_planning_with_examples_prompt)
+    return action_planning_result
