@@ -373,11 +373,11 @@ class AdvancedMultiStepAgent:
         self.top_k = top_k
         self.retrieval_type = retrieval_type
         # advanced planning args
-        self.q_decomp = (q_decomp,)
-        self.q_decomp_ex = (q_decomp_ex,)
-        self.p_rationale = (p_rationale,)
-        self.p_rationale_ex = (p_rationale_ex,)
-        self.action_planning = (action_planning,)
+        self.q_decomp = q_decomp
+        self.q_decomp_ex = q_decomp_ex
+        self.p_rationale = p_rationale
+        self.p_rationale_ex = p_rationale_ex
+        self.action_planning = action_planning
 
     @property
     def logs(self):
@@ -715,7 +715,7 @@ You have been provided with these additional arguments, that you can access usin
         facts,
         is_first_step,
     ):
-        retrieval_method = akb_client.hybrid_search
+        retrieval_method = self.akb_client.hybrid_search
         # {
         #     "hybrid": akb_client.hybrid_search,
         #     "text": akb_client.text_search,
@@ -730,17 +730,16 @@ You have been provided with these additional arguments, that you can access usin
                     model=self.model,
                     retrieval_method=retrieval_method,
                     top_k=self.top_k,
-                    return_as_str=not p_rationale,
+                    return_as_str=not self.p_rationale,
                 )
             else:
                 subtasks = decompose_task(
                     task=task,
                     facts=facts,
                     model=self.model,
-                    retrieval_method=retrieval_method,
                     retrieval_method=None,
                     top_k=None,
-                    return_as_str=not p_rationale,
+                    return_as_str=not self.p_rationale,
                 )
             print(
                 f"## ============================== AdancedAgent - QUERY DECOMPOSITION ============================== ##"
@@ -755,9 +754,9 @@ You have been provided with these additional arguments, that you can access usin
                         task=task,
                         facts=facts,
                         extracted_step_list=subtasks,
-                        model=model,
+                        model=self.model,
                         retrieval_method=retrieval_method,
-                        topk=self.topk,
+                        top_k=self.top_k,
                         return_as_str=True,
                     )
                 else:
@@ -765,9 +764,9 @@ You have been provided with these additional arguments, that you can access usin
                         task=task,
                         facts=facts,
                         extracted_step_list=subtasks,
-                        model=model,
+                        model=self.model,
                         retrieval_method=None,
-                        topk=None,
+                        top_k=None,
                         return_as_str=True,
                     )
                 print(
@@ -779,6 +778,7 @@ You have been provided with these additional arguments, that you can access usin
                 )
                 additional_knowledge = subtask_plannings
                 if self.action_planning:
+                    print(f"action_planning is called {self.action_planning}")
                     action_plannings = action_level_planning(
                         task=task,
                         curruent_plan=subtask_plannings,
@@ -814,8 +814,7 @@ You have been provided with these additional arguments, that you can access usin
                 [message_prompt_plan],
                 stop_sequences=["<end_plan>"],
             )
-            answer_plan = chat_message_plan.content
-            return answer_plan
+            return chat_message_plan
         else:
             pdate_plan_pre_messages = {
                 "role": MessageRole.SYSTEM,
@@ -896,9 +895,10 @@ You have been provided with these additional arguments, that you can access usin
 
             chat_message_facts: ChatMessage = self.model(input_messages)
             answer_facts = chat_message_facts.content
-            answer_plan = self.advanced_planning_step(
+            chat_message_plan = self.advanced_planning_step(
                 task=task, facts=answer_facts, is_first_step=True
             )
+            answer_plan = chat_message_plan.content
 
             final_plan_redaction = textwrap.dedent(
                 f"""Here is the plan of action that I will follow to solve the task:

@@ -19,8 +19,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-decision_manager = AKB_decision_manager(json_file_paths=["./agent_kb/decision_kb.json"])
-action_manager = AKB_decision_manager(json_file_paths=["./agent_kb/action_kb.json"])
+decision_manager = AKB_Manager(json_file_paths=["./agent_kb/decision_kb.json"])
+# action_manager = AKB_Manager(json_file_paths=["./agent_kb/action_kb.json"])
 
 performance_stats = {
     "total_requests": 0,
@@ -76,10 +76,12 @@ async def hybrid_search(request: SearchRequest):
         if cache_key in response_cache:
             if time.time() - response_cache[cache_key]["timestamp"] < CACHE_TTL:
                 return response_cache[cache_key]["data"]
-
-        results = decision_manager.hybrid_search(
-            query=request.query, top_k=request.top_k, weights=request.weights
-        )
+        if request.is_action:
+            raise UnImplementedError("action manager not implemented")
+        else:
+            results = decision_manager.hybrid_search(
+                query=request.query, top_k=request.top_k, weights=request.weights
+            )
 
         response_data = [
             WorkflowResponse(

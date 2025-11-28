@@ -87,7 +87,7 @@ def parse_steps(output: str) -> List[str]:
 
     # 3) Fallback 1: Markdown 번호 리스트 (1. ..., 2. ..., ...)
     #    각 번호 블록을 하나의 step 으로 취급
-    numbered_pattern = r'^\s*\d+\.\s+(.+?)(?=^\s*\d+\.|\Z)'
+    numbered_pattern = r"^\s*\d+\.\s+(.+?)(?=^\s*\d+\.|\Z)"
     blocks = re.findall(
         numbered_pattern,
         text.strip(),

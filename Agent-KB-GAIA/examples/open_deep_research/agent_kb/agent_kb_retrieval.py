@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import torch
 from sentence_transformers import SentenceTransformer
 
-
+# TODO Action용 분리
 @dataclass
 class WorkflowInstance:
     """A complete workflow instance"""
@@ -32,7 +32,8 @@ class AgenticKnowledgeBase:
     def __init__(self, json_file_paths=None):
         self.workflows: Dict[str, WorkflowInstance] = {}
         self.embedding_model = SentenceTransformer(
-            "sentence-transformers/all-MiniLM-L6-v2"
+            "/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/models/all-MiniLM-L6-v2",
+            # "sentence-transformers/all-MiniLM-L6-v2"
         )
 
         self.field_components = {

@@ -4,6 +4,11 @@ import yaml
 import ast
 import json
 import re
+from .models import (
+    ChatMessage,
+    MessageRole,
+    Model,
+)
 
 # TODO
 # 1. Use AKB Client instead of retrieval_method
@@ -21,7 +26,7 @@ def call_model(model, text):
             }
         ],
     }
-    response: ChatMessage = self.model([message])
+    response: ChatMessage = model([message])
     return response.content
 
 
@@ -31,7 +36,7 @@ import json
 import ast
 
 
-def parse_steps(output: str) -> List[str]:
+def parse_str_to_list(output: str) -> List[str]:
     """
     Supported patterns (앞뒤에 잡소리 텍스트가 있어도 허용):
 
@@ -101,7 +106,7 @@ def parse_steps(output: str) -> List[str]:
 
     # 3) Fallback 1: Markdown 번호 리스트 (1. ..., 2. ..., ...)
     #    각 번호 블록을 하나의 step 으로 취급
-    numbered_pattern = r'^\s*\d+\.\s+(.+?)(?=^\s*\d+\.|\Z)'
+    numbered_pattern = r"^\s*\d+\.\s+(.+?)(?=^\s*\d+\.|\Z)"
     blocks = re.findall(
         numbered_pattern,
         text.strip(),
@@ -184,7 +189,8 @@ def build_action_level_planning_subseq_examples(entities):
         lines.append(f"Similar actions: {action_description}")
         for i, (step, rationale) in enumerate(
             zip(
-                entity[step_field], entity[rationale_field],
+                entity[step_field],
+                entity[rationale_field],
             ),
             start=1,
         ):
@@ -204,18 +210,18 @@ def decompose_task(
     return_as_str=False,
 ):
     prompt = load_prompts(
-        path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/smolagents/prompts/rationale_planner_prompts.yaml"
+        path="/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/smolagents/prompts/rationale_planner_prompts.yaml"
     )
     if retrieval_method is None:
         print(f"decompose_task - retrieval_method is None")
         task_decomposition_prompt_template = prompt["task_decomposition_prompt"]
         task_decomposition_prompt = populate_template(
             task_decomposition_prompt_template,
-            variables={"task": example["question"]},
+            variables={"task": task},
         )
     else:
         print(f"decompose_task - retrieval_method is not None")
-        rationale_retrieval_results = retrieval_method(example["question"], top_k=top_k)
+        rationale_retrieval_results = retrieval_method(task, top_k=top_k)
         task_decomposition_prompt_template = prompt[
             "task_decomposition_with_examples_prompt"
         ]
@@ -225,7 +231,7 @@ def decompose_task(
         task_decomposition_prompt = populate_template(
             task_decomposition_prompt_template,
             variables={
-                "task": example["question"],
+                "task": task,
                 "decomposed_with_rationale_examples": step_rationale_examples,
             },
         )
@@ -234,7 +240,7 @@ def decompose_task(
     if return_as_str:
         return task_decomposition_result
     else:
-        extract_step_list_template = ["extract_step_list"]
+        extract_step_list_template = prompt["extract_step_list"]
         extract_step_list_prompt = populate_template(
             extract_step_list_template, variables={"steps": task_decomposition_result}
         )
@@ -253,7 +259,7 @@ def subtask_planning(
     return_as_str=True,
 ):
     prompt = load_prompts(
-        path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/smolagents/prompts/rationale_planner_prompts.yaml"
+        path="/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/smolagents/prompts/rationale_planner_prompts.yaml"
     )
     subtask_plannings = []
     for curruent_sub_task_number, curruent_sub_task in enumerate(
@@ -265,7 +271,7 @@ def subtask_planning(
             subtask_planning_prompt = populate_template(
                 subtask_planning_prompt_template,
                 variables={
-                    "task": example["question"],
+                    "task": task,
                     "sub_tasks": extracted_step_list,
                     "curruent_sub_task": curruent_sub_task,
                 },
@@ -286,7 +292,7 @@ def subtask_planning(
             subtask_planning_prompt = populate_template(
                 subtask_planning_with_examples_prompt_template,
                 variables={
-                    "task": example["question"],
+                    "task": task,
                     "sub_tasks": extracted_step_list,
                     "curruent_sub_task": curruent_sub_task,
                     "planning_with_rationale_examples": step_rationale_examples,
@@ -303,7 +309,7 @@ def subtask_planning(
 
 def action_level_planning(task, curruent_plan, model, retrieval_method, top_k):
     prompt = load_prompts(
-        path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/smolagents/prompts/action_planner_prompts.yaml"
+        path="/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/smolagents/prompts/action_planner_prompts.yaml"
     )
     generate_tag_prompt_template = prompt["generate_tag_prompt"]
     generate_tag_prompt = populate_template(

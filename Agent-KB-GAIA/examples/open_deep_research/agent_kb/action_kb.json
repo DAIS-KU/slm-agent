@@ -1,6 +1,6 @@
 [
     {
-        "macro_type": "probabilistic modeling",
+        "macro_type": "probabilistic modeling", 
         "macro_description": "Bayesian A/B Test: 전환율 비교",
         "actions": [
           {
