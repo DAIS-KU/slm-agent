@@ -125,6 +125,7 @@ def evaluate(input_path, output_path):
     with open(input_path, "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
+            task_id = data.get("task_id")
             pred = data.get("prediction")
             true = data.get("true_answer")
             is_correct = get_correct(pred, true)
@@ -132,7 +133,12 @@ def evaluate(input_path, output_path):
             correct += int(is_correct)
 
             results.append(
-                {"prediction": pred, "true_answer": true, "is_correct": is_correct}
+                {
+                    "task_id": task_id,
+                    "prediction": pred,
+                    "true_answer": true,
+                    "is_correct": is_correct,
+                }
             )
 
     # 정확도 계산

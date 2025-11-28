@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import base64
 import threading
 import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -241,9 +242,47 @@ eval_ds = eval_ds.rename_columns(
 
 
 def preprocess_file_paths(row):
-    if len(row["file_name"]) > 0:
-        # row["file_name"] = f"data/gaia/{SET}/" + row["file_name"]
-        row["file_name"] = f"data/hle/{SET}/" + row["file_name"]
+    raw = row.get("file_name", "")
+
+    # 1) data URL 인 경우 (data:image/...;base64,~~~)
+    if isinstance(raw, str) and raw.startswith("data:image"):
+        header, encoded = raw.split(",", 1)  # "data:image/jpeg;base64", "...."
+
+        # MIME 타입에서 확장자 추출
+        # 예: data:image/jpeg;base64 -> jpeg
+        mime = header.split(";")[0].split(":")[1]  # "image/jpeg"
+        ext_map = {
+            "image/jpeg": "jpg",
+            "image/jpg": "jpg",
+            "image/png": "png",
+            "image/gif": "gif",
+            "image/webp": "webp",
+        }
+        ext = ext_map.get(mime, "jpg")  # 모르면 jpg로
+
+        # task_id를 파일명으로 사용
+        task_id = str(row.get("task_id", "unknown"))
+        img_dir = os.path.join("data", "hle", str(SET))
+        os.makedirs(img_dir, exist_ok=True)
+
+        img_filename = f"{task_id}.{ext}"
+        img_path = os.path.join(img_dir, img_filename)
+
+        # 2) 파일이 없을 때만 디코딩해서 저장
+        if not os.path.exists(img_path):
+            img_bytes = base64.b64decode(encoded)
+            with open(img_path, "wb") as f:
+                f.write(img_bytes)
+
+        # 3) row["file_name"]에는 실제 파일 경로 저장
+        row["file_name"] = img_path
+        return row
+
+    # 2) 일반적인 파일명인 경우: 기존 로직 유지
+    if isinstance(raw, str) and len(raw) > 0:
+        # 상대 파일명 -> data/hle/{SET}/파일명
+        row["file_name"] = f"data/gaia/{SET}/" + row["file_name"]
+
     return row
 
 
@@ -786,7 +825,6 @@ def main():
     tasks_to_run = get_examples_to_answer(
         answers_file, eval_df, selected_tasks, level, args.debug
     )
-    task_rationale_dict = load_task_dict_from_jsonl("./gaia_val_level1.json")
 
     if args.slm:
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
@@ -811,9 +849,6 @@ def main():
 
     if args.debug or args.concurrency == 1:
         for example in tasks_to_run:
-            if args.s_rationale or args.p_rationale:
-                example_rationale = task_rationale_dict[example["task_id"]]
-                example.update(example_rationale)
             answer_single_question(
                 example,
                 args,
