@@ -11,6 +11,12 @@ import re
 from typing import List
 
 
+from typing import List
+import re
+import json
+import ast
+
+
 def parse_steps(output: str) -> List[str]:
     """
     Supported patterns (앞뒤에 잡소리 텍스트가 있어도 허용):
@@ -24,6 +30,13 @@ def parse_steps(output: str) -> List[str]:
 
     3) 그냥 문자열 나열:
        "Step 1: ...", "Step 2: ...", "Step 3: ..."
+
+    4) Markdown 번호 리스트:
+       1. Step 1 ...
+          - sub bullet ...
+
+       2. Step 2 ...
+          - ...
     """
     text = output.strip()
 
@@ -72,7 +85,19 @@ def parse_steps(output: str) -> List[str]:
             # candidate 파싱 실패하면 fallback 으로
             result = None
 
-    # 3) Fallback: 따옴표로 된 문자열들을 전부 추출해서 리스트로 사용
+    # 3) Fallback 1: Markdown 번호 리스트 (1. ..., 2. ..., ...)
+    #    각 번호 블록을 하나의 step 으로 취급
+    numbered_pattern = r'^\s*\d+\.\s+(.+?)(?=^\s*\d+\.|\Z)'
+    blocks = re.findall(
+        numbered_pattern,
+        text.strip(),
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    if blocks:
+        steps = [b.strip() for b in blocks]
+        return steps
+
+    # 4) Fallback 2: 따옴표로 된 문자열들을 전부 추출해서 리스트로 사용
     #   -> "Step 1: ...", "Step 2: ...", ... 같은 케이스 처리
     pattern = r'"([^"\\]*(?:\\.[^"\\]*)*)"|\'([^\'\\]*(?:\\.[^\'\\]*)*)\''
     matches = re.findall(pattern, text)
@@ -97,7 +122,7 @@ def load_prompts(path):
     return prompts
 
 
-def build_subtask_rationale_examples(entities, step_field, rationale_field):
+def build_rationale_examples(entities, step_field, rationale_field):
     step_and_rationaleses = []
     for entity in entities:
         lines = []
@@ -105,29 +130,6 @@ def build_subtask_rationale_examples(entities, step_field, rationale_field):
         lines.append(f"Similar task:{task}")
         for i, (step, rationale) in enumerate(
             zip(entity[step_field], entity[rationale_field]), start=1
-        ):
-            lines.append(f"{i}. {step}")
-            lines.append(f"reason: {rationale}")
-        step_and_rationales = "\n".join(lines)
-        step_and_rationaleses.append(step_and_rationales)
-    step_and_rationaleses_text = "\n".join(step_and_rationaleses)
-    return step_and_rationaleses_text
-
-
-def build_subtask_planning_rationale_examples(
-    entities, subtask_number, step_field, rationale_field
-):
-    step_and_rationaleses = []
-    for entity in entities:
-        lines = []
-        task = entity.get("query") or entity.get("question")
-        lines.append(f"Similar task:{task}")
-        for i, (step, rationale) in enumerate(
-            zip(
-                entity[step_field][subtask_number],
-                entity[rationale_field][str(subtask_number)],
-            ),
-            start=1,
         ):
             lines.append(f"{i}. {step}")
             lines.append(f"reason: {rationale}")
@@ -163,7 +165,7 @@ def decompose_task(
         task_decomposition_prompt_template = load_prompts(
             path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
         )["task_decomposition_with_examples_prompt"]
-        step_rationale_examples = build_subtask_rationale_examples(
+        step_rationale_examples = build_rationale_examples(
             rationale_retrieval_results, "steps", "step_rationales"
         )
         task_decomposition_prompt = populate_template(
@@ -237,9 +239,8 @@ def subtask_planning(
             rationale_retrieval_results = retrieval_method(
                 curruent_sub_task, top_k=top_k
             )
-            step_rationale_examples = build_subtask_planning_rationale_examples(
+            step_rationale_examples = build_rationale_examples(
                 rationale_retrieval_results,
-                curruent_sub_task_number,
                 "steps",
                 "step_rationales",
             )
