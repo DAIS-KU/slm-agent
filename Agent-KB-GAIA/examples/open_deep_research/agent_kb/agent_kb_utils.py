@@ -28,6 +28,7 @@ def call_model(query, model_name, key, url, model, slm=False):
             }
         ]
         message = model(messages)
+        print(f"call_model raw_response: {message}")
         return message.content
     else:
         client = OpenAI(

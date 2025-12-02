@@ -1,0 +1,23 @@
+generate_tag_prompt: |
+    You must return {{top_k}} tags in total for action sequence that you execute below task and plan.
+    Here is the final task:
+    {{task}}
+    Here is the first step of curruent sub-task(sub-query) plan:
+    {{curruent_plan}} 
+
+    Return all steps as a JSON array of strings in the following format: ["tag1", "tag2", ...].
+    Use double quotes for all strings so that the output is valid JSON.
+    Do not use code blocks.
+    Do not include any text before or after the JSON array.
+    Output only the JSON array.
+
+
+action_planning_with_examples_prompt: |
+    You have to make concise and action-level execution plan.
+    Here is the final task:
+    {{task}}
+    Here is the first step of curruent sub-task(sub-query) plan:
+    {{curruent_plan}} 
+
+    You can refer below similar action sequences.
+    {{action_sequence_examples}}

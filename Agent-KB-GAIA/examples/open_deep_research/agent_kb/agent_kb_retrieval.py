@@ -28,6 +28,18 @@ class WorkflowInstance:
     step_rationales: Optional[Dict] = None
 
 
+@dataclass
+class ActionSquenceInstance:
+    """A complete action seequence instance"""
+
+    action_sequence_id: str = field(
+        default_factory=lambda: str(datetime.now().timestamp())
+    )
+    macro_type: str
+    macro_description: str
+    actions: List[Dict]
+
+
 class AgenticKnowledgeBase:
     def __init__(self, json_file_paths=None):
         self.workflows: Dict[str, WorkflowInstance] = {}
@@ -221,6 +233,178 @@ class AgenticKnowledgeBase:
         ]
 
 
+class ActionAgenticKnowledgeBase:
+    def __init__(self, json_file_paths=None):
+        self.action_sequences: Dict[str, ActionSquenceInstance] = {}
+        self.embedding_model = SentenceTransformer(
+            "/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/models/all-MiniLM-L6-v2",
+            # "sentence-transformers/all-MiniLM-L6-v2"
+        )
+
+        self.field_components = {
+            "macro_type": {
+                "vectorizer": TfidfVectorizer(stop_words="english"),
+                "matrix": None,
+                "workflow_ids": [],
+            },
+            # "macro_description": {
+            #     "vectorizer": TfidfVectorizer(stop_words="english"),
+            #     "matrix": None,
+            #     "workflow_ids": [],
+            # },
+        }
+
+        if json_file_paths:
+            self.load_initial_data(json_file_paths)
+            self.finalize_index()
+
+    def load_initial_data(self, json_file_paths):
+        for json_path in json_file_paths:
+            if not os.path.exists(json_path):
+                raise FileNotFoundError(f"JSON file not found: {json_path}")
+            self.parse_json_file(json_path)
+
+    def parse_json_file(self, json_file_path):
+        try:
+            with open(json_file_path, "r") as f:
+                data = json.load(f)
+                batch = []
+                for item in data:
+                    try:
+                        instance = ActionSquenceInstance(
+                            macro_type=item.get("macro_type", ""),
+                            macro_description=item.get("macro_description"),
+                            actions=item.get("actions"),
+                        )
+                        batch.append(instance)
+                    except KeyError as e:
+                        print(f"Skipping invalid item: {e}")
+                        continue
+                for instance in batch:
+                    self.action_sequences[instance.action_sequence_id] = instance
+        except Exception as e:
+            print(f"Error parsing file: {e}")
+
+    def add_action_sequence_instance(self, action_sequence: ActionSquenceInstance):
+        self.action_sequences[action_sequence.action_sequence_id] = action_sequence
+        return action_sequence
+
+    def finalize_index(self):
+        print("Building search indices...")
+        self.build_tfidf_indices()
+        self.build_embeddings()
+
+    def build_tfidf_indices(self):
+        """Build TF-IDF indices in batch"""
+        field_data = {
+            "macro_type": [],
+            # 'macro_description': [],
+        }
+
+        for action_sequence in self.action_sequences.values():
+            field_data["macro_type"].append(action_sequence.macro_type)
+            # field_data['macro_description'].append(action_sequence.macro_description)
+
+        # for field in ['macro_type', 'macro_description']:
+        for field in ["macro_type"]:
+            if len(field_data[field]) == 0:
+                continue
+
+            vectorizer = self.field_components[field]["vectorizer"]
+            self.field_components[field]["matrix"] = vectorizer.fit_transform(
+                field_data[field]
+            )
+            self.field_components[field]["action_sequences_ids"] = list(
+                self.action_sequences.keys()
+            )
+
+    def build_embeddings(self):
+        print("Generating embeddings...")
+        action_sequences = list(self.action_sequences.values())
+        batch_size = 32
+
+        macro_types = [w.macro_type for w in action_sequences]
+        macro_type_embeddings = self.embedding_model.encode(
+            macro_types,
+            batch_size=batch_size,
+            show_progress_bar=True,
+            convert_to_numpy=True,
+        )
+
+        # macro_descriptions = [w.macro_description for w in action_sequences]
+        # macro_description_embeddings = self.embedding_model.encode(
+        #     macro_descriptions,
+        #     batch_size=batch_size,
+        #     show_progress_bar=True,
+        #     convert_to_numpy=True
+        # )
+
+        for i, action_sequence in enumerate(action_sequences):
+            action_sequence.macro_type_embedding = macro_type_embeddings[i]
+            # action_sequence.macro_description_embedding = macro_descriptions[i]
+
+    def field_text_search(self, query: str, field: str, top_k: int = 3) -> List[dict]:
+        component = self.field_components[field]
+        if component["matrix"] is None or not component["action_sequence_ids"]:
+            return []
+
+        query_vec = component["vectorizer"].transform([query])
+        similarities = cosine_similarity(query_vec, component["matrix"]).flatten()
+        top_indices = similarities.argsort()[-top_k:][::-1]
+
+        return [
+            {
+                "action_sequence_id": component["action_sequence_ids"][idx],
+                "score": float(similarities[idx]),
+                "field": field,
+                "content": getattr(
+                    self.action_sequences[component["action_sequence_ids"][idx]], field
+                ),
+            }
+            for idx in top_indices
+        ]
+
+    def field_semantic_search(
+        self, query: str, field: str, top_k: int = 3
+    ) -> List[dict]:
+        """Optimized semantic search"""
+        query_embedding = self.embedding_model.encode(query, convert_to_numpy=True)
+
+        embedding_field_map = {
+            "macro_type": "macro_type_embedding",
+            # 'macro_description': 'macro_description',
+        }
+
+        content_field_map = {
+            "macro_type": "macro_type",
+            # 'macro_description': 'macro_description',
+        }
+
+        embeddings = []
+        action_sequences = []
+        for action_id, action_sequence in self.action_sequences.items():
+            emb = getattr(action_sequence, embedding_field_map[field], None)
+            if emb is not None:
+                embeddings.append(emb)
+                action_sequences.append(action_sequence)
+
+        if not embeddings:
+            return []
+
+        similarities = cosine_similarity([query_embedding], embeddings)[0]
+        top_indices = similarities.argsort()[-top_k:][::-1]
+
+        return [
+            {
+                "action_sequence_id": action_sequences[idx].action_sequence_id,
+                "score": float(similarities[idx]),
+                "field": field,
+                "content": getattr(action_sequences[idx], content_field_map[field], ""),
+            }
+            for idx in top_indices
+        ]
+
+
 class AKB_Manager:
     def __init__(self, json_file_paths=None):
         self.knowledge_base = AgenticKnowledgeBase(json_file_paths=json_file_paths)
@@ -318,3 +502,102 @@ class AKB_Manager:
 
     def get_workflow_details(self, workflow_id: str) -> Optional[WorkflowInstance]:
         return self.knowledge_base.workflows.get(workflow_id)
+
+
+class Action_AKB_Manager:
+    def __init__(self, json_file_paths=None):
+        self.knowledge_base = ActionAgenticKnowledgeBase(
+            json_file_paths=json_file_paths
+        )
+
+    def hybrid_search(
+        self, query: str, top_k: int = 5, weights: Dict[str, float] = None
+    ) -> List[dict]:
+        weights = weights or {"text": 0.5, "semantic": 0.5}
+        # field_weights = {'macro_type': 0.5, 'macro_description': 0.5}
+        field_weights = {"macro_type": 1.0}
+
+        score_board = defaultdict(float)
+
+        # for field in ['macro_type', 'macro_description']:
+        for field in ["macro_type"]:
+            for result in self.knowledge_base.field_text_search(
+                query, field, top_k * 2
+            ):
+                score_board[result["action_sequence_id"]] += (
+                    weights["text"] * field_weights[field] * result["score"]
+                )
+            for result in self.knowledge_base.field_semantic_search(
+                query, field, top_k * 2
+            ):
+                score_board[result["action_sequence_id"]] += (
+                    weights["semantic"] * field_weights[field] * result["score"]
+                )
+
+        sorted_results = sorted(score_board.items(), key=lambda x: x[1], reverse=True)[
+            :top_k
+        ]
+
+        detailed_results = []
+        for action_id, total_score in sorted_results:
+            action_sequence = self.knowledge_base.action_sequences[wf_id]
+            detailed_results.append(
+                {
+                    "action_sequence_id": action_id,
+                    "total_score": total_score,
+                    "macro_type": action_sequence.macro_type,
+                    "macro_description": action_sequence.macro_description,
+                    "actions": workflow.actions,
+                }
+            )
+
+        return detailed_results
+
+    def search_by_text(
+        self, query: str, field: str = "query", top_k: int = 3
+    ) -> List[dict]:
+        """Batch text search"""
+        results = []
+        for result in self.knowledge_base.field_text_search(query, field, top_k):
+            action_sequence = self.get_action_sequence_details(
+                result["action_sequence_id"]
+            )
+            results.append(
+                {
+                    "workflow_id": result["action_sequence_id"],
+                    "score": result["score"],
+                    "content": {
+                        "macro_type": action_sequence.macro_type,
+                        "macro_description": action_sequence.macro_description,
+                        "actions": workflow.actions,
+                    },
+                }
+            )
+        return sorted(results, key=lambda x: x["score"], reverse=True)[:top_k]
+
+    def search_by_semantic(
+        self, query: str, field: str = "query", top_k: int = 3
+    ) -> List[dict]:
+        """Batch semantic search"""
+        results = []
+        for result in self.knowledge_base.field_semantic_search(query, field, top_k):
+            action_sequence = self.get_action_sequence_details(
+                result["action_sequence_id"]
+            )
+            results.append(
+                {
+                    "workflow_id": result["action_sequence_id"],
+                    "score": result["score"],
+                    "content": {
+                        "macro_type": action_sequence.macro_type,
+                        "macro_description": action_sequence.macro_description,
+                        "actions": workflow.actions,
+                    },
+                }
+            )
+        return sorted(results, key=lambda x: x["score"], reverse=True)[:top_k]
+
+    def get_action_sequence_details(
+        self, action_sequence_id: str
+    ) -> Optional[ActionSquenceInstance]:
+        return self.knowledge_base.action_sequences.get(action_sequence_id)

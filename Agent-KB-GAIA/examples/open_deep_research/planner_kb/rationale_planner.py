@@ -193,6 +193,7 @@ def decompose_task(
         extract_step_list_prompt = populate_template(
             extract_step_list_template, variables={"steps": task_decomposition_result}
         )
+        # print(f"extract_step_list_prompt: {extract_step_list_prompt}")
         extracted_steps = call_model(
             query=extract_step_list_prompt,
             model_name=model_name,
@@ -201,6 +202,7 @@ def decompose_task(
             model=model,
             slm=slm,
         )
+        print(f"extracted_steps: {extracted_steps}")
         extracted_step_list = parse_steps(extracted_steps)
         return extracted_step_list
 

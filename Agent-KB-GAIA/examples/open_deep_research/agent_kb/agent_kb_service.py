@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from agent_kb_retrieval import AKB_Manager
+from agent_kb_retrieval import AKB_Manager, Action_AKB_Manager
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 import time
@@ -19,8 +19,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-decision_manager = AKB_Manager(json_file_paths=["./agent_kb/decision_kb.json"])
-# action_manager = AKB_Manager(json_file_paths=["./agent_kb/action_kb.json"])
+manager = AKB_Manager(json_file_paths=["./agent_kb/decision_kb.json"])
+action_manager = Action_AKB_Manager(json_file_paths=["./agent_kb/action_kb.json"])
 
 performance_stats = {
     "total_requests": 0,
@@ -50,6 +50,14 @@ class WorkflowResponse(BaseModel):
     step_rationales: Optional[Dict] = None
 
 
+class ActionSequenceResponse(BaseModel):
+    action_sequence_id: str
+    total_score: Optional[float]
+    macro_type: str
+    macro_description: str
+    actions: List[Dict]
+
+
 class PerformanceStats(BaseModel):
     total_requests: int
     avg_response_time: float
@@ -67,7 +75,10 @@ def update_performance_stats(response_time: float):
     performance_stats["last_updated"] = time.time()
 
 
-@app.post("/search/hybrid", response_model=List[WorkflowResponse])
+@app.post(
+    "/search/hybrid",
+    response_model=List[Union[WorkflowResponse, ActionSequenceResponse]],
+)
 async def hybrid_search(request: SearchRequest):
     start_time = time.time()
     cache_key = f"hybrid_{request.query}_{request.top_k}"
@@ -77,26 +88,37 @@ async def hybrid_search(request: SearchRequest):
             if time.time() - response_cache[cache_key]["timestamp"] < CACHE_TTL:
                 return response_cache[cache_key]["data"]
         if request.is_action:
-            raise UnImplementedError("action manager not implemented")
-        else:
-            results = decision_manager.hybrid_search(
+            results = action_manager.hybrid_search(
                 query=request.query, top_k=request.top_k, weights=request.weights
             )
-
-        response_data = [
-            WorkflowResponse(
-                workflow_id=item["workflow_id"],
-                total_score=item["total_score"],
-                query=item["query"],
-                plan=item["plan"],
-                search_plan=item["search_plan"],
-                agent_experience=item["agent_experience"],
-                search_agent_experience=item["search_agent_experience"],
-                steps=item["steps"],
-                step_rationales=item["step_rationales"],
+            response_data = [
+                ActionSequenceResponse(
+                    action_sequence_id=item["action_sequence_id"],
+                    total_score=item["total_score"],
+                    macro_type=item["macro_type"],
+                    macro_description=item["macro_description"],
+                    actions=item["actions"],
+                )
+                for item in results
+            ]
+        else:
+            results = manager.hybrid_search(
+                query=request.query, top_k=request.top_k, weights=request.weights
             )
-            for item in results
-        ]
+            response_data = [
+                WorkflowResponse(
+                    workflow_id=item["workflow_id"],
+                    total_score=item["total_score"],
+                    query=item["query"],
+                    plan=item["plan"],
+                    search_plan=item["search_plan"],
+                    agent_experience=item["agent_experience"],
+                    search_agent_experience=item["search_agent_experience"],
+                    steps=item["steps"],
+                    step_rationales=item["step_rationales"],
+                )
+                for item in results
+            ]
 
         response_cache[cache_key] = {"timestamp": time.time(), "data": response_data}
 
@@ -109,7 +131,9 @@ async def hybrid_search(request: SearchRequest):
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 
-@app.post("/search/text", response_model=List[WorkflowResponse])
+@app.post(
+    "/search/text", response_model=List[Union[WorkflowResponse, ActionSequenceResponse]]
+)
 async def text_search(request: SearchRequest):
     start_time = time.time()
     cache_key = f"text_{request.query}_{request.top_k}"
@@ -118,23 +142,34 @@ async def text_search(request: SearchRequest):
         if cache_key in response_cache:
             if time.time() - response_cache[cache_key]["timestamp"] < CACHE_TTL:
                 return response_cache[cache_key]["data"]
-
-        raw_results = decision_manager.search_by_text(
-            request.query, "query", request.top_k
-        )
-
-        response_data = [
-            WorkflowResponse(
-                workflow_id=item["workflow_id"],
-                total_score=item["score"],
-                query=item["content"]["query"],
-                plan=item["content"]["plan"],
-                search_plan=item["content"]["search_plan"],
-                agent_experience=item["content"]["agent_experience"],
-                search_agent_experience=item["content"]["search_agent_experience"],
+        if request.is_action:
+            results = action_manager.search_by_text(
+                request.query, "macro_type", request.top_k
             )
-            for item in raw_results
-        ]
+            response_data = [
+                ActionSequenceResponse(
+                    action_sequence_id=item["action_sequence_id"],
+                    total_score=item["total_score"],
+                    macro_type=item["macro_type"],
+                    macro_description=item["macro_description"],
+                    actions=item["actions"],
+                )
+                for item in results
+            ]
+        else:
+            raw_results = manager.search_by_text(request.query, "query", request.top_k)
+            response_data = [
+                WorkflowResponse(
+                    workflow_id=item["workflow_id"],
+                    total_score=item["score"],
+                    query=item["content"]["query"],
+                    plan=item["content"]["plan"],
+                    search_plan=item["content"]["search_plan"],
+                    agent_experience=item["content"]["agent_experience"],
+                    search_agent_experience=item["content"]["search_agent_experience"],
+                )
+                for item in raw_results
+            ]
 
         response_cache[cache_key] = {"timestamp": time.time(), "data": response_data}
 
@@ -145,7 +180,10 @@ async def text_search(request: SearchRequest):
         raise HTTPException(status_code=500, detail=f"Text search failed: {str(e)}")
 
 
-@app.post("/search/semantic", response_model=List[WorkflowResponse])
+@app.post(
+    "/search/semantic",
+    response_model=List[Union[WorkflowResponse, ActionSequenceResponse]],
+)
 async def semantic_search(request: SearchRequest):
     start_time = time.time()
     cache_key = f"semantic_{request.query}_{request.top_k}"
@@ -154,23 +192,36 @@ async def semantic_search(request: SearchRequest):
         if cache_key in response_cache:
             if time.time() - response_cache[cache_key]["timestamp"] < CACHE_TTL:
                 return response_cache[cache_key]["data"]
-
-        raw_results = decision_manager.search_by_semantic(
-            request.query, "query", request.top_k
-        )
-
-        response_data = [
-            WorkflowResponse(
-                workflow_id=item["workflow_id"],
-                total_score=item["score"],
-                query=item["content"]["query"],
-                plan=item["content"]["plan"],
-                search_plan=item["content"]["search_plan"],
-                agent_experience=item["content"]["agent_experience"],
-                search_agent_experience=item["content"]["search_agent_experience"],
+        if request.is_action:
+            results = action_manager.search_by_semantic(
+                request.query, "macro_type", request.top_k
             )
-            for item in raw_results
-        ]
+            response_data = [
+                ActionSequenceResponse(
+                    action_sequence_id=item["action_sequence_id"],
+                    total_score=item["total_score"],
+                    macro_type=item["macro_type"],
+                    macro_description=item["macro_description"],
+                    actions=item["actions"],
+                )
+                for item in results
+            ]
+        else:
+            raw_results = manager.search_by_semantic(
+                request.query, "query", request.top_k
+            )
+            response_data = [
+                WorkflowResponse(
+                    workflow_id=item["workflow_id"],
+                    total_score=item["score"],
+                    query=item["content"]["query"],
+                    plan=item["content"]["plan"],
+                    search_plan=item["content"]["search_plan"],
+                    agent_experience=item["content"]["agent_experience"],
+                    search_agent_experience=item["content"]["search_agent_experience"],
+                )
+                for item in raw_results
+            ]
 
         response_cache[cache_key] = {"timestamp": time.time(), "data": response_data}
 

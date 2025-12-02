@@ -36,10 +36,6 @@ subtask_planning_with_examples_prompt: |
     {{planning_with_rationale_examples}} 
 
 extract_step_list: |
-    Return all steps as a JSON array of strings in the following format: ["Step 1: ...", "Step 2: ...", ...].
-    Use double quotes for all strings so that the output is valid JSON.
-    Do not use code blocks.
-    Do not include any text before or after the JSON array.
-    Output only the JSON array.
+    You must return all steps as a JSON array of strings in the following format: ["Step 1: ...", "Step 2: ...", ...].
     Here are the steps:
     {{steps}}

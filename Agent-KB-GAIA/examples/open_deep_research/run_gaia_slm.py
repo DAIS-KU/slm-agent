@@ -49,7 +49,7 @@ from scripts.automodel import (
 
 from agent_kb.agent_kb_utils import AKBClient, call_model
 
-from planner_kb import decompose_task, subtask_planning
+from planner_kb import decompose_task, subtask_planning, action_level_planning
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
 from smolagents.agents import populate_template
@@ -351,6 +351,7 @@ def answer_single_question(
     q_decomp_ex=False,
     p_rationale=False,
     p_rationale_ex=False,
+    action_planning=False,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -490,6 +491,16 @@ def answer_single_question(
                 f"## ====================================================================================== ##"
             )
             additional_knowledge = subtask_plannings
+            if action_planning:
+                print(f"action_planning is called.")
+                action_plannings = action_level_planning(
+                    task=task,
+                    curruent_plan=subtask_plannings,
+                    model=self.model,
+                    retrieval_method=retrieval_method,
+                    top_k=self.top_k,
+                )
+                additional_knowledge = action_plannings
         else:
             additional_knowledge = subtasks
 

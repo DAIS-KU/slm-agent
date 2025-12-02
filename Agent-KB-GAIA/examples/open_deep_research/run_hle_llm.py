@@ -775,7 +775,7 @@ def answer_single_question(
         "agent_error": str(exception) if raised_exception else None,
         "start_time": start_time,
         "end_time": end_time,
-        "task": example["task"],
+        # "task": example["task"],
         "task_id": example["task_id"],
         "search_agent_actions": agent.managed_agents["search_agent"].task_records,
     }
@@ -847,6 +847,7 @@ def main():
     else:
         model, model_search = None, None
 
+    logger.info(f"All tasks #{len(tasks_to_run)} processing started.")
     if args.debug or args.concurrency == 1:
         for example in tasks_to_run:
             answer_single_question(
