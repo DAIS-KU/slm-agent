@@ -219,6 +219,11 @@ def parse_args():
         action="store_true",
         help="Using rationales when planning",
     )
+    parser.add_argument(
+        "--action",
+        action="store_true",
+        help="Apply action planning",
+    )
     return parser.parse_args()
 
 
@@ -468,7 +473,7 @@ def answer_single_question(
                     slm=slm,
                     retrieval_method=retrieval_method,
                     top_k=args.top_k,
-                    return_as_str=True,
+                    return_as_str=not action_planning,
                 )
             else:
                 subtask_plannings = subtask_planning(
@@ -481,7 +486,7 @@ def answer_single_question(
                     slm=slm,
                     retrieval_method=None,
                     top_k=None,
-                    return_as_str=True,
+                    return_as_str=not action_planning,
                 )
             print(
                 f"## ============================== RATIONALE-BASED PLANNING ============================== ##"
@@ -494,11 +499,22 @@ def answer_single_question(
             if action_planning:
                 print(f"action_planning is called.")
                 action_plannings = action_level_planning(
-                    task=task,
-                    curruent_plan=subtask_plannings,
-                    model=self.model,
+                    task=augmented_question,
+                    curruent_plans=subtask_plannings,
+                    key=key,
+                    url=url,
+                    model=model,
+                    model_name=model_name,
                     retrieval_method=retrieval_method,
-                    top_k=self.top_k,
+                    top_k=args.top_k,
+                    slm=slm,
+                )
+                print(
+                    f"## ============================== ACTION-LEVEL PLANNING ============================== ##"
+                )
+                print(action_plannings)
+                print(
+                    f"## ====================================================================================== ##"
                 )
                 additional_knowledge = action_plannings
         else:
@@ -661,6 +677,7 @@ def main():
                 args.qdecomp_ex,
                 args.p_rationale,
                 args.p_rationale_ex,
+                args.action,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:

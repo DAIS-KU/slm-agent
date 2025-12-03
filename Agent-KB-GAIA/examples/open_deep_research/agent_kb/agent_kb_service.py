@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from agent_kb_retrieval import AKB_Manager, Action_AKB_Manager
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
@@ -88,6 +88,7 @@ async def hybrid_search(request: SearchRequest):
             if time.time() - response_cache[cache_key]["timestamp"] < CACHE_TTL:
                 return response_cache[cache_key]["data"]
         if request.is_action:
+            print(f"action_manager hybrid_search")
             results = action_manager.hybrid_search(
                 query=request.query, top_k=request.top_k, weights=request.weights
             )
@@ -102,6 +103,7 @@ async def hybrid_search(request: SearchRequest):
                 for item in results
             ]
         else:
+            print(f"planning_manager hybrid_search")
             results = manager.hybrid_search(
                 query=request.query, top_k=request.top_k, weights=request.weights
             )

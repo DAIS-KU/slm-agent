@@ -158,31 +158,6 @@ def evaluate(input_path, output_path):
 
 if __name__ == "__main__":
     evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-base.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-base.jsonl",
-    )
-    evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-subtask.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-subtask.jsonl",
-    )
-    evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-subtask_ex.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-subtask_ex.jsonl",
-    )
-    evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-subtask-prationale.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-subtask-prationale.jsonl",
-    )
-
-    evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-subtask-prationale_ex.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-subtask-prationale_ex.jsonl",
-    )
-    evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-subtask_ex-prationale_ex.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-subtask_ex-prationale_ex.jsonl",
-    )
-    evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-subtask_ex-prationale_ex.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-subtask_ex-prationale_ex.jsonl",
+        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/test/gpt-hle.jsonl",
+        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/gpt-hle.jsonl",
     )

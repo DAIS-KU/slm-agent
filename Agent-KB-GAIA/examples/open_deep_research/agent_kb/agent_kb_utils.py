@@ -28,7 +28,7 @@ def call_model(query, model_name, key, url, model, slm=False):
             }
         ]
         message = model(messages)
-        print(f"call_model raw_response: {message}")
+        # print(f"call_model raw_response: {message}")
         return message.content
     else:
         client = OpenAI(
@@ -57,13 +57,18 @@ class AKBClient:
         self.session.headers.update({"Content-Type": "application/json"})
 
     def hybrid_search(
-        self, query: str, top_k: int = 5, weights: Dict[str, float] = None
+        self,
+        query: str,
+        top_k: int = 5,
+        weights: Dict[str, float] = None,
+        is_action=False,
     ) -> List[Dict]:
         endpoint = f"{self.base_url}/search/hybrid"
         payload = {
             "query": query,
             "top_k": top_k,
             "weights": weights or {"text": 0.5, "semantic": 0.5},
+            "is_action": is_action,
         }
 
         try:

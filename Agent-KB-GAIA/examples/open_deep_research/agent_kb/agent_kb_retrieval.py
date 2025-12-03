@@ -35,17 +35,17 @@ class ActionSquenceInstance:
     action_sequence_id: str = field(
         default_factory=lambda: str(datetime.now().timestamp())
     )
-    macro_type: str
-    macro_description: str
-    actions: List[Dict]
+    macro_type: Optional[str] = None
+    macro_description: Optional[str] = None
+    actions: Optional[List[Dict]] = None
 
 
 class AgenticKnowledgeBase:
     def __init__(self, json_file_paths=None):
         self.workflows: Dict[str, WorkflowInstance] = {}
         self.embedding_model = SentenceTransformer(
-            "/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/models/all-MiniLM-L6-v2",
-            # "sentence-transformers/all-MiniLM-L6-v2"
+            # "/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/models/all-MiniLM-L6-v2",
+            "sentence-transformers/all-MiniLM-L6-v2"
         )
 
         self.field_components = {
@@ -237,15 +237,15 @@ class ActionAgenticKnowledgeBase:
     def __init__(self, json_file_paths=None):
         self.action_sequences: Dict[str, ActionSquenceInstance] = {}
         self.embedding_model = SentenceTransformer(
-            "/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/models/all-MiniLM-L6-v2",
-            # "sentence-transformers/all-MiniLM-L6-v2"
+            # "/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/models/all-MiniLM-L6-v2",
+            "sentence-transformers/all-MiniLM-L6-v2"
         )
 
         self.field_components = {
             "macro_type": {
                 "vectorizer": TfidfVectorizer(stop_words="english"),
                 "matrix": None,
-                "workflow_ids": [],
+                "action_sequence_ids": [],
             },
             # "macro_description": {
             #     "vectorizer": TfidfVectorizer(stop_words="english"),
@@ -314,7 +314,7 @@ class ActionAgenticKnowledgeBase:
             self.field_components[field]["matrix"] = vectorizer.fit_transform(
                 field_data[field]
             )
-            self.field_components[field]["action_sequences_ids"] = list(
+            self.field_components[field]["action_sequence_ids"] = list(
                 self.action_sequences.keys()
             )
 
@@ -344,6 +344,7 @@ class ActionAgenticKnowledgeBase:
             # action_sequence.macro_description_embedding = macro_descriptions[i]
 
     def field_text_search(self, query: str, field: str, top_k: int = 3) -> List[dict]:
+        print(f"ActionAgenticKnowledgeBase field_text_search...")
         component = self.field_components[field]
         if component["matrix"] is None or not component["action_sequence_ids"]:
             return []
@@ -367,6 +368,7 @@ class ActionAgenticKnowledgeBase:
     def field_semantic_search(
         self, query: str, field: str, top_k: int = 3
     ) -> List[dict]:
+        print("ActionAgenticKnowledgeBase field_semantic_search...")
         """Optimized semantic search"""
         query_embedding = self.embedding_model.encode(query, convert_to_numpy=True)
 
@@ -540,14 +542,14 @@ class Action_AKB_Manager:
 
         detailed_results = []
         for action_id, total_score in sorted_results:
-            action_sequence = self.knowledge_base.action_sequences[wf_id]
+            action_sequence = self.knowledge_base.action_sequences[action_id]
             detailed_results.append(
                 {
                     "action_sequence_id": action_id,
                     "total_score": total_score,
                     "macro_type": action_sequence.macro_type,
                     "macro_description": action_sequence.macro_description,
-                    "actions": workflow.actions,
+                    "actions": action_sequence.actions,
                 }
             )
 
@@ -569,7 +571,7 @@ class Action_AKB_Manager:
                     "content": {
                         "macro_type": action_sequence.macro_type,
                         "macro_description": action_sequence.macro_description,
-                        "actions": workflow.actions,
+                        "actions": action_sequence.actions,
                     },
                 }
             )
@@ -591,7 +593,7 @@ class Action_AKB_Manager:
                     "content": {
                         "macro_type": action_sequence.macro_type,
                         "macro_description": action_sequence.macro_description,
-                        "actions": workflow.actions,
+                        "actions": action_sequence.actions,
                     },
                 }
             )
