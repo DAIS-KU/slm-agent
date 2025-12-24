@@ -1,5 +1,2171 @@
 [
   {
+    "macro_type": "data filtering and comparison",
+    "macro_description": "Identifies the oldest Blu-Ray title by filtering inventory data and comparing release years.",
+    "actions": [
+      {
+        "action_description": "Filter inventory to select Blu-Ray entries.",
+        "observation": "Blu-Ray items and their years are listed."
+      },
+      {
+        "action_description": "Compare years to find the oldest Blu-Ray.",
+        "observation": "Oldest Blu-Ray identified as 'Time-Parking 2: Parallel Universe'."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and fact extraction",
+    "macro_description": "Identifies a museum object's species, locates a relevant research article, and extracts a numeric fact from the abstract to answer a historical age question.",
+    "actions": [
+      {
+        "action_description": "Clarifies the question and required information.",
+        "observation": "Needs bead age from Science Advances 2021 for a specific mollusk species."
+      },
+      {
+        "action_description": "Finds the mollusk species for the museum object.",
+        "observation": "Species identified as Nassa gibbosula from museum records."
+      },
+      {
+        "action_description": "Searches for the 2021 Science Advances article on this species' beads.",
+        "observation": "Finds article and abstract mentioning minimum bead age."
+      },
+      {
+        "action_description": "Extracts the minimum age value from the abstract.",
+        "observation": "Minimum bead age is 142,000 years."
+      },
+      {
+        "action_description": "Outputs the extracted numeric answer.",
+        "observation": "Final answer is 142."
+      }
+    ]
+  },
+  {
+    "macro_type": "web lookup and filtering",
+    "macro_description": "Finds and counts items matching date and type constraints by searching Wikipedia, extracting relevant lists, and filtering by criteria (discography filtering).",
+    "actions": [
+      {
+        "action_description": "Clarify the task and outline a plan to find and count studio albums in a date range.",
+        "observation": "Task and approach are clearly defined."
+      },
+      {
+        "action_description": "Search Wikipedia and archives for Mercedes Sosa's discography and album release years.",
+        "observation": "Obtained list of studio albums with release years from Wikipedia."
+      },
+      {
+        "action_description": "Filter the album list by type and release year, then count qualifying albums.",
+        "observation": "Identified and counted 3 studio albums from 2000–2009."
+      }
+    ]
+  },
+  {
+    "macro_type": "simulation-based probability estimation",
+    "macro_description": "Simulates the game mechanics to estimate ejection probabilities for each ball, then selects the ball with the highest chance of being ejected (winning).",
+    "actions": [
+      {
+        "action_description": "Analyzed the riddle and outlined a plan to model the game.",
+        "observation": "Identified key mechanics and steps needed for simulation."
+      },
+      {
+        "action_description": "Simulated ejection probabilities for initial balls using Python.",
+        "observation": "Found ball 3 had the highest estimated probability."
+      },
+      {
+        "action_description": "Expanded simulation to more balls and steps for confirmation.",
+        "observation": "Confirmed ball 3 consistently had the highest ejection chance."
+      },
+      {
+        "action_description": "Selected the optimal ball based on simulation results.",
+        "observation": "Chose ball 3 as the best pick."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and data extraction",
+    "macro_description": "Identifies a movie character's species, searches official databases for nonnative records, and extracts location zip codes to answer invasive species queries.",
+    "actions": [
+      {
+        "action_description": "Clarifies the question and outlines a plan to identify the species and find nonnative records.",
+        "observation": "Task requires species identification and USGS data lookup for zip codes."
+      },
+      {
+        "action_description": "Finds the species and scientific name of the 'Finding Nemo' fish.",
+        "observation": "Identified as clown anemonefish, Amphiprion percula."
+      },
+      {
+        "action_description": "Searches USGS NAS and web for nonnative clownfish records before 2020.",
+        "observation": "Found one relevant record: Amphiprion ocellaris in Pinellas County, FL, 2018."
+      },
+      {
+        "action_description": "Looks up the zip code for the specific sighting location.",
+        "observation": "Confirmed Fred Howard Park's zip code as 34689."
+      },
+      {
+        "action_description": "Formats and returns the zip code as the final answer.",
+        "observation": "Output is 34689."
+      }
+    ]
+  },
+  {
+    "macro_type": "code analysis and web lookup",
+    "macro_description": "Analyzes Unlambda code, searches for correct output examples online, and verifies code structure to identify the needed correction.",
+    "actions": [
+      {
+        "action_description": "Receives and parses the Unlambda code correction task.",
+        "observation": "Identifies the code and required output."
+      },
+      {
+        "action_description": "Attempts direct code analysis and simulation.",
+        "observation": "Parsing fails; no output produced."
+      },
+      {
+        "action_description": "Searches online for Unlambda code examples matching the desired output.",
+        "observation": "Finds correct Unlambda code and explanation."
+      },
+      {
+        "action_description": "Compares provided code with the correct example.",
+        "observation": "Confirms code structure and identifies missing character."
+      },
+      {
+        "action_description": "Verifies code details using Python checks.",
+        "observation": "Confirms code starts with backtick and ends with 'i'."
+      }
+    ]
+  },
+  {
+    "macro_type": "targeted literature search and verification",
+    "macro_description": "This macro locates relevant academic articles by date and topic, extracts key terms, and verifies their usage to answer cross-referenced questions.",
+    "actions": [
+      {
+        "action_description": "Identified the need to cross-reference terms from two arXiv papers based on dates and topics.",
+        "observation": "Clarified the task and outlined a plan."
+      },
+      {
+        "action_description": "Searched for AI regulation papers from June 2022 and Physics and Society articles from August 11, 2016.",
+        "observation": "Found relevant papers and confirmed their details."
+      },
+      {
+        "action_description": "Inspected the 2016 article for society type terms.",
+        "observation": "Confirmed 'egalitarian' is explicitly used to describe a type of society."
+      },
+      {
+        "action_description": "Selected 'egalitarian' as the answer based on verified usage.",
+        "observation": "Final answer determined."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and rate calculation",
+    "macro_description": "This macro finds key numeric facts via web search, then computes time to traverse a large distance at a known pace, rounding as specified.",
+    "actions": [
+      {
+        "action_description": "Identifies required data and calculation steps.",
+        "observation": "Clarifies need for marathon record, distance, and Earth-Moon perigee."
+      },
+      {
+        "action_description": "Searches for Kipchoge's marathon record, marathon distance, and Moon perigee.",
+        "observation": "Finds 2:01:09 record, 42.195 km marathon, 356400 km perigee."
+      },
+      {
+        "action_description": "Calculates Kipchoge's speed and time to cover perigee distance.",
+        "observation": "Computes and rounds result to 17000 hours."
+      }
+    ]
+  },
+  {
+    "macro_type": "text lookup and date matching",
+    "macro_description": "Identifies the first place named in a biblical text, maps it to a modern country, and finds the head of government at a specified date.",
+    "actions": [
+      {
+        "action_description": "Determined the first place mentioned in the Book of Esther (NIV).",
+        "observation": "Found 'India' as the first place named."
+      },
+      {
+        "action_description": "Identified the Prime Minister of India in April 1977.",
+        "observation": "Found Morarji Desai held office during that time."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and numeric reasoning",
+    "macro_description": "This macro finds relevant density data from trusted sources, calculates masses for given volumes, and determines how many units to remove for a comparison threshold.",
+    "actions": [
+      {
+        "action_description": "Identifies required densities and volumes for honey and mayonnaise.",
+        "observation": "Recognizes need for density values and removal process."
+      },
+      {
+        "action_description": "Searches trusted chemistry materials for density values.",
+        "observation": "Finds honey: 1.420 g/cm³, mayonnaise: 0.910 g/cm³."
+      },
+      {
+        "action_description": "Calculates initial masses and mass per cup using densities and volumes.",
+        "observation": "Computes 1 gallon honey = 5375.28 g, 1 gallon mayonnaise = 3444.72 g, 1 cup honey = 335.95 g."
+      },
+      {
+        "action_description": "Determines minimum cups of honey to remove so remaining honey weighs less than mayonnaise.",
+        "observation": "Finds 6 cups must be removed."
+      }
+    ]
+  },
+  {
+    "macro_type": "targeted web search and extraction",
+    "macro_description": "This macro locates a specific academic paper online, extracts the required quantitative value, and verifies it as the answer.",
+    "actions": [
+      {
+        "action_description": "Identifies the need to find the fish bag volume from a specific paper.",
+        "observation": "Clarifies the target information and source."
+      },
+      {
+        "action_description": "Plans to search for and verify the value in the University of Leicester paper.",
+        "observation": "Outlines approach to locate and confirm the answer."
+      },
+      {
+        "action_description": "Searches for and accesses the paper through alternative sources.",
+        "observation": "Finds and extracts the relevant volume value from the paper."
+      },
+      {
+        "action_description": "Outputs the extracted volume as the final answer.",
+        "observation": "Returns 0.1777 m³ as the answer."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and synthesis",
+    "macro_description": "Finds the maximum number of bird species visible at once in a specific video by searching descriptions and external sources, then synthesizes the answer.",
+    "actions": [
+      {
+        "action_description": "Clarify the task and plan the approach.",
+        "observation": "Identified need to determine max bird species visible simultaneously in a YouTube video."
+      },
+      {
+        "action_description": "Search video description, comments, and external sources.",
+        "observation": "Found three bird species mentioned: Emperor Penguin (chicks), Adélie Penguin, Giant Petrel."
+      },
+      {
+        "action_description": "Synthesize findings to determine the answer.",
+        "observation": "Confirmed three species visible together; no evidence of more."
+      }
+    ]
+  },
+  {
+    "macro_type": "author publication search and ordering",
+    "macro_description": "Identifies authors of a target paper, determines which had prior publications, and finds the earliest paper by that author through publication history lookup and date comparison.",
+    "actions": [
+      {
+        "action_description": "Identify all authors of the specified 2015 paper.",
+        "observation": "Authors found: Pietro Murano and Iram N. Khan."
+      },
+      {
+        "action_description": "Determine which author had prior publications.",
+        "observation": "Pietro Murano had earlier papers; Iram N. Khan did not."
+      },
+      {
+        "action_description": "Retrieve and chronologically order Pietro Murano's publication history.",
+        "observation": "List of Murano's papers from 2001 onward compiled."
+      },
+      {
+        "action_description": "Compare earliest papers for publication order using dates and citations.",
+        "observation": "Confirmed 'Mapping human-oriented information to software agents for online systems usage' as the first."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and fact extraction",
+    "macro_description": "This macro identifies a specific scientist's prediction by searching for the relevant video, extracting names and statements from available sources, and comparing predictions to select the correct individual.",
+    "actions": [
+      {
+        "action_description": "Clarify the question and outline the approach to identify the scientist with the soonest prediction.",
+        "observation": "Understood the task and planned to use video and secondary sources."
+      },
+      {
+        "action_description": "Search for the original video and list interviewed scientists.",
+        "observation": "Found video and identified Claude Shannon, Jerome Wiesner, and Oliver Selfridge."
+      },
+      {
+        "action_description": "Gather and compare predictions from transcripts and secondary sources.",
+        "observation": "Determined Claude Shannon predicted thinking machines would arrive soonest."
+      },
+      {
+        "action_description": "Select and output the scientist's name as the answer.",
+        "observation": "Final answer: Claude Shannon."
+      }
+    ]
+  },
+  {
+    "macro_type": "citation text verification",
+    "macro_description": "Checks if a quoted passage matches the original source by retrieving and comparing the text.",
+    "actions": [
+      {
+        "action_description": "Restate the fact-checking task and requirements.",
+        "observation": "Clarified the need to compare the quoted text with the source."
+      },
+      {
+        "action_description": "Retrieve the original article's relevant pages.",
+        "observation": "Obtained the full text of pages 45-46 from the cited article."
+      },
+      {
+        "action_description": "Compare the quoted text with the source.",
+        "observation": "Identified 'cloak' as the mismatched word in the citation."
+      }
+    ]
+  },
+  {
+    "macro_type": "document extraction and matching",
+    "macro_description": "Extracts structured data from a document, matches gifts to recipients' interests, and identifies the missing giver by process of elimination.",
+    "actions": [
+      {
+        "action_description": "Extract employee list, assignments, profiles, and gifts from document.",
+        "observation": "Obtained lists of employees, assignments, interests, and 11 gifts."
+      },
+      {
+        "action_description": "Match each gift to a recipient based on interests.",
+        "observation": "Mapped 11 gifts to corresponding recipients."
+      },
+      {
+        "action_description": "Identify which recipient did not receive a gift and who was assigned to give it.",
+        "observation": "Found Rebecca did not receive a gift; Fred was her assigned giver."
+      },
+      {
+        "action_description": "Output the name of the employee who did not give a gift.",
+        "observation": "Final answer: Fred."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and spatial calculation",
+    "macro_description": "Finds the two ASEAN countries whose capitals are furthest apart by searching for member states, retrieving capital coordinates, and computing pairwise distances.",
+    "actions": [
+      {
+        "action_description": "Identifies ASEAN member countries via web search.",
+        "observation": "Confirmed 10 member states."
+      },
+      {
+        "action_description": "Retrieves each country's capital city.",
+        "observation": "Mapped all 10 countries to their capitals."
+      },
+      {
+        "action_description": "Collects geographic coordinates for each capital from Wikipedia.",
+        "observation": "Obtained coordinates for all capitals."
+      },
+      {
+        "action_description": "Calculates all pairwise distances between capitals using coordinates.",
+        "observation": "Identified the two capitals with the greatest distance."
+      },
+      {
+        "action_description": "Returns the two countries in alphabetical order as the answer.",
+        "observation": "Final answer: Indonesia, Myanmar."
+      }
+    ]
+  },
+  {
+    "macro_type": "literature lookup and ratio calculation",
+    "macro_description": "This macro retrieves quantitative data from two scientific papers, then computes and rounds the ratio as a percentage to answer a comparative question.",
+    "actions": [
+      {
+        "action_description": "Extract harlequin shrimp total length from the 2017 paper.",
+        "observation": "Found shrimp length as ~4.5 cm."
+      },
+      {
+        "action_description": "Extract sea star piece length from the 2002 paper.",
+        "observation": "Found sea star piece length as 1 cm."
+      },
+      {
+        "action_description": "Calculate and round the percentage ratio of sea star to shrimp length.",
+        "observation": "Computed (1/4.5)*100 ≈ 22%."
+      }
+    ]
+  },
+  {
+    "macro_type": "reverse reading and antonym lookup",
+    "macro_description": "This macro deciphers reversed text instructions, identifies a target word, and outputs its opposite meaning (antonym).",
+    "actions": [
+      {
+        "action_description": "Recognize the sentence is written backwards.",
+        "observation": "Instruction is reversed and mentions the word 'left'."
+      },
+      {
+        "action_description": "Reverse the sentence to read the instruction correctly.",
+        "observation": "Instruction asks for the opposite of 'left'."
+      },
+      {
+        "action_description": "Identify and output the antonym of 'left'.",
+        "observation": "Output is 'right'."
+      }
+    ]
+  },
+  {
+    "macro_type": "literature search and model comparison",
+    "macro_description": "This macro locates relevant academic studies by specified authors and years, extracts the model types used, and identifies the common two-word model type.",
+    "actions": [
+      {
+        "action_description": "Clarify the question and requirements.",
+        "observation": "Identified need to find a common two-word model type in 2018-2019 studies by Kashyap and Fader."
+      },
+      {
+        "action_description": "Search for Kashyap's 2018-2019 customer retention studies and extract model type.",
+        "observation": "Found a 2019 study using the beta geometric model."
+      },
+      {
+        "action_description": "Search for Fader's 2018-2019 customer retention studies and extract model type.",
+        "observation": "Found a 2018 study also using the beta geometric model."
+      },
+      {
+        "action_description": "Compare extracted model types to identify the common two-word type.",
+        "observation": "Both studies used the beta geometric model."
+      }
+    ]
+  },
+  {
+    "macro_type": "data extraction and cross-referencing",
+    "macro_description": "Extracts categories and food items from files, identifies the only food without duplicates or synonyms, maps it to its category, and outputs the result (unique item categorization).",
+    "actions": [
+      {
+        "action_description": "Extracts category names from the XML file.",
+        "observation": "Obtains list of food categories."
+      },
+      {
+        "action_description": "Reads and flattens the spreadsheet to list all food items.",
+        "observation": "Gets all food names, normalizes and cleans data."
+      },
+      {
+        "action_description": "Counts occurrences and filters out foods with alternate names.",
+        "observation": "Identifies foods appearing only once and not as synonyms."
+      },
+      {
+        "action_description": "Maps each unique food to its category using the data.",
+        "observation": "Finds only one unique food in 'Soups and Stews'."
+      },
+      {
+        "action_description": "Outputs the category containing the unique food.",
+        "observation": "Final answer is 'Soups and Stews'."
+      }
+    ]
+  },
+  {
+    "macro_type": "logic equivalence verification",
+    "macro_description": "This macro checks logical equivalence among statements by generating and comparing truth tables to identify the non-equivalent statement.",
+    "actions": [
+      {
+        "action_description": "Received a list of logical equivalence statements and the task to find the non-equivalent one.",
+        "observation": "Identified six candidate statements for analysis."
+      },
+      {
+        "action_description": "Outlined a plan to use truth tables to test equivalence.",
+        "observation": "Prepared to systematically compare all statements."
+      },
+      {
+        "action_description": "Generated truth tables for each statement using code.",
+        "observation": "Found that all but one statement were always true."
+      },
+      {
+        "action_description": "Identified the statement that failed equivalence in some cases.",
+        "observation": "Concluded (¬A → B) ↔ (A ∨ ¬B) is not equivalent to the rest."
+      }
+    ]
+  },
+  {
+    "macro_type": "graph analysis of colored grid",
+    "macro_description": "This macro reconstructs a colored grid, identifies target cells, builds their adjacency graph, and analyzes connectivity and degrees to determine if a Hamiltonian cycle exists (i.e., if all plots can be traversed without backtracking).",
+    "actions": [
+      {
+        "action_description": "Restate the problem and plan to extract and analyze green cell connectivity.",
+        "observation": "Clarified definitions and outlined a graph-based approach."
+      },
+      {
+        "action_description": "Parse the grid and identify all green cell coordinates.",
+        "observation": "Found 49 green cells at specific positions."
+      },
+      {
+        "action_description": "Build adjacency graph for green cells and compute node degrees.",
+        "observation": "Graph is connected; degree distribution shows two degree-1 nodes."
+      },
+      {
+        "action_description": "Conclude based on degree analysis whether a cycle is possible.",
+        "observation": "Cycle impossible due to degree-1 nodes; Earl cannot traverse all plots without backtracking."
+      }
+    ]
+  },
+  {
+    "macro_type": "counting and unit conversion",
+    "macro_description": "Counts attendees, applies serving sizes, converts to pounds, and calculates bags needed for mashed potatoes.",
+    "actions": [
+      {
+        "action_description": "Extracts attendee counts and serving sizes from the problem.",
+        "observation": "Identifies 10 adults eating, 3 kids eating, 3 kids not eating."
+      },
+      {
+        "action_description": "Calculates total potatoes and total pounds required.",
+        "observation": "Finds 16.5 potatoes needed, totaling 8.25 pounds."
+      },
+      {
+        "action_description": "Divides total pounds by bag size and rounds up to whole bags.",
+        "observation": "Determines 2 bags of potatoes are needed."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and cross-referencing",
+    "macro_description": "Identifies relevant albums by searching for discographies and cross-references with a critic's grading database to filter results.",
+    "actions": [
+      {
+        "action_description": "Clarified the task and planned to find pre-1999 albums without Christgau letter grades.",
+        "observation": "Outlined approach and sources to use."
+      },
+      {
+        "action_description": "Searched for Fiona Apple and Paula Cole albums released before 1999.",
+        "observation": "Found 'Tidal', 'Harbinger', and 'This Fire'."
+      },
+      {
+        "action_description": "Checked if Christgau assigned letter grades to these albums.",
+        "observation": "No grade for 'Tidal' or 'Harbinger'; 'This Fire' received a C+."
+      },
+      {
+        "action_description": "Compiled and sorted the final list of ungraded albums.",
+        "observation": "Output: Harbinger, Tidal."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and pathfinding",
+    "macro_description": "Finds the minimum Wikipedia page clicks between two articles by identifying their URLs and searching for direct or shortest link paths, using available web and archive tools.",
+    "actions": [
+      {
+        "action_description": "Clarified the task and constraints.",
+        "observation": "Restated requirements for minimum Wikipedia clicks as of a specific date."
+      },
+      {
+        "action_description": "Searched for exact Wikipedia page titles and URLs.",
+        "observation": "Confirmed correct URLs for both articles."
+      },
+      {
+        "action_description": "Attempted to retrieve historical page versions and archives.",
+        "observation": "No relevant archived versions or oldids found for the target date."
+      },
+      {
+        "action_description": "Searched for historical Wikipedia link paths using web tools and archives.",
+        "observation": "Could not find historical path data; current tools only."
+      },
+      {
+        "action_description": "Returned the minimum number of clicks based on available information.",
+        "observation": "Outputted answer: 2."
+      }
+    ]
+  },
+  {
+    "macro_type": "targeted academic search and extraction",
+    "macro_description": "Identifies a journal via mythological clues, locates a specific article, and extracts a quoted word expressing distaste from its content.",
+    "actions": [
+      {
+        "action_description": "Analyzed question to determine needed journal and article.",
+        "observation": "Recognized journal is named after Fafnir, Hreidmar's son."
+      },
+      {
+        "action_description": "Verified existence and field of Fafnir journal.",
+        "observation": "Confirmed Fafnir is a fantasy research journal."
+      },
+      {
+        "action_description": "Located Emily Midkiff's June 2014 article in Fafnir.",
+        "observation": "Found article title, publication details, and open access link."
+      },
+      {
+        "action_description": "Attempted to extract quoted word from article text.",
+        "observation": "Encountered technical issues but identified 'fluffy' as the quoted word."
+      }
+    ]
+  },
+  {
+    "macro_type": "web lookup and digit calculation",
+    "macro_description": "Finds a specific identifier online, then computes its ISBN-10 check digit using standard rules.",
+    "actions": [
+      {
+        "action_description": "Search for the Tropicos ID of Helotiales (Order).",
+        "observation": "Found and verified Tropicos ID: 100370510."
+      },
+      {
+        "action_description": "Apply ISBN-10 check digit algorithm to the ID.",
+        "observation": "Calculated check digit: 3."
+      }
+    ]
+  },
+  {
+    "macro_type": "document extraction and comparison",
+    "macro_description": "Extracts applicant and job data from files, compares qualifications, and counts applicants missing only one requirement (qualification matching).",
+    "actions": [
+      {
+        "action_description": "Reviewed job listing and applicant spreadsheet to identify required qualifications and applicant data.",
+        "observation": "Confirmed 51 applicants and job requirements."
+      },
+      {
+        "action_description": "Extracted text from Job Listing.pdf and Applicants.xlsx.",
+        "observation": "Obtained full job requirements and raw applicant data."
+      },
+      {
+        "action_description": "Parsed applicant data into structured records.",
+        "observation": "Parsed 50 applicant records successfully."
+      },
+      {
+        "action_description": "Compared each applicant's qualifications to job requirements and counted those missing exactly one.",
+        "observation": "Found 17 applicants missing only one qualification."
+      },
+      {
+        "action_description": "Returned the final count as the answer.",
+        "observation": "Output: 17."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and content verification",
+    "macro_description": "This macro searches for a referenced blog post, checks for the presence of a video, and verifies if a specific command was used, concluding there is no such video or command.",
+    "actions": [
+      {
+        "action_description": "Identify and locate the relevant 2018 VSCode blog post on replit.com.",
+        "observation": "Found the post; confirmed its publication and URL."
+      },
+      {
+        "action_description": "Examine the post for embedded videos or relevant media.",
+        "observation": "Confirmed the post contains no videos, only text and images."
+      },
+      {
+        "action_description": "Conclude whether any command was clicked in a video to remove extra lines.",
+        "observation": "Determined no such command or video exists in the post."
+      }
+    ]
+  },
+  {
+    "macro_type": "spreadsheet data analysis",
+    "macro_description": "Loads vendor data from a spreadsheet, cleans and processes it to compute revenue-to-rent ratios, and identifies the vendor with the lowest ratio to retrieve its type.",
+    "actions": [
+      {
+        "action_description": "Load and preview vendor data from the Excel file.",
+        "observation": "File and sheet loaded; initial rows and columns displayed."
+      },
+      {
+        "action_description": "Clean and format the data for analysis.",
+        "observation": "Columns renamed, irrelevant rows removed, and numeric conversions applied."
+      },
+      {
+        "action_description": "Calculate revenue-to-rent ratios for all vendors.",
+        "observation": "Ratios computed for each vendor."
+      },
+      {
+        "action_description": "Identify the vendor with the lowest ratio and extract its type.",
+        "observation": "Carnivore Loan Specialists found; type is 'Finance'."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and entity verification",
+    "macro_description": "Identifies a portrait subject and verifies biographical details of related figures to answer a specific historical question (consecrator who never became pope).",
+    "actions": [
+      {
+        "action_description": "Identified the subject of the Met portrait using accession number.",
+        "observation": "Found subject is Cardinal Fernando Niño de Guevara."
+      },
+      {
+        "action_description": "Researched consecrators and checked which became pope.",
+        "observation": "Camillo Borghese became pope; Alfonso Visconti did not."
+      },
+      {
+        "action_description": "Selected the consecrator who never became pope.",
+        "observation": "Final answer: Alfonso Visconti."
+      }
+    ]
+  },
+  {
+    "macro_type": "targeted academic source extraction",
+    "macro_description": "Locates and analyzes a specific academic book chapter to extract a cited film title relevant to a conceptual topic (metalepsis in horror).",
+    "actions": [
+      {
+        "action_description": "Clarify the citation task and break it into steps.",
+        "observation": "Identified need to find the exact movie cited for metalepsis between dream and reality."
+      },
+      {
+        "action_description": "Locate the book and chapter details using search tools.",
+        "observation": "Found chapter title, author, and page range but not full text."
+      },
+      {
+        "action_description": "Obtain and search the chapter text for the relevant citation.",
+        "observation": "Extracted chapter pages and identified 'A Nightmare on Elm Street' as the cited movie."
+      },
+      {
+        "action_description": "Output the extracted movie title as the answer.",
+        "observation": "Final answer: A Nightmare on Elm Street."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and policy lookup",
+    "macro_description": "Identifies the meaning of a policy abbreviation by searching for Wikipedia's core content policies and matching abbreviations to their full names.",
+    "actions": [
+      {
+        "action_description": "Receives question about the meaning of 'R' in Wikipedia's core policies for Legume page violations in 2022.",
+        "observation": "Clarifies the specific abbreviation and context to investigate."
+      },
+      {
+        "action_description": "Attempts to retrieve Wikipedia's three core content policies using an automated tool.",
+        "observation": "Tool fails due to network error."
+      },
+      {
+        "action_description": "Uses web search to find and summarize Wikipedia's three core content policies and their abbreviations.",
+        "observation": "Finds that 'R' in 'NOR' stands for 'Research'."
+      },
+      {
+        "action_description": "Outputs the final answer based on the policy abbreviation lookup.",
+        "observation": "Returns 'Research' as the meaning of 'R'."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and verification",
+    "macro_description": "This macro locates the writer quoted by Merriam-Webster for a specific Word of the Day by searching online sources and verifying the result.",
+    "actions": [
+      {
+        "action_description": "Clarify the task and plan the approach.",
+        "observation": "Identified need to find the quoted writer for June 27, 2022."
+      },
+      {
+        "action_description": "Search online for the Merriam-Webster Word of the Day and its quoted writer.",
+        "observation": "Found 'jingoism' as the word and Annie Levin as the quoted writer."
+      },
+      {
+        "action_description": "Verify the quote and source for accuracy.",
+        "observation": "Confirmed Annie Levin is the correct quoted writer."
+      },
+      {
+        "action_description": "Submit the final answer.",
+        "observation": "Returned 'Annie Levin' as the answer."
+      }
+    ]
+  },
+  {
+    "macro_type": "targeted web lookup and verification",
+    "macro_description": "This macro identifies the nominator of a specific Wikipedia Featured Article by searching for promotion records and verifying article details.",
+    "actions": [
+      {
+        "action_description": "Clarified the task and outlined a plan to find the nominator of the relevant article.",
+        "observation": "Task and approach established."
+      },
+      {
+        "action_description": "Attempted to access Wikipedia's Featured Article promotion records for November 2016.",
+        "observation": "Encountered network error."
+      },
+      {
+        "action_description": "Used a search tool to gather a list of Featured Articles promoted in November 2016.",
+        "observation": "Obtained article titles and context."
+      },
+      {
+        "action_description": "Verified which article was about a dinosaur and identified its nominator.",
+        "observation": "Confirmed 'Giganotosaurus' as the only dinosaur article and 'FunkMonk' as nominator."
+      }
+    ]
+  },
+  {
+    "macro_type": "table analysis for counter-examples",
+    "macro_description": "Checks a binary operation table for non-commutative pairs and extracts the involved elements in sorted order.",
+    "actions": [
+      {
+        "action_description": "Receives operation table and identifies task to find elements in counter-examples to commutativity.",
+        "observation": "Understands set S and operation *; clarifies goal."
+      },
+      {
+        "action_description": "Plans to check all element pairs for commutativity violations and collect involved elements.",
+        "observation": "Outlines systematic approach to scan table and gather results."
+      },
+      {
+        "action_description": "Executes code to find all non-commutative pairs and the elements involved.",
+        "observation": "Finds that only 'b' and 'e' are involved."
+      },
+      {
+        "action_description": "Formats and outputs the sorted list of involved elements as the final answer.",
+        "observation": "Returns 'b,e' as the answer."
+      }
+    ]
+  },
+  {
+    "macro_type": "systematic enumeration and validation",
+    "macro_description": "This macro systematically tests possible weights and transposition indices by simulating corrections and validating checksums to identify the correct parameters for the ISBN-like numbers.",
+    "actions": [
+      {
+        "action_description": "Parse numbers into digit arrays for processing.",
+        "observation": "Obtained lists of digits for each number."
+      },
+      {
+        "action_description": "Enumerate all valid weights and transposition indices.",
+        "observation": "Prepared all (weight, index) pairs for testing."
+      },
+      {
+        "action_description": "Simulate digit swaps and check checksum validity for each pair.",
+        "observation": "Identified the unique (weight, index) pair that validates all numbers."
+      }
+    ]
+  },
+  {
+    "macro_type": "document search and term counting",
+    "macro_description": "Locates the relevant report version, searches for mentions of nuclear energy, and counts the number of pages containing such terms.",
+    "actions": [
+      {
+        "action_description": "Clarified the task and identified the required report version.",
+        "observation": "Confirmed need to check 2023 IPCC report (85-page version) for nuclear mentions."
+      },
+      {
+        "action_description": "Searched for the official 85-page report version.",
+        "observation": "No standalone 85-page version found; closest is 184-page Synthesis Report."
+      },
+      {
+        "action_description": "Searched the 184-page report for nuclear-related terms.",
+        "observation": "Found zero pages mentioning nuclear energy or variants."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and formula computation",
+    "macro_description": "This macro retrieves specific factual data from the web, substitutes them into a given math formula, and computes the final numeric answer.",
+    "actions": [
+      {
+        "action_description": "Identify required facts and parse the formula.",
+        "observation": "Determined need for historical year, logo colors, and average height."
+      },
+      {
+        "action_description": "Search for the year of Venezuelan Declaration of Independence.",
+        "observation": "Found year as 1811; last two digits are 11."
+      },
+      {
+        "action_description": "Search for number of TikTok logo colors (excluding black and white).",
+        "observation": "Found two main colors: cyan and pink/red."
+      },
+      {
+        "action_description": "Search for average height of women in the Philippines.",
+        "observation": "Found value as 149.6 cm; rounded to 150."
+      },
+      {
+        "action_description": "Substitute values into formula and compute x.",
+        "observation": "Calculated x = 563.9."
+      }
+    ]
+  },
+  {
+    "macro_type": "data extraction and filtering",
+    "macro_description": "Extracts accommodation data from a file, filters for houses with required amenities and availability, and selects the best option based on ratings.",
+    "actions": [
+      {
+        "action_description": "Extract accommodation listings from the attached file.",
+        "observation": "Obtained a list of rental houses with attributes."
+      },
+      {
+        "action_description": "Parse and align house details such as name, rating, vacancy, and pool.",
+        "observation": "Reconstructed structured data for each house."
+      },
+      {
+        "action_description": "Filter houses for both vacancy and pool availability.",
+        "observation": "Identified available houses with pools."
+      },
+      {
+        "action_description": "Select the house with the highest rating among filtered options.",
+        "observation": "Chose Shelley's Place as the best fit."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and fact matching",
+    "macro_description": "This macro finds a historical event's explosive force from a reputable source, then matches it to a US nuclear test with the same yield, returning the last word of the test's name.",
+    "actions": [
+      {
+        "action_description": "Identify the catastrophe reported by Phys.org on July 15, 2008.",
+        "observation": "Catastrophe is the Tunguska event."
+      },
+      {
+        "action_description": "Find the explosive force of the Tunguska event per Encyclopedia Britannica.",
+        "observation": "Yield is 15 megatons of TNT."
+      },
+      {
+        "action_description": "Search for the US nuclear test with a 15 megaton yield.",
+        "observation": "Castle Bravo test matches the yield."
+      },
+      {
+        "action_description": "Return the last word of the test's name.",
+        "observation": "Output is 'Bravo'."
+      }
+    ]
+  },
+  {
+    "macro_type": "instruction compliance check",
+    "macro_description": "The macro analyzes instructions for contradictions or special requirements and outputs the specified response without answering unrelated questions.",
+    "actions": [
+      {
+        "action_description": "Read and analyzed instructions for clarity and contradictions.",
+        "observation": "Identified that only 'Guava' should be output."
+      },
+      {
+        "action_description": "Ignored unrelated questions and confirmed required response.",
+        "observation": "Determined 'Guava' is the correct output."
+      },
+      {
+        "action_description": "Output the required word as instructed.",
+        "observation": "Returned 'Guava' as the answer."
+      }
+    ]
+  },
+  {
+    "macro_type": "web archive and search verification",
+    "macro_description": "This macro investigates a claim about Wikipedia edit history by searching archives, edit histories, and external forums to verify or refute the removal of a specific phrase.",
+    "actions": [
+      {
+        "action_description": "Clarified the task and identified the target event and page.",
+        "observation": "Understood the need to find a joke phrase removed from Wikipedia's 'Dragon' page on a leap day before 2008."
+      },
+      {
+        "action_description": "Searched Wikipedia edit histories and web archives for relevant leap days.",
+        "observation": "Found no accessible diffs or evidence of joke removal on specified dates."
+      },
+      {
+        "action_description": "Checked related Wikipedia meta-pages and external forums for references to the event.",
+        "observation": "Found no mention or confirmation of the joke phrase removal."
+      },
+      {
+        "action_description": "Proposed the most likely answer based on general knowledge.",
+        "observation": "Answered with 'Here be dragons'."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and data extraction",
+    "macro_description": "This macro answers questions about Wikipedia edit counts by searching for reliable statistics sources, extracting the relevant data, and reporting the total edits up to a specified date.",
+    "actions": [
+      {
+        "action_description": "Interpreted the question and identified the need for Wikipedia edit statistics.",
+        "observation": "Recognized the target page and date range."
+      },
+      {
+        "action_description": "Searched for authoritative sources providing Wikipedia edit counts.",
+        "observation": "Located the XTools statistics page for the article."
+      },
+      {
+        "action_description": "Extracted and calculated the total number of edits from the source.",
+        "observation": "Obtained the edit count as 2,756 from XTools."
+      },
+      {
+        "action_description": "Reported the final edit count with source attribution.",
+        "observation": "Returned the answer: 2,756 edits (source: XTools)."
+      }
+    ]
+  },
+  {
+    "macro_type": "document content search and count",
+    "macro_description": "Extracts text from a PowerPoint file and counts slides mentioning a specific term to answer a targeted query.",
+    "actions": [
+      {
+        "action_description": "Receives and interprets the task to count slides mentioning crustaceans.",
+        "observation": "Clarifies the goal is to count relevant slides."
+      },
+      {
+        "action_description": "Extracts text from all slides in the PowerPoint file.",
+        "observation": "Obtains text content from 8 slides."
+      },
+      {
+        "action_description": "Searches for and counts slides mentioning crustaceans.",
+        "observation": "Finds 4 slides that mention crustaceans."
+      },
+      {
+        "action_description": "Outputs the final count as the answer.",
+        "observation": "Returns 4 as the result."
+      }
+    ]
+  },
+  {
+    "macro_type": "document retrieval and extraction",
+    "macro_description": "Attempts to access a specific page and endnote in a book to extract a cited date, retrying with different tools until successful extraction.",
+    "actions": [
+      {
+        "action_description": "Receives task to find a November access date from a book's endnote.",
+        "observation": "Clarifies task and plans extraction steps."
+      },
+      {
+        "action_description": "Attempts to read and extract relevant text from the PDF using code tools.",
+        "observation": "Repeated code execution fails with errors."
+      },
+      {
+        "action_description": "Tries alternative search and extraction methods to locate the endnote date.",
+        "observation": "Initial searches and code attempts yield no result."
+      },
+      {
+        "action_description": "Successfully retrieves the November access date from the endnote using a search agent.",
+        "observation": "Finds and outputs the day as 26."
+      }
+    ]
+  },
+  {
+    "macro_type": "iterative numeric computation",
+    "macro_description": "Applies Newton's Method iteratively to a cubic function, checking for convergence by comparing rounded values at each step.",
+    "actions": [
+      {
+        "action_description": "Identifies function and initial value for Newton's Method.",
+        "observation": "Given f(x) and x₀ = -5."
+      },
+      {
+        "action_description": "Finds the derivative of the function.",
+        "observation": "Obtains f'(x) = 3x^2 + 8x - 3."
+      },
+      {
+        "action_description": "Performs Newton's Method iterations, rounding results.",
+        "observation": "Finds n = 2 is the smallest step where rounded xₙ = xₙ₊₁."
+      }
+    ]
+  },
+  {
+    "macro_type": "logic puzzle elimination",
+    "macro_description": "Systematically analyzes possible truth-teller/liar (human/vampire) combinations based on residents' identical statements to deduce the only consistent scenario.",
+    "actions": [
+      {
+        "action_description": "Restates the puzzle and identifies the need to check all possible human/vampire distributions.",
+        "observation": "Clarifies that only all-human, all-vampire, or mixed scenarios are possible."
+      },
+      {
+        "action_description": "Tests each scenario for logical consistency with the residents' statements.",
+        "observation": "Finds that only the all-vampire scenario fits the universal claim 'At least one of us is a human.'"
+      },
+      {
+        "action_description": "Concludes that all 100 residents are vampires.",
+        "observation": "Final answer: 100 vampires in Șirnea."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and quote verification",
+    "macro_description": "This macro locates a specific character's quote from a video by searching transcripts, subtitles, and external sources, then verifies and summarizes the answer with episode context.",
+    "actions": [
+      {
+        "action_description": "Identify the task and target quote from the video.",
+        "observation": "Task is to find Teal'c's response to 'Isn't that hot?'."
+      },
+      {
+        "action_description": "Plan to search transcripts, subtitles, and external sources for the quote.",
+        "observation": "Outlined approach to locate and verify the quote."
+      },
+      {
+        "action_description": "Search YouTube, Google, and wikis for the quote and episode details.",
+        "observation": "Found Teal'c replies 'Extremely' in episode 'Urgo' (S3E16), confirmed by multiple sources."
+      },
+      {
+        "action_description": "Summarize and return the verified answer with context.",
+        "observation": "Final answer: Teal'c says 'Extremely' in Stargate SG-1 S3E16."
+      }
+    ]
+  },
+  {
+    "macro_type": "file extraction and numeric reasoning",
+    "macro_description": "Extracts relevant data from a file, interprets domain-specific notation, and computes a numeric total based on extracted attributes (wheel counts).",
+    "actions": [
+      {
+        "action_description": "Read Excel file and identify steam locomotives with wheel configurations.",
+        "observation": "Located 7 steam locomotive entries with Whyte notations."
+      },
+      {
+        "action_description": "Research Whyte notation to determine wheel count calculation method.",
+        "observation": "Learned to sum numbers in notation for total wheels."
+      },
+      {
+        "action_description": "Apply calculation to each locomotive and sum totals.",
+        "observation": "Computed individual and total wheel counts; final total is 60."
+      }
+    ]
+  },
+  {
+    "macro_type": "data extraction and comparison",
+    "macro_description": "Extracts sales data for specified cities from a spreadsheet, sums their totals, and compares them to identify which city had higher sales.",
+    "actions": [
+      {
+        "action_description": "Read sales data for Wharvton and Algrimand from spreadsheet.",
+        "observation": "Sales values for both cities obtained."
+      },
+      {
+        "action_description": "Sum total sales for each city.",
+        "observation": "Wharvton: 12055.0; Algrimand: 11907.0."
+      },
+      {
+        "action_description": "Compare summed totals to determine which is greater.",
+        "observation": "Wharvton had the greater total sales."
+      }
+    ]
+  },
+  {
+    "macro_type": "web lookup and filtering",
+    "macro_description": "The macro retrieves a list of Asian monarchies from Wikipedia, filters for those with sea access, and counts them to answer the question.",
+    "actions": [
+      {
+        "action_description": "Clarified the question and outlined a plan to identify Asian monarchies with sea access.",
+        "observation": "Prepared to search Wikipedia for relevant lists."
+      },
+      {
+        "action_description": "Searched Wikipedia for lists of monarchies in Asia.",
+        "observation": "Initial queries returned insufficient information."
+      },
+      {
+        "action_description": "Used a search tool to compile a detailed list of Asian monarchies in 2021.",
+        "observation": "Identified 13 monarchies with relevant details."
+      },
+      {
+        "action_description": "Classified each monarchy as coastal or landlocked using code.",
+        "observation": "Found 12 monarchies with sea access."
+      },
+      {
+        "action_description": "Reported the final count based on Wikipedia data.",
+        "observation": "Answered: 12 Asian monarchies with sea access in 2021."
+      }
+    ]
+  },
+  {
+    "macro_type": "targeted document lookup",
+    "macro_description": "Locates and reviews a specific section of educational materials to extract a requested name or fact (document search and extraction).",
+    "actions": [
+      {
+        "action_description": "Clarified the question and identified the required document section.",
+        "observation": "Confirmed need to find a surname in 1.E Exercises of specified chemistry materials."
+      },
+      {
+        "action_description": "Located and examined the relevant section in the source.",
+        "observation": "Found a single mention of an equine veterinarian named Louvrier."
+      },
+      {
+        "action_description": "Selected and reported the identified surname as the answer.",
+        "observation": "Final answer: Louvrier."
+      }
+    ]
+  },
+  {
+    "macro_type": "grid pathfinding with constraints",
+    "macro_description": "Finds a valid path on a color-coded grid from START to END, moving two cells per turn, avoiding forbidden cells, and determines the color at a specific step (turn-based constrained navigation).",
+    "actions": [
+      {
+        "action_description": "Parse the Excel file to extract the grid, cell colors, and START/END positions.",
+        "observation": "Obtained a 20x9 grid with color codes and identified START and END cells."
+      },
+      {
+        "action_description": "Map forbidden (blue) cells and define movement rules for two-cell steps without backtracking.",
+        "observation": "Movement constraints and forbidden cells established."
+      },
+      {
+        "action_description": "Implement BFS to search for a valid path from START, moving two cells per turn and avoiding blue cells.",
+        "observation": "Found a valid path of 11 moves that satisfies all constraints."
+      },
+      {
+        "action_description": "Extract the color code of the cell reached after the 11th move.",
+        "observation": "Determined the color code is F478A7."
+      }
+    ]
+  },
+  {
+    "macro_type": "iterative web search and verification",
+    "macro_description": "This macro identifies a song's composer by searching for clues about its performances, confirming details through web and wiki searches, and verifying the composer's identity before formatting the answer.",
+    "actions": [
+      {
+        "action_description": "Restate the problem and plan research steps.",
+        "observation": "Clarified requirements and selected tools for searching."
+      },
+      {
+        "action_description": "Search for information about the song and its meme versions.",
+        "observation": "Found references to 'Hampster Dance Song' and meme origins."
+      },
+      {
+        "action_description": "Search Wikipedia for song and composer details.",
+        "observation": "No relevant information found on initial queries."
+      },
+      {
+        "action_description": "Use web search to confirm the composer of the identified song.",
+        "observation": "Confirmed Roger Miller as the composer and performer."
+      },
+      {
+        "action_description": "Format and output the final answer.",
+        "observation": "Produced answer: Roger Miller."
+      }
+    ]
+  },
+  {
+    "macro_type": "botanical classification and filtering",
+    "macro_description": "Identifies and alphabetizes true vegetables from a grocery list by verifying botanical classifications and excluding fruits.",
+    "actions": [
+      {
+        "action_description": "Restates the task and plans to identify botanically correct vegetables.",
+        "observation": "Clarifies need for strict botanical accuracy and alphabetization."
+      },
+      {
+        "action_description": "Attempts to verify botanical status of list items using external sources.",
+        "observation": "Finds no relevant information for several items."
+      },
+      {
+        "action_description": "Selects items known to be vegetables and excludes botanical fruits.",
+        "observation": "Identifies broccoli, celery, fresh basil, lettuce, sweet potatoes as vegetables."
+      },
+      {
+        "action_description": "Alphabetizes the selected vegetable list.",
+        "observation": "Final list: broccoli, celery, fresh basil, lettuce, sweet potatoes."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and price comparison",
+    "macro_description": "Looks up recent sale prices for specified homes using web search, then compares the values to identify and report the higher price (numeric comparison).",
+    "actions": [
+      {
+        "action_description": "Restate the task and outline plan to find and compare 2022 sale prices for two homes.",
+        "observation": "Clarified approach to look up, verify, and compare sale prices."
+      },
+      {
+        "action_description": "Search for and extract 2022 sale price of 2072 Akaikai Loop.",
+        "observation": "Found sale price was 860000 in 2022."
+      },
+      {
+        "action_description": "Search for and extract 2022 sale price of 2017 Komo Mai Drive.",
+        "observation": "Found sale price was 900000 in 2022."
+      },
+      {
+        "action_description": "Compare the two prices and select the higher value.",
+        "observation": "Determined 900000 is the higher price."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and lyric parsing",
+    "macro_description": "Identifies a specific word in a song by determining the correct track via web search, locating official lyrics, and extracting the target word from the lyrics.",
+    "actions": [
+      {
+        "action_description": "Clarified the question and outlined a plan to find the target word in a Michael Jackson song.",
+        "observation": "Identified task steps and relevant facts."
+      },
+      {
+        "action_description": "Searched for Michael Jackson's sixth studio album and its singles.",
+        "observation": "Found 'Thriller' as the sixth album and 'Human Nature' as the fifth single."
+      },
+      {
+        "action_description": "Located and reviewed official lyrics for 'Human Nature'.",
+        "observation": "Obtained song structure and chorus placement."
+      },
+      {
+        "action_description": "Parsed lyrics to extract the last word before the second chorus.",
+        "observation": "Identified 'stare' as the answer."
+      }
+    ]
+  },
+  {
+    "macro_type": "audio extraction and list formatting",
+    "macro_description": "Extracts ingredient names from an audio recipe, alphabetizes them, and formats as a comma-separated list for the user.",
+    "actions": [
+      {
+        "action_description": "Listens to the audio recipe to identify filling ingredients.",
+        "observation": "Obtains a set of ingredient names from the audio."
+      },
+      {
+        "action_description": "Alphabetizes the extracted ingredient names.",
+        "observation": "Produces an ordered list of ingredients."
+      },
+      {
+        "action_description": "Formats the alphabetized list as a comma-separated string.",
+        "observation": "Returns the final formatted ingredient list."
+      }
+    ]
+  },
+  {
+    "macro_type": "code extraction and numeric reasoning",
+    "macro_description": "This macro reconstructs a URL from code, retrieves C++ source, runs a sort on input data, and computes a sum from sorted results.",
+    "actions": [
+      {
+        "action_description": "Analyzed Python script to determine URL construction logic.",
+        "observation": "Identified indices and prefix for building the URL."
+      },
+      {
+        "action_description": "Reconstructed and printed the target URL using the given array and indices.",
+        "observation": "Obtained the URL to C++ Quicksort code."
+      },
+      {
+        "action_description": "Fetched and extracted C++ Quicksort source code from the URL.",
+        "observation": "Retrieved the relevant C++ code."
+      },
+      {
+        "action_description": "Sorted the input integer array using the extracted algorithm.",
+        "observation": "Sorted array: [5, 8, 12, 21, 35, 99]."
+      },
+      {
+        "action_description": "Summed the third and fifth elements of the sorted array.",
+        "observation": "Computed sum: 47."
+      }
+    ]
+  },
+  {
+    "macro_type": "plan comparison and unit cost calculation",
+    "macro_description": "Determines the minimum plan upgrade needed for extra storage, computes the total extra cost, and divides by the number of files over the limit to find average additional cost per file.",
+    "actions": [
+      {
+        "action_description": "Extract plan storage limits and prices.",
+        "observation": "Standard: 2TB/$9.99, Plus: 10TB/$19.99, Premium: 50TB/$39.99."
+      },
+      {
+        "action_description": "Calculate individual file size from current usage.",
+        "observation": "Each file is 35GB."
+      },
+      {
+        "action_description": "Compute total storage needed for all files.",
+        "observation": "Total required: 36.4TB."
+      },
+      {
+        "action_description": "Identify minimum plan that covers total storage.",
+        "observation": "Premium plan (50TB/$39.99) is required."
+      },
+      {
+        "action_description": "Determine number of files over current plan limit.",
+        "observation": "983 files exceed Standard plan."
+      },
+      {
+        "action_description": "Calculate average extra cost per file over the limit.",
+        "observation": "Result: $0.03 per file."
+      }
+    ]
+  },
+  {
+    "macro_type": "data extraction and comparison",
+    "macro_description": "Extracts accommodation types and ratings from a document, computes average ratings by type, and identifies which type has the highest average (rating comparison).",
+    "actions": [
+      {
+        "action_description": "Extract accommodation types and ratings from the PDF.",
+        "observation": "Obtained a list of types and their ratings."
+      },
+      {
+        "action_description": "Calculate average rating for each accommodation type.",
+        "observation": "Computed averages for Hotels, Motels, Rental Houses, and Campgrounds."
+      },
+      {
+        "action_description": "Compare averages to determine the highest-rated type.",
+        "observation": "Hotels have the highest average rating."
+      }
+    ]
+  },
+  {
+    "macro_type": "file-based word search attempt",
+    "macro_description": "Attempts to find the longest Boggle word by reading a large dictionary file and searching for valid words, but fails due to file access and size limitations.",
+    "actions": [
+      {
+        "action_description": "Receives Boggle board and instructions to use words_alpha dictionary.",
+        "observation": "Understands task and rules."
+      },
+      {
+        "action_description": "Plans to parse board, load dictionary, and search for longest word.",
+        "observation": "Outlines approach."
+      },
+      {
+        "action_description": "Attempts to read words_alpha.txt using Python.",
+        "observation": "Fails due to file access restrictions."
+      },
+      {
+        "action_description": "Tries alternative file reading methods.",
+        "observation": "File not found."
+      },
+      {
+        "action_description": "Attempts to retrieve longest words from dictionary file.",
+        "observation": "File still not found."
+      },
+      {
+        "action_description": "Searches web for longest English words.",
+        "observation": "No relevant results."
+      },
+      {
+        "action_description": "Tries again to read dictionary file for Boggle words.",
+        "observation": "File not found."
+      },
+      {
+        "action_description": "Attempts to process dictionary with search agent.",
+        "observation": "Fails due to file size/token budget limits."
+      },
+      {
+        "action_description": "Reports inability to process dictionary and requests smaller input.",
+        "observation": "Task cannot be completed as specified."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and cross-referencing",
+    "macro_description": "Identifies an actor from a localized TV show, then finds the character's first name played by that actor in another series by searching and cross-referencing sources.",
+    "actions": [
+      {
+        "action_description": "Clarified the question and planned steps to identify the actor and character.",
+        "observation": "Outlined approach to find actor and role."
+      },
+      {
+        "action_description": "Searched for the Polish version of Everybody Loves Raymond and its lead actor.",
+        "observation": "Found Bartłomiej Kasprzykowski as the lead."
+      },
+      {
+        "action_description": "Searched for the character Bartłomiej Kasprzykowski played in Magda M.",
+        "observation": "Confirmed the first name is Wojciech."
+      },
+      {
+        "action_description": "Returned the final answer.",
+        "observation": "Output: Wojciech."
+      }
+    ]
+  },
+  {
+    "macro_type": "distance and refund calculation",
+    "macro_description": "Calculates total bottle refund for a cross-country trip by estimating distance, bottle usage, and Maine's deposit value (using web sources).",
+    "actions": [
+      {
+        "action_description": "Determine driving distance for each route segment.",
+        "observation": "Total trip distance estimated as 3200 miles."
+      },
+      {
+        "action_description": "Calculate total water bottles consumed based on distance.",
+        "observation": "160 bottles needed for the trip."
+      },
+      {
+        "action_description": "Find Maine's bottle deposit refund value from Wikipedia.",
+        "observation": "Refund is $0.05 per bottle."
+      },
+      {
+        "action_description": "Compute total refund by multiplying bottle count by deposit value.",
+        "observation": "Total refund calculated as $8.00."
+      }
+    ]
+  },
+  {
+    "macro_type": "python code execution and verification",
+    "macro_description": "Reads a Python file, executes it, and verifies the final numeric output to answer the question.",
+    "actions": [
+      {
+        "action_description": "Receives Python code file and task to find its output.",
+        "observation": "Task and file are identified."
+      },
+      {
+        "action_description": "Reads and prints the contents of the Python file.",
+        "observation": "File contents are displayed."
+      },
+      {
+        "action_description": "Executes the Python file to obtain the output.",
+        "observation": "Output is 0."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and fact extraction",
+    "macro_description": "Identifies the relevant organism and its namesake location, then finds and rounds the latest population data from Wikipedia.",
+    "actions": [
+      {
+        "action_description": "Clarified the task and planned steps to identify the organism, location, and population.",
+        "observation": "Plan created for finding organism, island, and 2020 population."
+      },
+      {
+        "action_description": "Searched for the longest-lived vertebrate and its namesake.",
+        "observation": "Determined it is the Greenland shark, named after Greenland."
+      },
+      {
+        "action_description": "Searched Wikipedia for Greenland's 2020 population as of Jan 1, 2021.",
+        "observation": "Found population: 56,081."
+      },
+      {
+        "action_description": "Rounded the population to the nearest thousand.",
+        "observation": "Final answer: 56,000."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and comparison",
+    "macro_description": "Finds and compares model architecture details by searching for authoritative sources and calculating the numeric difference.",
+    "actions": [
+      {
+        "action_description": "Identifies the need to compare encoder layer counts for two models.",
+        "observation": "Clarifies the comparison target: BERT base vs. original Transformer encoder."
+      },
+      {
+        "action_description": "Searches for encoder layer counts in both models' papers.",
+        "observation": "Finds BERT base has 12 layers; original Transformer encoder has 6 layers."
+      },
+      {
+        "action_description": "Calculates the difference between the two layer counts.",
+        "observation": "BERT base encoder has 6 more layers than the original Transformer encoder."
+      }
+    ]
+  },
+  {
+    "macro_type": "row-wise text extraction",
+    "macro_description": "Concatenates rows of a letter block left to right to reconstruct a sentence, then formats it as natural language.",
+    "actions": [
+      {
+        "action_description": "Receives a 5x7 letter block and the extraction task.",
+        "observation": "Identifies the need to read all rows left to right."
+      },
+      {
+        "action_description": "Concatenates all rows sequentially.",
+        "observation": "Forms a continuous string of letters."
+      },
+      {
+        "action_description": "Inserts spaces to separate words and formats as a sentence.",
+        "observation": "Outputs the reconstructed sentence."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and entity linking",
+    "macro_description": "This macro identifies a city from an image reference, traces its namesake to a Chicago landmark, and determines the architectural firm's current name to extract the first name.",
+    "actions": [
+      {
+        "action_description": "Identify the city shown in the NASA APOD from early August 2015.",
+        "observation": "City lights identified as Marquette, Michigan."
+      },
+      {
+        "action_description": "Determine who Marquette, Michigan is named after.",
+        "observation": "Found to be Jacques Marquette."
+      },
+      {
+        "action_description": "Find a Chicago landmark building named after Jacques Marquette.",
+        "observation": "Located the Marquette Building, designed by Holabird & Roche."
+      },
+      {
+        "action_description": "Check the current name of the architectural firm as of June 2023.",
+        "observation": "Firm is now Holabird & Root."
+      },
+      {
+        "action_description": "Extract the first name in the firm's current name.",
+        "observation": "First name is Holabird."
+      }
+    ]
+  },
+  {
+    "macro_type": "symbol lookup and numeric conversion",
+    "macro_description": "This macro identifies cuneiform symbols, retrieves their Babylonian numeric values, and computes the decimal equivalent using sexagesimal notation.",
+    "actions": [
+      {
+        "action_description": "Recognize and parse the cuneiform numeral symbols.",
+        "observation": "Symbols 𒐜, 𒐐, and 𒐚 are identified for conversion."
+      },
+      {
+        "action_description": "Look up the Babylonian numeric values for each symbol.",
+        "observation": "𒐜 = 8, 𒐐 = 50, 𒐚 = 6 are found."
+      },
+      {
+        "action_description": "Apply sexagesimal place values and sum to get the decimal number.",
+        "observation": "Calculation yields 536 as the decimal result."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and geographic comparison",
+    "macro_description": "Identifies relevant officials, finds their undergraduate universities and cities via web search, then compares city longitudes to determine the westernmost and easternmost locations.",
+    "actions": [
+      {
+        "action_description": "List all formal US Secretaries of Homeland Security before April 2019.",
+        "observation": "Obtained names of 6 qualifying secretaries."
+      },
+      {
+        "action_description": "Find each secretary's bachelor's university and its city using web search.",
+        "observation": "Compiled list of universities and their cities for all secretaries."
+      },
+      {
+        "action_description": "Compare the longitudes of the cities to find the westernmost and easternmost.",
+        "observation": "Identified Santa Clara as westernmost and Boston as easternmost."
+      },
+      {
+        "action_description": "Output the two cities as a comma-separated list.",
+        "observation": "Returned 'Santa Clara, Boston'."
+      }
+    ]
+  },
+  {
+    "macro_type": "targeted database lookup",
+    "macro_description": "Finds the first occurrence of a species in a region by searching authoritative databases and extracting the earliest relevant record.",
+    "actions": [
+      {
+        "action_description": "Clarify the specific query and information needed.",
+        "observation": "Identified the need for the first USGS record of American Alligator west of Texas."
+      },
+      {
+        "action_description": "Plan and select the appropriate authoritative database to search.",
+        "observation": "Chose USGS NAS database as the primary source."
+      },
+      {
+        "action_description": "Search the database for relevant records and identify the earliest occurrence.",
+        "observation": "Found 2009 Colorado record as the first west of Texas."
+      },
+      {
+        "action_description": "Extract and confirm the year and location from the database entry.",
+        "observation": "Verified 2009 in Delta County, Colorado as the correct answer."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and structured filtering",
+    "macro_description": "This macro identifies the relevant legal section, filters articles by keyword frequency, and retrieves amendment details to find a deleted word in a rule.",
+    "actions": [
+      {
+        "action_description": "List all federal rule sections from the Cornell Law LII site and sort them alphabetically.",
+        "observation": "Identified 'Federal Rules of Evidence' as the fifth section."
+      },
+      {
+        "action_description": "Enumerate all articles and rule titles in the Evidence section and count 'witnesses' in titles per article.",
+        "observation": "Found the article with the most 'witnesses' in rule titles."
+      },
+      {
+        "action_description": "Locate the first rule in that article and check the last amendment for deleted words.",
+        "observation": "Determined 'inference' was the deleted word in the last amendment."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and data extraction",
+    "macro_description": "Finds authoritative statistics online, extracts relevant data points, and calculates the time span for a specified percentage change.",
+    "actions": [
+      {
+        "action_description": "Identifies the need to determine years for a 13% change from 37% women in computer science.",
+        "observation": "Clarifies the problem and target values."
+      },
+      {
+        "action_description": "Searches for official Girls Who Code statistics and reports.",
+        "observation": "Finds a report showing 37% in 1984 and 18% in 2016."
+      },
+      {
+        "action_description": "Extracts years and percentage values from the report.",
+        "observation": "Notes a 13% decrease over 32 years."
+      },
+      {
+        "action_description": "Calculates the number of years between the two data points.",
+        "observation": "Finds it took 32 years for the 13% change."
+      }
+    ]
+  },
+  {
+    "macro_type": "web lookup and data extraction",
+    "macro_description": "Finds a specific player's stat by searching for team data online and extracting the relevant value (statistical lookup).",
+    "actions": [
+      {
+        "action_description": "Clarifies the question and plans to identify the stat leader.",
+        "observation": "Task and required stat are clearly defined."
+      },
+      {
+        "action_description": "Searches for 1977 Yankees batting stats online.",
+        "observation": "Finds Baseball-Reference team stats page."
+      },
+      {
+        "action_description": "Identifies the player with most walks and notes their at bats.",
+        "observation": "Roy White leads with 75 walks and 519 at bats."
+      },
+      {
+        "action_description": "Outputs the at bats value as the answer.",
+        "observation": "Returns 519."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and unit conversion",
+    "macro_description": "Identifies a landmark from a magazine cover via web search, finds its official height, and converts the measurement to the required unit (yards) for the answer.",
+    "actions": [
+      {
+        "action_description": "Clarifies the question and outlines a plan to identify the landmark and its height.",
+        "observation": "Recognizes the task is to find the height in yards of a landmark on Vogue's August 2021 cover."
+      },
+      {
+        "action_description": "Searches for and confirms the landmark shown on the magazine cover.",
+        "observation": "Identifies the Washington Monument as the landmark behind trees."
+      },
+      {
+        "action_description": "Searches for authoritative sources to find the official height of the Washington Monument.",
+        "observation": "Finds multiple sources listing the height as 555 ft 5 1/8 in."
+      },
+      {
+        "action_description": "Converts the monument's height from feet and inches to yards and rounds the result.",
+        "observation": "Calculates and rounds the height to 185 yards."
+      }
+    ]
+  },
+  {
+    "macro_type": "text retrieval and structure analysis",
+    "macro_description": "This macro locates the original poem text online, verifies formatting, and analyzes stanza structure to identify which stanza contains indented lines.",
+    "actions": [
+      {
+        "action_description": "Receives a question about stanza formatting in a specific poem.",
+        "observation": "Understands the need to find which stanza has indented lines."
+      },
+      {
+        "action_description": "Searches for the poem's full text with original formatting.",
+        "observation": "Finds and verifies the poem on a reputable site; alternate source unavailable."
+      },
+      {
+        "action_description": "Analyzes the poem's structure programmatically.",
+        "observation": "Finds 5 stanzas; identifies stanza 2 as containing indented lines."
+      },
+      {
+        "action_description": "Outputs the stanza number with indented lines.",
+        "observation": "Reports stanza 2 as the answer."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and cross-verification",
+    "macro_description": "Finds a unique attribute among a set of people by compiling a complete list, searching multiple sources for key data, and confirming with reputable references.",
+    "actions": [
+      {
+        "action_description": "Clarified the task and outlined a plan.",
+        "observation": "Identified need to find the only US Survivor winner born in May."
+      },
+      {
+        "action_description": "Compiled a full list of US Survivor winners.",
+        "observation": "Created a season-by-season winner list up to August 2023."
+      },
+      {
+        "action_description": "Searched multiple sources for winners' birth dates.",
+        "observation": "Found no single table; IMDb had most birth dates."
+      },
+      {
+        "action_description": "Checked birth months for all winners.",
+        "observation": "Only Michele Fitzgerald was born in May."
+      },
+      {
+        "action_description": "Confirmed Michele Fitzgerald's birth month with reputable sources.",
+        "observation": "Verified May 5, 1990 birthdate via Survivor Wiki and IMDb."
+      }
+    ]
+  },
+  {
+    "macro_type": "data extraction and probability calculation",
+    "macro_description": "Extracts relevant locomotive data from a file and calculates the probability that a specific excursion uses a steam locomotive.",
+    "actions": [
+      {
+        "action_description": "Review the file and identify locomotives assigned to the Sunset Picnic Trip.",
+        "observation": "Found three assigned locomotives: one steam, two diesel."
+      },
+      {
+        "action_description": "Count the number of steam locomotives among the assigned ones.",
+        "observation": "One out of three is steam."
+      },
+      {
+        "action_description": "Calculate and express the odds of selecting a steam locomotive.",
+        "observation": "Odds are 1 in 3."
+      }
+    ]
+  },
+  {
+    "macro_type": "data lookup and terminology search",
+    "macro_description": "This macro extracts relevant data from a spreadsheet to identify a specific locomotive, then searches for the typical American name for its wheel arrangement to answer the question.",
+    "actions": [
+      {
+        "action_description": "Review spreadsheet to find which locomotive is used for the Murder Mystery Express.",
+        "observation": "Identified locomotive Number 266, Type 2-8-4 as used for the event."
+      },
+      {
+        "action_description": "Determine the typical American name for the 2-8-4 wheel arrangement.",
+        "observation": "Found that 'Berkshire' is the standard American name."
+      }
+    ]
+  },
+  {
+    "macro_type": "multi-step web search synthesis",
+    "macro_description": "This macro identifies a book title by tracing connections from a TV show episode through web searches, confirming award-winning authors, and retrieving the exact title.",
+    "actions": [
+      {
+        "action_description": "Clarify the question and break down sub-tasks.",
+        "observation": "Identified need to find show, episode, restaurant, authors, and book title."
+      },
+      {
+        "action_description": "Search for Ali Khan's 2015 cost-conscious TV show.",
+        "observation": "Found show is 'Cheap Eats.'"
+      },
+      {
+        "action_description": "Find episode featuring New Mexican staple and restaurant.",
+        "observation": "Located carne adovada at Papa Felipe's in Albuquerque episode."
+      },
+      {
+        "action_description": "Search for book where two James Beard Award winners recommend the restaurant.",
+        "observation": "Found '500 Things to Eat Before It's Too Late' by Jane and Michael Stern."
+      },
+      {
+        "action_description": "Confirm authors' award status and retrieve complete book title.",
+        "observation": "Both are award winners; full title is 'Five Hundred Things to Eat Before It's Too Late: and the Very Best Places to Eat Them.'"
+      }
+    ]
+  },
+  {
+    "macro_type": "audio transcription and data extraction",
+    "macro_description": "Transcribes an audio file to extract relevant numerical data, processes it to remove duplicates, sorts it, and formats the result as requested.",
+    "actions": [
+      {
+        "action_description": "Transcribe the audio file and extract all mentioned page numbers.",
+        "observation": "Identified page numbers: 245, 197 (twice), 132, 133, 134."
+      },
+      {
+        "action_description": "Deduplicate and sort the extracted page numbers.",
+        "observation": "Got sorted, unique list: 132, 133, 134, 197, 245."
+      },
+      {
+        "action_description": "Format the sorted list as a comma-delimited string.",
+        "observation": "Produced output: 132,133,134,197,245."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and numeric comparison",
+    "macro_description": "This macro retrieves population data from two sources via web search, converts units as needed, and computes the absolute difference in tens of thousands.",
+    "actions": [
+      {
+        "action_description": "Identify and outline the required population data and calculation steps.",
+        "observation": "Clarified task, listed data sources and conversion needed."
+      },
+      {
+        "action_description": "Search Wikipedia and extract chinstrap penguin population as of 2018.",
+        "observation": "Found population estimate: 8,000,000 individuals."
+      },
+      {
+        "action_description": "Search Nature.com article for 2020 chinstrap penguin population in breeding pairs.",
+        "observation": "Found: 3,420,000 breeding pairs."
+      },
+      {
+        "action_description": "Convert breeding pairs to individuals and calculate absolute difference.",
+        "observation": "Computed 6,840,000 individuals; difference is 1,160,000."
+      },
+      {
+        "action_description": "Divide difference by 10,000 and round to nearest integer.",
+        "observation": "Final answer: 116."
+      }
+    ]
+  },
+  {
+    "macro_type": "logic puzzle with web lookup",
+    "macro_description": "Solves a World of Warcraft class logic puzzle by extracting constraints, researching item restrictions online, and systematically testing class combinations to find the valid answer.",
+    "actions": [
+      {
+        "action_description": "Extracts all constraints and requirements from the puzzle.",
+        "observation": "Identifies roles, armor types, spell usage, and loot restrictions."
+      },
+      {
+        "action_description": "Attempts to look up item restrictions for Kilt of the Forgotten One online.",
+        "observation": "Finds item is leather, usable by Druids and Rogues, not by group members."
+      },
+      {
+        "action_description": "Lists possible classes and their properties for systematic analysis.",
+        "observation": "Prepares data for class combination testing."
+      },
+      {
+        "action_description": "Tests all valid class combinations against constraints using code.",
+        "observation": "Finds unique class set: Death Knight, Hunter, Paladin, Priest, Warlock."
+      },
+      {
+        "action_description": "Outputs the final sorted list of classes as the answer.",
+        "observation": "Returns: Death Knight, Hunter, Paladin, Priest, Warlock."
+      }
+    ]
+  },
+  {
+    "macro_type": "web lookup and percent comparison",
+    "macro_description": "Retrieves relevant standards online, extracts product fat content, and computes percent difference from the standard (regulatory comparison).",
+    "actions": [
+      {
+        "action_description": "Extracts fat content and total weight from nutrition info.",
+        "observation": "Finds 63g fat in 432g ice cream."
+      },
+      {
+        "action_description": "Calculates fat percentage by weight.",
+        "observation": "Computes 14.6% fat."
+      },
+      {
+        "action_description": "Searches for US federal butterfat standard in ice cream.",
+        "observation": "Finds standard is >10% butterfat by weight."
+      },
+      {
+        "action_description": "Computes percent above standard.",
+        "observation": "Finds +4.6% above standard."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and calculation",
+    "macro_description": "Finds official statistics online, extracts relevant gender data, and computes the numeric difference to answer demographic comparison questions.",
+    "actions": [
+      {
+        "action_description": "Identifies required demographic data and plans search.",
+        "observation": "Clarifies need for tertiary education numbers by gender from 2011 Bulgaria."
+      },
+      {
+        "action_description": "Searches official sources for census data.",
+        "observation": "Finds and extracts numbers: 791,800 women, 556,900 men."
+      },
+      {
+        "action_description": "Calculates gender difference in thousands.",
+        "observation": "Computes and outputs 234.9."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and document extraction",
+    "macro_description": "This macro locates a referenced scientific paper via web search, accesses the full text, and extracts specific funding information from the acknowledgments.",
+    "actions": [
+      {
+        "action_description": "Identify and locate the relevant Universe Today article and its linked scientific paper.",
+        "observation": "Found article and link to the target arXiv paper."
+      },
+      {
+        "action_description": "Access the full text of the linked scientific paper.",
+        "observation": "Obtained the PDF of the paper from arXiv."
+      },
+      {
+        "action_description": "Extract the NASA award number supporting R. G. Arendt from the acknowledgments section.",
+        "observation": "Found award number 80GSFC21M0002."
+      }
+    ]
+  },
+  {
+    "macro_type": "targeted web search and extraction",
+    "macro_description": "This macro locates and extracts specific clinical trial enrollment data by searching ClinicalTrials.gov for relevant studies and verifying participant counts.",
+    "actions": [
+      {
+        "action_description": "Clarified the need for actual enrollment data from NIH-listed H. pylori and acne vulgaris clinical trials in early 2018.",
+        "observation": "Identified precise data requirement and search scope."
+      },
+      {
+        "action_description": "Searched ClinicalTrials.gov for matching studies within the specified timeframe and criteria.",
+        "observation": "Found one relevant study (NCT03411733) matching all criteria."
+      },
+      {
+        "action_description": "Extracted and verified the actual enrollment number from the identified study.",
+        "observation": "Enrollment count confirmed as 90 participants."
+      }
+    ]
+  },
+  {
+    "macro_type": "targeted literature lookup",
+    "macro_description": "This macro locates and reviews a specific scientific paper to extract the city where described specimens were deposited, then outputs the city name as the answer.",
+    "actions": [
+      {
+        "action_description": "Clarified the question about the deposition city for Vietnamese specimens in Nedoshivina's 2010 paper.",
+        "observation": "Identified the need to find the deposition city."
+      },
+      {
+        "action_description": "Searched for and summarized the relevant paper to find deposition details.",
+        "observation": "Found that most types are in ZISP, St. Petersburg."
+      },
+      {
+        "action_description": "Returned the city name as the final answer.",
+        "observation": "Output: Saint Petersburg."
+      }
+    ]
+  },
+  {
+    "macro_type": "constraint logic with search",
+    "macro_description": "Solves a Rubik's cube missing piece puzzle by gathering cube color rules, searching for standard color opposites, and logically eliminating found edge pieces to identify the missing one.",
+    "actions": [
+      {
+        "action_description": "List all puzzle constraints and plan solution steps.",
+        "observation": "Identified required cube properties and constraints."
+      },
+      {
+        "action_description": "Search for standard Rubik's cube color opposites.",
+        "observation": "Found six colors and their opposite pairs."
+      },
+      {
+        "action_description": "Enumerate all possible edge color pairs.",
+        "observation": "Generated list of 12 edge pieces."
+      },
+      {
+        "action_description": "Mark edge pieces as found based on puzzle clues.",
+        "observation": "Updated found_edges set with all known found edges."
+      },
+      {
+        "action_description": "Compare all edge pairs to found edges to find the missing one.",
+        "observation": "Identified ('green', 'white') as the missing edge."
+      },
+      {
+        "action_description": "Alphabetize and output the missing edge's colors.",
+        "observation": "Output: green,white."
+      }
+    ]
+  },
+  {
+    "macro_type": "web lookup and data extraction",
+    "macro_description": "Finds the country with the fewest athletes at a specific Olympics by extracting participation data, applies alphabetical tiebreaker, and retrieves the IOC code.",
+    "actions": [
+      {
+        "action_description": "Clarifies task and identifies needed data.",
+        "observation": "Understands to find the country with the fewest athletes and its IOC code."
+      },
+      {
+        "action_description": "Searches for a table of countries and athlete counts for the 1928 Olympics.",
+        "observation": "Finds a list of 46 countries with athlete numbers."
+      },
+      {
+        "action_description": "Identifies the country with the lowest athlete count, using alphabetical order for ties.",
+        "observation": "Determines Cuba is the correct country."
+      },
+      {
+        "action_description": "Looks up the IOC country code for Cuba.",
+        "observation": "Finds the code is CUB."
+      },
+      {
+        "action_description": "Outputs the IOC code as the final answer.",
+        "observation": "Returns CUB."
+      }
+    ]
+  },
+  {
+    "macro_type": "spreadsheet data filtering and summing",
+    "macro_description": "This macro identifies relevant food sales columns in a spreadsheet, sums their values, and outputs the total in USD (excluding drinks).",
+    "actions": [
+      {
+        "action_description": "Received Excel file and clarified task to sum food sales only.",
+        "observation": "Task requires total USD sales for food items, not drinks."
+      },
+      {
+        "action_description": "Inspected spreadsheet to identify food and drink columns.",
+        "observation": "Found columns for food (Burgers, Hot Dogs, Salads, Fries, Ice Cream) and drinks (Soda)."
+      },
+      {
+        "action_description": "Summed sales values for all food columns across locations.",
+        "observation": "Calculated total food sales as 89706."
+      },
+      {
+        "action_description": "Formatted and output the final total in USD.",
+        "observation": "Final answer: 89706.00"
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and answer synthesis",
+    "macro_description": "The macro identifies the object in question, searches authoritative sources for its color(s), verifies findings, and formats the answer as required.",
+    "actions": [
+      {
+        "action_description": "Clarify the question and determine the object to identify.",
+        "observation": "Object to find is what Bond and Pussy Galore concealed themselves in."
+      },
+      {
+        "action_description": "Search multiple sources for the object's color(s) in the film's final scene.",
+        "observation": "Found that the object is a parachute with orange and white colors."
+      },
+      {
+        "action_description": "Format and output the answer as a comma-separated list in alphabetical order.",
+        "observation": "Final answer is 'orange, white'."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and comparison",
+    "macro_description": "This macro finds the number of unique winners for two TV shows using web search, then computes the difference to answer the comparison question.",
+    "actions": [
+      {
+        "action_description": "Clarify the task and plan steps to compare unique winners.",
+        "observation": "Task and approach outlined."
+      },
+      {
+        "action_description": "Search for the number of unique Survivor winners.",
+        "observation": "Found 43 unique winners; two repeat winners."
+      },
+      {
+        "action_description": "Search for the number of unique American Idol winners.",
+        "observation": "Found 21 unique winners; no repeats."
+      },
+      {
+        "action_description": "Subtract American Idol winners from Survivor winners.",
+        "observation": "Calculated difference is 22."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and filtering",
+    "macro_description": "This macro locates a list of competition winners, filters by date and nationality, and extracts the required first name based on historical country status.",
+    "actions": [
+      {
+        "action_description": "Clarify the question and constraints.",
+        "observation": "Identified need for post-1977 winner from a defunct country."
+      },
+      {
+        "action_description": "Search for Malko Competition winners and their nationalities.",
+        "observation": "Compiled a list of winners from 1978–1999 with nationalities."
+      },
+      {
+        "action_description": "Filter winners by nationality from a now-defunct country.",
+        "observation": "Found Claus Peter Flor (East Germany) fits the criteria."
+      },
+      {
+        "action_description": "Extract and return the first name.",
+        "observation": "Final answer: Claus."
+      }
+    ]
+  },
+  {
+    "macro_type": "web lookup and roster parsing",
+    "macro_description": "Finds a player's team and number, then identifies adjacent-numbered teammates using web sources and roster data.",
+    "actions": [
+      {
+        "action_description": "Identify Taishō Tamai's team, position, and uniform number as of July 2023.",
+        "observation": "Confirmed Tamai is a pitcher for Hokkaido Nippon-Ham Fighters, number 19."
+      },
+      {
+        "action_description": "Retrieve and parse the team's pitcher roster with uniform numbers.",
+        "observation": "Located roster with pitchers and their numbers."
+      },
+      {
+        "action_description": "Find pitchers with numbers immediately before and after 19.",
+        "observation": "Identified Yoshida (18) and Uehara (20) as adjacent pitchers."
+      }
+    ]
+  },
+  {
+    "macro_type": "web lookup and counting",
+    "macro_description": "Finds and verifies the number of stops between two stations by retrieving an official transit schedule and counting intermediate stations.",
+    "actions": [
+      {
+        "action_description": "Clarify the task and requirements.",
+        "observation": "Confirmed need to count stops between specified stations as of May 2023."
+      },
+      {
+        "action_description": "Locate the official MBTA Franklin-Foxboro line schedule for the relevant date.",
+        "observation": "Found April 27, 2023 schedule with ordered station list and no major changes."
+      },
+      {
+        "action_description": "Count the number of stations between the endpoints, excluding them.",
+        "observation": "Calculated 10 intermediate stops."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and fact extraction",
+    "macro_description": "Finds a specific number mentioned in a video by identifying the video, searching for transcripts or summaries, and extracting the answer from reliable secondary sources when direct access is unavailable.",
+    "actions": [
+      {
+        "action_description": "Clarified the question and identified the target video and narrator.",
+        "observation": "Confirmed video is 'We Are Stars' narrated by Andy Serkis."
+      },
+      {
+        "action_description": "Searched for the video and attempted to locate transcripts or summaries.",
+        "observation": "Video unavailable; no transcript found."
+      },
+      {
+        "action_description": "Searched academic and secondary sources for the required number.",
+        "observation": "Found arXiv paper citing the number as 100,000,000."
+      },
+      {
+        "action_description": "Reported the extracted number as the final answer.",
+        "observation": "Final answer: 100,000,000."
+      }
+    ]
+  },
+  {
+    "macro_type": "web search and aggregation",
+    "macro_description": "Identifies a specific astronaut group via web search, gathers each member's spaceflight durations from authoritative sources, and computes which astronaut spent the least time in space (excluding zero).",
+    "actions": [
+      {
+        "action_description": "Finds the relevant APOD image and identifies the smaller astronaut.",
+        "observation": "Determines Pete Conrad is the smaller astronaut."
+      },
+      {
+        "action_description": "Searches for Pete Conrad's astronaut group.",
+        "observation": "Finds he was in NASA Astronaut Group 2."
+      },
+      {
+        "action_description": "Lists all members of Group 2.",
+        "observation": "Compiles names of the nine astronauts."
+      },
+      {
+        "action_description": "Retrieves and sums spaceflight durations for each member.",
+        "observation": "Finds total time in space for each astronaut."
+      },
+      {
+        "action_description": "Compares durations and selects the minimum nonzero value.",
+        "observation": "Identifies Edward White as having the least time in space: 5876 minutes."
+      }
+    ]
+  },
+  {
     "macro_type": "chess FEN comparison and legality check",
     "macro_description": "Compares two chess positions in FEN, identifies piece and metadata differences, and checks if both can legally occur in the same game and in any order.",
     "actions": [

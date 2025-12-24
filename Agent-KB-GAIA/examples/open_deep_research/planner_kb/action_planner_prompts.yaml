@@ -1,11 +1,12 @@
 generate_tag_prompt: |
-    You must return {{top_k}} tags in total for action sequence that you execute below task and plan.
+    You must return {{top_k}} tags for action that you execute below task and plan.
+    For example, tags can be 'probability modeling', 'web search' and so on.
     Here is the final task:
     {{task}}
     Here is the first step of curruent sub-task(sub-query) plan:
     {{curruent_plan}} 
 
-    Return all tags as a array of strings in the following format: ["tag1", "tag2", ...].
+    Return all tags as a array of strings in the following format: ["probability modeling", "web search"]
 
 
 action_planning_with_examples_prompt: |

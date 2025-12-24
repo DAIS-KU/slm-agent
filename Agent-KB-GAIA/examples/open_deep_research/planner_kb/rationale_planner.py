@@ -6,8 +6,32 @@ import json
 import re
 from typing import List
 
+def extract_steps(step_str,model_name, key,url,model,slm):
+    print("extract steps.")
+    extract_steps_prompt_template = load_prompts(
+        path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
+    )
+    extract_step_number_prompt = populate_template(
+            extract_steps_prompt_template['count_steps'],
+            variables={"steps": step_str},
+        )
+    step_number = call_model(extract_step_number_prompt,model_name, key,url,model,slm)
+    step_number= int(step_number)
+    print(f"extract {step_number} steps.")
+    
+    steps=[]
+    for i in range(step_number):
+        extract_specific_step_prompt= populate_template(
+            extract_steps_prompt_template['extract_specific_step'],
+            variables={"step_number": step_number+1, "steps": step_str},
+        )
+        step = call_model(extract_specific_step_prompt,model_name, key,url,model,slm)
+        steps.appen(step)
+    return steps
+
 
 def parse_steps(output: str) -> List[str]:
+    print(f"parse_steps output:{output}")
     """
     Supported patterns (앞뒤에 잡소리 텍스트가 있어도 허용):
 
@@ -27,6 +51,9 @@ def parse_steps(output: str) -> List[str]:
 
        2. Step 2 ...
           - ...
+
+    5) 'Step 1: ...', 'Step 2: ...' 처럼
+       각 Step 헤더와 그 아래 여러 줄이 한 블록인 형식
     """
     text = output.strip()
 
@@ -87,6 +114,18 @@ def parse_steps(output: str) -> List[str]:
         steps = [b.strip() for b in blocks]
         return steps
 
+    # 3.5) Fallback 1.5: "Step N:" 으로 시작하는 블록들
+    #      예: Step 1: ... \n - ... \n\n Step 2: ...
+    step_pattern = r"^Step\s+\d+:\s*(.*?)(?=^Step\s+\d+:\s*|\Z)"
+    step_blocks = re.findall(
+        step_pattern,
+        text.strip(),
+        flags=re.MULTILINE | re.DOTALL | re.IGNORECASE,
+    )
+    if step_blocks:
+        steps = [b.strip() for b in step_blocks]
+        return steps
+
     # 4) Fallback 2: 따옴표로 된 문자열들을 전부 추출해서 리스트로 사용
     #   -> "Step 1: ...", "Step 2: ...", ... 같은 케이스 처리
     pattern = r'"([^"\\]*(?:\\.[^"\\]*)*)"|\'([^\'\\]*(?:\\.[^\'\\]*)*)\''
@@ -104,6 +143,7 @@ def parse_steps(output: str) -> List[str]:
         raise ValueError("No steps extracted from output.")
 
     return steps
+
 
 
 def load_prompts(path):
@@ -131,6 +171,7 @@ def build_rationale_examples(entities, step_field, rationale_field):
 
 def decompose_task(
     example,
+    augmented_question,
     model_name,
     key,
     url,
@@ -147,7 +188,7 @@ def decompose_task(
         )["task_decomposition_prompt"]
         task_decomposition_prompt = populate_template(
             task_decomposition_prompt_template,
-            variables={"task": example["question"]},
+            variables={"task": augmented_question},
         )
     else:
         print(f"decompose_task - retrieval_method is not None")
@@ -161,7 +202,7 @@ def decompose_task(
         task_decomposition_prompt = populate_template(
             task_decomposition_prompt_template,
             variables={
-                "task": example["question"],
+                "task": augmented_question,
                 "decomposed_with_rationale_examples": step_rationale_examples,
             },
         )
@@ -177,28 +218,30 @@ def decompose_task(
     if return_as_str:
         return task_decomposition_result
     else:
-        extract_step_list_template = load_prompts(
-            path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-        )["extract_step_list"]
-        extract_step_list_prompt = populate_template(
-            extract_step_list_template, variables={"steps": task_decomposition_result}
-        )
-        # print(f"extract_step_list_prompt: {extract_step_list_prompt}")
-        extracted_steps = call_model(
-            query=extract_step_list_prompt,
-            model_name=model_name,
-            key=key,
-            url=url,
-            model=model,
-            slm=slm,
-        )
-        print(f"extracted_steps: {extracted_steps}")
-        extracted_step_list = parse_steps(extracted_steps)
+        # extract_step_list_template = load_prompts(
+        #     path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
+        # )["extract_step_list"]
+        # extract_step_list_prompt = populate_template(
+        #     extract_step_list_template, variables={"steps": task_decomposition_result}
+        # )
+        # # print(f"extract_step_list_prompt: {extract_step_list_prompt}")
+        # extracted_steps = call_model(
+        #                 query=extract_step_list_prompt,
+        #                 model_name=model_name,
+        #                 key=key,
+        #                 url=url,
+        #                 model=model,
+        #                 slm=slm,
+        #             )
+        # # print(f"extracted_steps: {extracted_steps}")
+        extracted_step_list = parse_steps(task_decomposition_result)
+        # extracted_step_list =  extract_steps(task_decomposition_result, model_name, key,url,model,slm)
         return extracted_step_list
 
 
 def subtask_planning(
     example,
+    augmented_question,
     extracted_step_list,
     model_name,
     key,
@@ -219,7 +262,7 @@ def subtask_planning(
             subtask_planning_prompt = populate_template(
                 subtask_planning_prompt_template,
                 variables={
-                    "task": example["question"],
+                    "task": augmented_question,
                     "sub_tasks": extracted_step_list,
                     "curruent_sub_task": curruent_sub_task,
                 },
@@ -239,7 +282,7 @@ def subtask_planning(
             subtask_planning_prompt = populate_template(
                 subtask_planning_with_examples_prompt_template,
                 variables={
-                    "task": example["question"],
+                    "task": augmented_question,
                     "sub_tasks": extracted_step_list,
                     "curruent_sub_task": curruent_sub_task,
                     "planning_with_rationale_examples": step_rationale_examples,

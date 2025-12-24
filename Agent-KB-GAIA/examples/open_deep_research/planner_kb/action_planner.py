@@ -6,17 +6,22 @@ import json
 import re
 from typing import List
 
-
 def parse_tag_array(text: str) -> List[str]:
     """
-    text 안에서 '["tag1", "tag2", ...]' 형태의 배열 문자열을 찾아
+    text 안에서 태그 배열 형태의 문자열을 찾아
     파이썬 리스트로 파싱해서 리턴한다.
 
-    예)
-    '["a", "b"]'
-    'Assistant\n["astronomy", "mathematics", "unit_conversion"]'
-    이런 것들 다 처리.
+    지원하는 예시:
+      - ["a", "b", "c"]             # JSON 배열
+      - ['a', 'b', 'c']             # 파이썬 리스트 literal
+      - [a, b, c]                   # 따옴표 없는 배열
+      - "a", "b", "c"               # 따옴표 나열
+      - a, b, c                     # 쉼표로 구분된 태그 나열
+    실패 시에는 예외를 던지지 않고 빈 리스트([])를 반환한다.
     """
+    if not isinstance(text, str):
+        return []
+
     text = text.strip()
 
     # 1) 전체가 그대로 JSON 리스트일 수도 있으니 먼저 시도
@@ -27,13 +32,33 @@ def parse_tag_array(text: str) -> List[str]:
     except Exception:
         pass
 
-    # 2) 전체가 아니면, 내부에서 배열 부분만 뽑기
+    # 2) 내부에서 배열 부분([ ... ])만 뽑기
     start = text.find("[")
     end = text.rfind("]")
 
+    # 2-A) 아예 [] 가 없는 경우
     if start == -1 or end == -1 or end <= start:
-        raise ValueError("No array-like [ ... ] part found in text")
+        # 2-A-1) 따옴표로 둘러싸인 문자열들을 모두 추출
+        candidates = re.findall(r'["\'](.*?)["\']', text)
+        candidates = [c.strip() for c in candidates if c.strip()]
+        if candidates:
+            return candidates
 
+        # 2-A-2) 쉼표로 구분된 문자열을 태그 리스트로 간주
+        if "," in text:
+            parts = [p.strip() for p in text.split(",")]
+            parts = [p for p in parts if p]
+            if parts:
+                return parts
+
+        # 2-A-3) 쉼표도 따옴표도 없지만 텍스트가 비어있지 않으면
+        #        단일 태그로 간주
+        if text:
+            return [text]
+
+        return []
+
+    # 2-B) [] 가 있는 경우 기존 로직
     array_str = text[start : end + 1]
 
     # 2-1) JSON 스타일로 다시 시도
@@ -44,15 +69,30 @@ def parse_tag_array(text: str) -> List[str]:
     except Exception:
         pass
 
-    # 2-2) 안 되면 파이썬 literal 형식으로 시도 (단일 따옴표 등)
+    # 2-2) 파이썬 literal 형식으로 시도 (단일 따옴표 등)
     try:
         value = ast.literal_eval(array_str)
         if isinstance(value, list):
             return value
-    except Exception as e:
-        raise ValueError(f"Cannot parse array from text: {e}")
+    except Exception:
+        # literal_eval 실패해도 이제는 에러를 올리지 않고 통과
+        pass
 
-    raise ValueError("Parsed value is not a list")
+    # 2-3) 따옴표 없는 단순 토큰 리스트: [web search, metadata extraction, contextual analysis]
+    inner = array_str[1:-1].strip()
+    if inner and not re.search(r'["\']', inner):
+        parts = [p.strip() for p in inner.split(",")]
+        parts = [p for p in parts if p]
+        if parts:
+            return parts
+
+    # 3) 마지막 fallback: 배열 안의 따옴표 문자열만 추출
+    candidates = re.findall(r'["\'](.*?)["\']', array_str)
+    candidates = [c.strip() for c in candidates if c.strip()]
+    if candidates:
+        return candidates
+
+    raise ValueError(f"Cannot parse array from text: {text}")
 
 
 def load_prompts(path):
@@ -105,6 +145,7 @@ def action_level_planning(
         )
         print(f"action_tags: {action_tags}")
         action_tag_list = parse_tag_array(action_tags)
+        print(f"action_tag_list: {action_tag_list}")
         retrieval_results = []
         for action_tag in action_tag_list:
             retrieval_result = retrieval_method(action_tag, top_k=1, is_action=True)

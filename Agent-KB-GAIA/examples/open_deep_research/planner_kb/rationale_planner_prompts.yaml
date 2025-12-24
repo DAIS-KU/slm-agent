@@ -35,7 +35,54 @@ subtask_planning_with_examples_prompt: |
     Here is the plan steps and rationale for each step:
     {{planning_with_rationale_examples}} 
 
-extract_step_list: |
-    You must return all steps as a JSON array of strings in the following format: ["Step 1: ...", "Step 2: ...", ...].
+count_steps: |
+  You are a component inside a Python program.
+
+  Task:
+  - Count how many steps are in the list below.
+
+  IMPORTANT OUTPUT RULES:
+  - Output ONLY the number of steps.
+  - Use ONLY digits 0-9.
+  - Do NOT output any words, sentences, or explanations.
+  - Do NOT output spaces, newlines, or punctuation.
+  - Do NOT repeat these instructions.
+  - Your ENTIRE reply will be passed directly into Python int(), so
+    ANY extra characters will crash the program.
+  - Your reply must match this regex exactly: ^[0-9]+$
+
+  If there are no steps, output 0.
+
+  Valid examples:
+  - 3
+  - 10
+  Invalid examples:
+  - "There are 3 steps"
+  - 3 steps
+  - 3\n
+
+  Here are the steps:
+  {{steps}}
+
+
+
+extract_specific_step: |
+    Extract the {{step_number}}-th step from the following plan.
     Here are the steps:
     {{steps}}
+
+extract_step_list: |
+  You are a function that extracts and summarizes procedure steps.
+
+  <task>
+  From the text in steps, find the main procedure steps and rewrite each step as a short, clear instruction.
+  Here are the steps:
+  {{steps}}
+  </task>
+
+  <output_format>
+  You must return ALL steps as a JSON array of strings.
+  Each string MUST be in the format: "Step N: ...".
+  Do NOT output anything else. No explanations, no extra keys.
+  The first element must start with "Step 1: ...".
+  </output_format>

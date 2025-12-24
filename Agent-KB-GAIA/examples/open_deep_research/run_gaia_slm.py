@@ -433,6 +433,7 @@ def answer_single_question(
         if q_decomp_ex:
             subtasks = decompose_task(
                 example=example,
+                augmented_question=augmented_question,
                 model_name=model_name,
                 key=key,
                 url=url,
@@ -445,6 +446,7 @@ def answer_single_question(
         else:
             subtasks = decompose_task(
                 example=example,
+                augmented_question=augmented_question,
                 model_name=model_name,
                 key=key,
                 url=url,
@@ -465,6 +467,7 @@ def answer_single_question(
             if p_rationale_ex:
                 subtask_plannings = subtask_planning(
                     example=example,
+                    augmented_question=augmented_question,
                     extracted_step_list=subtasks,
                     model_name=model_name,
                     key=key,
@@ -478,6 +481,7 @@ def answer_single_question(
             else:
                 subtask_plannings = subtask_planning(
                     example=example,
+                    augmented_question=augmented_question,
                     extracted_step_list=subtasks,
                     model_name=model_name,
                     key=key,
