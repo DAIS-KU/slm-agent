@@ -6,6 +6,7 @@ import json
 import re
 from typing import List
 
+
 def parse_tag_array(text: str) -> List[str]:
     """
     text 안에서 태그 배열 형태의 문자열을 찾아

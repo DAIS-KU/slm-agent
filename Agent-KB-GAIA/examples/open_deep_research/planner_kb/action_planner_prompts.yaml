@@ -18,3 +18,60 @@ action_planning_with_examples_prompt: |
 
     You can refer below similar action sequences.
     {{action_sequence_examples}}
+
+
+
+action_planning_with_icl_examples_prompt: |
+    Please convert natural language plans into a series of subgoals and their corresponding actions that lead to the successful implementation with respect to the given instructions. 
+    Please use ‘R[number]’ to represent the intermediate results for each subgoal, without generating any exact values. 
+    Please also use functions to represent the corresponding actions.
+    For the actions, they must be one of ‘Calculator’, 'KnowledgeQuery', 'ParagraphRetrieve', QA, ‘Count’, ‘Code’, and ‘Define’.
+    Here is the final task:
+    {{task}}
+    Here is the first step of curruent sub-task(sub-query) plan:
+    {{curruent_plan}} 
+
+    Example 1:
+        - Task: Peter goes to the store to buy a soda. The soda costs $.25 an ounch. He brought $2 with him and leaves with $.50. How many ounces of soda did he buy?
+        - Natural language plan: He spend $1.5 on soda because 2 - .5 = 1.5 He bought 6 ounces of soda because 1.5 / .25 = 6
+        - Subgoal-based plan:
+            - Subgoal 1: Calculate how much the soda costs in total.
+              Action 1-1: R1 = Calculator(2 - 0.5) = 1.5
+            - Subgoal 2: Calculate the ounces of soda the price per ounch.
+              Action 2-1: R2 = Calculator(R1 / 0.25) = 6
+    Example 2: 
+        - Task: Are more people today related to Genghis Khan than Julius Caesar?
+        - Natural language plan: We find relevant facts: Julius Caesar had three children. Genghis Khan had sixteen children. Modern geneticists have determined that out of every 200 men today has DNA that can be traced to Genghis Khan. We need to answer these questions: 1. How many kids did Julius Caesar have? (Can be answered based on paragraph ‘Julius Caesar-75’) 2. How many kids did Genghis Khan have? (Can be answered based on paragraph ‘Genghis Khan-17’) 3. Is #2 greater than #1? Based on these evidences and decomposed questions, the answer is True.
+        - Subgoal-based plan:
+            - Subgoal 1: Obtain the number of the kids that Julius Caesar had.
+              Action 1-1: R1 = KnowledgeQuery(Julius Caesar) = WikipediaPage(Julius Caesar)
+              Action 1-2: R2 = ParagraphRetrieve(R1, Query: How many kids did Julius Caesar have?) =  Paragraph(Julius Caesar-75).
+              Action 1-3: R3 = QA([R2], Question: How many kids did Julius Caesar have?) = 3.
+            - Subgoal 2: Obtain the number of the kids that Genghis Khan had.
+              Action 2-1: R4 = KnowledgeQuery(Genghis Khan) = WikipediaPage(Genghis Khan).
+              Action 2-2: R5 = ParagraphRetrieve(R4, Query: How many kids did Genghis Khan have?) = Paragraph(Genghis Khan-17).
+              Action 2-3: R6 = QA([R5], Question: How many kids did Genghis Khan have?) = 16.
+            - Subgoal 3: Determine if Genghis Khan had more kids.
+              Action 3-1: R7 = Calculator(R6 > R3) = True
+    Example 3:
+        - Task: Find a Ricky Kej track to listen and share which has been added in the last year and is between 2 to 10 minutes.
+        - Natural language plan: [searchbox] Search −→ TYPE: Ricky Kej; [link] Search for “Ricky Kej” −→ CLICK; [link] Tracks −→ CLICK; [link] Added any time −→ CLICK; [link] Past year −→ SELECT; [link] Any length −→ CLICK; [link] 2-10 min −→ CLICK; [link] To listen to −→ CLICK; [link] To share −→ CLICK
+        - Subgoal-based plan:
+            - Subgoal 1: Type Ricky Kej to search his songs.
+              Action 1-1: R1 = TYPE(Env, QUERY: Type Ricky Kej to search his songs, TEXT: Ricky Kej)
+            - Subgoal 2: Click on the option to search for Ricky Rej.
+              Action 2-1: R2 = CLICK(R1, QUERY: Click on the option to search for Ricky Rej)
+            - Subgoal 3: Choose tracks as the search category.
+              Action 3-1: R3 = CLICK(R2, QUERY: Choose tracks as the search category)
+            - Subgoal 4: Find the region to adjust the added time of our interested track.
+              Action 4-1: R4 = CLICK(R3, QUERY: Find the region to adjust the added time of our interested track)
+            - Subgoal 5: Choose the last year as the added date.
+              Action 5-1: R5 = SELECT(R4, QUERY: Choose the last year as the added date, TEXT: Past year)
+            - Subgoal 6: Find the region to adjust the track length of our interested track.
+              Action 6-1: R6 = CLICK(R5, QUERY: Find the region to adjust the track length of our interested track)
+            - Subgoal 7: Choose 2 to 10 minutes as the track length.
+              Action 7-1: R7 = CLICK(R6, QUERY: Choose 2 to 10 minutes as the track length)
+            - Subgoal 8: Listen to our searched track.
+              Action 8-1: R8 = CLICK(R7, QUERY: Listen to our searched track)
+            - Subgoal 9: Share our searched track.
+              Action 9-1: R9 = CLICK(R8, QUERY: Share our searched track)

@@ -552,6 +552,7 @@ class AdvancedMultiStepAgent:
         images: Optional[List[str]] = None,
         additional_args: Optional[Dict] = None,
         additional_knowledge: Optional[str] = None,
+        pass_1=False,
     ):
         """
         Run the agent for the given task.
@@ -594,13 +595,23 @@ You have been provided with these additional arguments, that you can access usin
         self.memory.steps.append(TaskStep(task=self.task, task_images=images))
 
         if stream:
-            return self._run(task=self.task, images=images)
+            return self._run(task=self.task, images=image, pass_1=pass_1)
+            # return self._run(task=self.task, images=image)
         return deque(
             self._run(
-                task=self.task, images=images, additional_knowledge=additional_knowledge
+                task=self.task,
+                images=images,
+                additional_knowledge=additional_knowledge,
+                pass_1=pass_1,
             ),
             maxlen=1,
         )[0]
+        # return deque(
+        #     self._run(
+        #         task=self.task, images=images, additional_knowledge=additional_knowledge
+        #     ),
+        #     maxlen=1,
+        # )[0]
 
     def _run(
         self,
@@ -1918,71 +1929,117 @@ class AdvancedCodeAgent(AdvancedMultiStepAgent):
         task: str,
         images: List[str] | None = None,
         additional_knowledge: Optional[str] = None,
+        pass_1=False,
     ) -> Generator[ActionStep | AgentType, None, None]:
 
-        Task_steps = self.memory.steps
-        memory_steps = Task_steps.copy()
-        final_answer = None
-        self.step_number = 1
-        planning_step = self.planning_step(
-            task,
-            is_first_step=(self.step_number == 1),
-            step=self.step_number,
-            additional_knowledge=additional_knowledge,
-        )
-        self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
-        memory_steps.append(planning_step)
+        if pass_1:
+            Task_steps = self.memory.steps
+            memory_steps = Task_steps.copy()
+            final_answer = None
+            self.step_number = 1
+            planning_step = self.planning_step(
+                task,
+                is_first_step=(self.step_number == 1),
+                step=self.step_number,
+                additional_knowledge=additional_knowledge,
+            )
+            self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
+            memory_steps.append(planning_step)
 
-        task_success = False
-        memory_messages = self.write_memory_to_messages(memory_steps=memory_steps)
-        while not task_success and self.step_number <= self.max_steps:
-
-            if (
-                self.planning_interval is not None
-                and self.planning_interval != 1
-                and self.step_number % self.planning_interval == 0
-            ):
-                planning_step = self.planning_step(
-                    task,
-                    is_first_step=(self.step_number == 1),
-                    step=self.step_number,
-                )
-                self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
-                memory_steps.append(planning_step)
-
+            task_success = False
+            memory_messages = self.write_memory_to_messages(memory_steps=memory_steps)
             final_answer = self.process_step(
                 self.step_number, images, memory_messages, memory_steps
             )
+            assert memory_steps is not None, "memory_steps cannot be None"
+            assert (
+                len(memory_steps) > 0
+            ), f"memory_steps cannot be empty, current length: {len(memory_steps)}"
+            self.memory.steps = memory_steps
 
-            if final_answer is not None:
-                task_success = True
-                break
-            self.step_number += 1
+            if final_answer is None:
+                error_message = "Reached max steps."
+                final_answer = self.provide_final_answer(task, images)
+                final_memory_step = ActionStep(
+                    step_number=self.step_number,
+                    error=AgentMaxStepsError(error_message, self.logger),
+                )
+                final_memory_step.action_output = final_answer
+                final_memory_step.end_time = time.time()
+                self.memory.steps.append(final_memory_step)
+                for callback in self.step_callbacks:
+                    if len(inspect.signature(callback).parameters) == 1:
+                        callback(final_memory_step)
+                    else:
+                        callback(final_memory_step, agent=self)
+                yield final_memory_step
 
-        assert memory_steps is not None, "memory_steps cannot be None"
-        assert (
-            len(memory_steps) > 0
-        ), f"memory_steps cannot be empty, current length: {len(memory_steps)}"
-        self.memory.steps = memory_steps
-
-        if final_answer is None and self.step_number == self.max_steps + 1:
-            error_message = "Reached max steps."
-            final_answer = self.provide_final_answer(task, images)
-            final_memory_step = ActionStep(
-                step_number=self.step_number,
-                error=AgentMaxStepsError(error_message, self.logger),
+            yield handle_agent_output_types(final_answer)
+        else:
+            Task_steps = self.memory.steps
+            memory_steps = Task_steps.copy()
+            final_answer = None
+            self.step_number = 1
+            planning_step = self.planning_step(
+                task,
+                is_first_step=(self.step_number == 1),
+                step=self.step_number,
+                additional_knowledge=additional_knowledge,
             )
-            final_memory_step.action_output = final_answer
-            final_memory_step.end_time = time.time()
-            self.memory.steps.append(final_memory_step)
-            for callback in self.step_callbacks:
-                if len(inspect.signature(callback).parameters) == 1:
-                    callback(final_memory_step)
-                else:
-                    callback(final_memory_step, agent=self)
-            yield final_memory_step
+            self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
+            memory_steps.append(planning_step)
 
-        yield handle_agent_output_types(final_answer)
+            task_success = False
+            memory_messages = self.write_memory_to_messages(memory_steps=memory_steps)
+            while not task_success and self.step_number <= self.max_steps:
+                if (
+                    self.planning_interval is not None
+                    and self.planning_interval != 1
+                    and self.step_number % self.planning_interval == 0
+                ):
+                    planning_step = self.planning_step(
+                        task,
+                        is_first_step=(self.step_number == 1),
+                        step=self.step_number,
+                    )
+                    self.logger.log_rule(
+                        f"Step {self.step_number}", level=LogLevel.INFO
+                    )
+                    memory_steps.append(planning_step)
+
+                final_answer = self.process_step(
+                    self.step_number, images, memory_messages, memory_steps
+                )
+
+                if final_answer is not None:
+                    task_success = True
+                    break
+                self.step_number += 1
+
+            assert memory_steps is not None, "memory_steps cannot be None"
+            assert (
+                len(memory_steps) > 0
+            ), f"memory_steps cannot be empty, current length: {len(memory_steps)}"
+            self.memory.steps = memory_steps
+
+            if final_answer is None and self.step_number == self.max_steps + 1:
+                error_message = "Reached max steps."
+                final_answer = self.provide_final_answer(task, images)
+                final_memory_step = ActionStep(
+                    step_number=self.step_number,
+                    error=AgentMaxStepsError(error_message, self.logger),
+                )
+                final_memory_step.action_output = final_answer
+                final_memory_step.end_time = time.time()
+                self.memory.steps.append(final_memory_step)
+                for callback in self.step_callbacks:
+                    if len(inspect.signature(callback).parameters) == 1:
+                        callback(final_memory_step)
+                    else:
+                        callback(final_memory_step, agent=self)
+                yield final_memory_step
+
+            yield handle_agent_output_types(final_answer)
 
     def get_memory_step_message(
         self,

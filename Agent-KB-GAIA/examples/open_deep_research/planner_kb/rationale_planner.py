@@ -6,26 +6,31 @@ import json
 import re
 from typing import List
 
-def extract_steps(step_str,model_name, key,url,model,slm):
+
+def extract_steps(step_str, model_name, key, url, model, slm):
     print("extract steps.")
     extract_steps_prompt_template = load_prompts(
         path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
     )
     extract_step_number_prompt = populate_template(
-            extract_steps_prompt_template['count_steps'],
-            variables={"steps": step_str},
-        )
-    step_number = call_model(extract_step_number_prompt,model_name, key,url,model,slm)
-    step_number= int(step_number)
+        extract_steps_prompt_template["count_steps"],
+        variables={"steps": step_str},
+    )
+    step_number = call_model(
+        extract_step_number_prompt, model_name, key, url, model, slm
+    )
+    step_number = int(step_number)
     print(f"extract {step_number} steps.")
-    
-    steps=[]
+
+    steps = []
     for i in range(step_number):
-        extract_specific_step_prompt= populate_template(
-            extract_steps_prompt_template['extract_specific_step'],
-            variables={"step_number": step_number+1, "steps": step_str},
+        extract_specific_step_prompt = populate_template(
+            extract_steps_prompt_template["extract_specific_step"],
+            variables={"step_number": step_number + 1, "steps": step_str},
         )
-        step = call_model(extract_specific_step_prompt,model_name, key,url,model,slm)
+        step = call_model(
+            extract_specific_step_prompt, model_name, key, url, model, slm
+        )
         steps.appen(step)
     return steps
 
@@ -143,7 +148,6 @@ def parse_steps(output: str) -> List[str]:
         raise ValueError("No steps extracted from output.")
 
     return steps
-
 
 
 def load_prompts(path):

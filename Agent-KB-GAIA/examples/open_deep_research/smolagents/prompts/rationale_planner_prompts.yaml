@@ -43,3 +43,69 @@ extract_step_list: |
     Output only the JSON array.
     Here are the steps:
     {{steps}}
+
+
+task_decomposition_and_planning_with_icl_examples_prompt: |
+    Please provide a reasonable subgoal-based plan to solve the given task.  
+    Here is the task:
+    {{task}}
+
+    Example 1:
+       - Task: What was the opening date of the museum dedicated to the war that, after it occurred, Boston became one of the wealthiest international ports?
+       - [{
+            "Subgoal 1": "Identify the war after which Boston became one of the wealthiest international ports.",
+            "Rationale 1": "The task refers to a specific historical clue about Boston’s economic rise. Identifying the correct war is essential because the museum in question is dedicated to that war. Without knowing which war led to Boston’s increased wealth and international port status, it is impossible to determine the relevant museum."
+        },
+        {
+            "Subgoal 2": "Determine the opening date of the museum dedicated to the war identified in Subgoal 1.",
+            "Rationale 2": "Once the correct war is identified, the next step is to locate the museum specifically dedicated to that war. The task explicitly asks for the museum’s opening date, so this subgoal focuses on extracting that precise factual information."
+        },
+        {
+            "Subgoal 3": "Confirm the opening date of the museum dedicated to the war after which Boston became one of the wealthiest international ports.",
+            "Rationale 3": "Historical facts can vary by source, and museums may have multiple relevant dates (founding, opening to the public, reopening). Verifying the opening date ensures accuracy and resolves any ambiguity before presenting the final answer."
+        }]
+    Example 2:
+        - Task: A right cylindrical oil tank is $15$ feet tall and its circular bases have diameters of $4$ feet each. When the tank is lying flat on its side (not on one of the circular ends), the oil inside is $3$ feet deep. How deep, in feet, would the oil have been if the tank had been standing upright on one of its bases? Express your answer as a decimal to the nearest tenth.
+        - [{
+            "Subgoal 1": "Calculate the cross-sectional area of oil in the circular end when the tank is lying on its side (oil depth = 3 ft).",
+            "Rationale 1": "When the cylinder is on its side, the oil volume equals (oil-filled circular segment area) × (tank length). So the first key is finding the area of the circular segment determined by radius 2 ft and fill depth 3 ft."
+        },
+        {
+            "Subgoal 2": "Calculate the total area of the circular cross-section.",
+            "Rationale 2": "Knowing the full circle area (πr²) allows comparison between the oil-filled segment and the entire cross-section, which is needed to determine what fraction of the tank’s volume is filled."
+        },
+        {
+            "Subgoal 3": "Compute the fraction of the tank’s volume occupied by oil (using area ratio).",
+            "Rationale 3": "Because the tank length is the same for both orientations, the volume fraction filled equals (oil-segment area) / (full circle area). This fraction directly transfers to the upright case to find the oil height."
+        },
+        {
+            "Subgoal 4": "Convert that volume fraction into the oil height when the tank is upright, then round to the nearest tenth.",
+            "Rationale 4": "When upright, the volume equals (base circle area) × (oil height). Using the previously found filled fraction of total volume gives oil height = fraction × total height (15 ft), and rounding completes the requested format."
+        }
+        ]
+    Example 3:
+        - Task: Locate a park that has a campground and is located in the state of Colorado
+        -  [{
+            "Subgoal 1": "Navigate to the \"Find a Park\" section.",
+            "Rationale 1": "The task requires locating a park, so starting from a centralized park search interface is necessary to access filters such as state and available facilities."
+        },
+        {
+            "Subgoal 2": "Open the \"Search by Activity or Topic\" link.",
+            "Rationale 2": "This option allows refining parks by specific features or amenities, which is essential because the task requires a park with a campground."
+        },
+        {
+            "Subgoal 3": "Select \"Colorado\" in the \"By State\" combobox.",
+            "Rationale 3": "Restricting the search to Colorado ensures that all resulting parks meet the geographic requirement of the task."
+        },
+        {
+            "Subgoal 4": "Click on the \"Activity\" button.",
+            "Rationale 4": "Accessing activity-based filters enables selection of campground-related activities, narrowing results to parks that support camping."
+        },
+        {
+            "Subgoal 5": "Click on the input field to enter the desired activity.",
+            "Rationale 5": "Entering or selecting the camping-related activity specifies the requirement that the park must have a campground."
+        },
+        {
+            "Subgoal 6": "Initiate the search.",
+            "Rationale 6": "Running the search applies all selected filters (state and activity), producing a list of parks in Colorado that have campgrounds and thereby completing the task."
+        }]
