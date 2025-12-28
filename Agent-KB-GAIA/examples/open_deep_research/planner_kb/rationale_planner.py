@@ -156,21 +156,32 @@ def load_prompts(path):
     return prompts
 
 
-def build_rationale_examples(entities, step_field, rationale_field):
+def build_rationale_examples(
+    entities, step_field="actions", rationale_field="rationale"
+):
     step_and_rationaleses = []
+
     for entity in entities:
         lines = []
-        task = entity.get("query") or entity.get("question")
+        task = entity.get("task") or entity.get("query") or entity.get("question")
         lines.append(f"Similar task:{task}")
-        for i, (step, rationale) in enumerate(
-            zip(entity[step_field], entity[rationale_field]), start=1
-        ):
-            lines.append(f"{i}. {step}")
-            lines.append(f"reason: {rationale}")
-        step_and_rationales = "\n".join(lines)
-        step_and_rationaleses.append(step_and_rationales)
-    step_and_rationaleses_text = "\n".join(step_and_rationaleses)
-    return step_and_rationaleses_text
+
+        subtasks = entity.get("subtasks", [])
+        for i, sub in enumerate(subtasks, start=1):
+            subgoal = sub.get("subgoal", "")
+            rationale = sub.get(rationale_field, "")
+
+            lines.append(f"{i}. {subgoal}".rstrip())
+            if rationale:
+                lines.append(f"reason: {rationale}")
+
+            actions = sub.get(step_field, [])
+            for j, action in enumerate(actions, start=1):
+                lines.append(f"  - {action}")
+
+        step_and_rationaleses.append("\n".join(lines))
+
+    return "\n".join(step_and_rationaleses)
 
 
 def decompose_task(
@@ -181,6 +192,8 @@ def decompose_task(
     url,
     model,
     slm,
+    inter_decomp,
+    intra_inter_decomp,
     retrieval_method,
     top_k,
     return_as_str=False,
@@ -189,7 +202,7 @@ def decompose_task(
         print(f"decompose_task - retrieval_method is None")
         task_decomposition_prompt_template = load_prompts(
             path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-        )["task_decomposition_prompt"]
+        )["task_decomposition_and_planning_with_icl_examples_prompt"]
         task_decomposition_prompt = populate_template(
             task_decomposition_prompt_template,
             variables={"task": augmented_question},
@@ -210,17 +223,89 @@ def decompose_task(
                 "decomposed_with_rationale_examples": step_rationale_examples,
             },
         )
-    task_decomposition_result = call_model(
-        query=task_decomposition_prompt,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-    )
-    print(f"decompose_task - task_decomposition_result: {task_decomposition_result}")
+    if inter_decomp:
+        engine = InterMeceEngine(
+            model,  # (= tm)
+            call_model_fn=call_model,
+            call_model_kwargs={
+                "model_name": model_name,
+                "key": key,
+                "url": url,
+                "model": model,
+                "slm": slm,
+            },
+            max_length=2048,
+        )
+
+        best = engine.pick_best(
+            task_text=task_text,
+            task_decomposition_prompt=task_decomposition_prompt,
+            mode="loss",
+            num_samples=10,
+            alpha=0.5,
+            min_subtasks=2,
+            max_subtasks=10,
+            dedup_raw=True,
+            seed=None,
+            return_topk=1,
+        )
+
+        if best:
+            best1 = best[0]
+            print("inter_mece:", best1.score)
+            print(
+                "coverage:", best1.mece.coverage, "exclusivity:", best1.mece.exclusivity
+            )
+            print("subtasks:", best1.subtasks)
+        else:
+            print("No valid decomposition candidates.")
+    elif intra_inter_decomp:
+        intra_engine = IntraMeceEngine(
+            model,  # (= tm)
+            call_model_fn=call_model,
+            call_model_kwargs={
+                "model_name": model_name,
+                "key": key,
+                "url": url,
+                "model": model,
+                "slm": slm,
+            },
+            max_length=2048,
+        )
+
+        topk = intra_engine.pick_topk(
+            task_text=task_text,
+            task_decomposition_prompt=task_decomposition_prompt,
+            mode="loss",
+            num_samples=40,
+            top_k=5,
+            alpha_inter=0.5,
+            min_subtasks=2,
+            max_subtasks=10,
+        )
+
+        if topk:
+            best1 = topk[0]
+            print("selection_score:", best1.score)
+            print("inter_mece:", best1.mece.inter_mece)
+            print(
+                "coverage:", best1.mece.coverage, "exclusivity:", best1.mece.exclusivity
+            )
+            print("subtasks:", best1.subtasks)
+        else:
+            print("No valid decomposition candidates.")
+    else:
+        task_decomposition_str = call_model(
+            query=task_decomposition_prompt,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+        )
+    print(f"decompose_task - task_decomposition_str: {task_decomposition_str}")
     if return_as_str:
-        return task_decomposition_result
+        return task_decomposition_str
     else:
         # extract_step_list_template = load_prompts(
         #     path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
@@ -238,8 +323,8 @@ def decompose_task(
         #                 slm=slm,
         #             )
         # # print(f"extracted_steps: {extracted_steps}")
-        extracted_step_list = parse_steps(task_decomposition_result)
-        # extracted_step_list =  extract_steps(task_decomposition_result, model_name, key,url,model,slm)
+        extracted_step_list = parse_steps(task_decomposition_str)
+        # extracted_step_list =  extract_steps(task_decomposition_str, model_name, key,url,model,slm)
         return extracted_step_list
 
 

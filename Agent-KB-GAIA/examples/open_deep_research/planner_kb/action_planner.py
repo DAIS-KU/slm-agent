@@ -124,47 +124,13 @@ def build_action_level_planning_subseq_examples(entities):
 def action_level_planning(
     task, curruent_plans, key, url, model, model_name, retrieval_method, top_k, slm
 ):
-    prompt = load_prompts(
-        path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/action_planner_prompts.yaml"
-    )
-    generate_tag_prompt_template = prompt["generate_tag_prompt"]
-    action_planning_results = []
-    for plan_number, curruent_plan in enumerate(curruent_plans):
-        print(f"action_level_planning #{plan_number}/{len(curruent_plans)}")
-        print(f"curruent_plan: {curruent_plan}")
-        generate_tag_prompt = populate_template(
-            generate_tag_prompt_template,
-            variables={"task": task, "curruent_plan": curruent_plan, "top_k": top_k},
-        )
-        action_tags = call_model(
-            query=generate_tag_prompt,
-            model_name=model_name,
-            key=key,
-            url=url,
-            model=model,
-            slm=slm,
-        )
-        print(f"action_tags: {action_tags}")
-        action_tag_list = parse_tag_array(action_tags)
-        print(f"action_tag_list: {action_tag_list}")
-        retrieval_results = []
-        for action_tag in action_tag_list:
-            retrieval_result = retrieval_method(action_tag, top_k=1, is_action=True)
-            retrieval_results.extend(retrieval_result)
-        action_sequence_examples = build_action_level_planning_subseq_examples(
-            retrieval_results
-        )
-
-        action_planning_with_examples_prompt_template = prompt[
-            "action_planning_with_examples_prompt"
-        ]
+    if retrieval_method is None:
+        action_planning_with_examples_prompt_template = load_prompts(
+            path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/action_planner_prompts.yaml"
+        )["action_planning_with_icl_examples_prompt"]
         action_planning_with_examples_prompt = populate_template(
             action_planning_with_examples_prompt_template,
-            variables={
-                "task": task,
-                "curruent_plan": curruent_plan,
-                "action_sequence_examples": action_sequence_examples,
-            },
+            variables={"task": task, "curruent_plans": curruent_plans},
         )
         action_planning_result = call_model(
             query=action_planning_with_examples_prompt,
@@ -174,5 +140,61 @@ def action_level_planning(
             model=model,
             slm=slm,
         )
-        action_planning_results.append(action_planning_result)
-    return action_planning_results
+        return action_planning_result
+    else:
+        prompt = load_prompts(
+            path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/action_planner_prompts.yaml"
+        )
+        generate_tag_prompt_template = prompt["generate_tag_prompt"]
+        action_planning_results = []
+        for plan_number, curruent_plan in enumerate(curruent_plans):
+            print(f"action_level_planning #{plan_number}/{len(curruent_plans)}")
+            print(f"curruent_plan: {curruent_plan}")
+            generate_tag_prompt = populate_template(
+                generate_tag_prompt_template,
+                variables={
+                    "task": task,
+                    "curruent_plan": curruent_plan,
+                    "top_k": top_k,
+                },
+            )
+            action_tags = call_model(
+                query=generate_tag_prompt,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+            )
+            print(f"action_tags: {action_tags}")
+            action_tag_list = parse_tag_array(action_tags)
+            print(f"action_tag_list: {action_tag_list}")
+            retrieval_results = []
+            for action_tag in action_tag_list:
+                retrieval_result = retrieval_method(action_tag, top_k=1, is_action=True)
+                retrieval_results.extend(retrieval_result)
+            action_sequence_examples = build_action_level_planning_subseq_examples(
+                retrieval_results
+            )
+
+            action_planning_with_examples_prompt_template = prompt[
+                "action_planning_with_examples_prompt"
+            ]
+            action_planning_with_examples_prompt = populate_template(
+                action_planning_with_examples_prompt_template,
+                variables={
+                    "task": task,
+                    "curruent_plan": curruent_plan,
+                    "action_sequence_examples": action_sequence_examples,
+                },
+            )
+            action_planning_result = call_model(
+                query=action_planning_with_examples_prompt,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+            )
+            action_planning_results.append(action_planning_result)
+        return action_planning_results

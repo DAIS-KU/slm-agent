@@ -25,11 +25,8 @@ action_planning_with_icl_examples_prompt: |
     Please convert natural language plans into a series of subgoals and their corresponding actions that lead to the successful implementation with respect to the given instructions. 
     Please use ‘R[number]’ to represent the intermediate results for each subgoal, without generating any exact values. 
     Please also use functions to represent the corresponding actions.
-    For the actions, they must be one of ‘Calculator’, 'KnowledgeQuery', 'ParagraphRetrieve', QA, ‘Count’, ‘Code’, and ‘Define’.
-    Here is the final task:
-    {{task}}
-    Here is the first step of curruent sub-task(sub-query) plan:
-    {{curruent_plan}} 
+    Here is the sub-task(sub-query) plans:
+    {{curruent_plans}} 
 
     Example 1:
         - Task: Peter goes to the store to buy a soda. The soda costs $.25 an ounch. He brought $2 with him and leaves with $.50. How many ounces of soda did he buy?

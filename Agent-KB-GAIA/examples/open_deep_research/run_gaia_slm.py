@@ -47,7 +47,7 @@ from scripts.automodel import (
     prepare_model_kwargs,
 )
 
-from agent_kb.agent_kb_utils import AKBClient, call_model
+from agent_kb.agent_kb_utils_unified import AKBClient, call_model
 
 from planner_kb import decompose_task, subtask_planning, action_level_planning
 
@@ -204,25 +204,39 @@ def parse_args():
     )
     # decomp/rationale params
     parser.add_argument(
-        "--qdecomp", action="store_true", help="Planning after task decomposition"
+        "--inter_decomp",
+        action="store_true",
+        help="Measuring inter-MECE after task decomposition",
     )
     parser.add_argument(
-        "--qdecomp_ex",
+        "--intra_inter_decomp",
+        action="store_true",
+        help="Measuring intra-inter-MECE after task decomposition",
+    )
+    parser.add_argument(
+        "--incre_mece",
+        action="store_true",
+        help="Stop when mece is lower than threshold",
+    )
+    parser.add_argument(
+        "--decomp_ex",
         action="store_true",
         help="Using rationales when decomposing a task",
-    )
-    parser.add_argument(
-        "--p_rationale", action="store_true", help="Enable LLM rationale-based planning"
-    )
-    parser.add_argument(
-        "--p_rationale_ex",
-        action="store_true",
-        help="Using rationales when planning",
     )
     parser.add_argument(
         "--action",
         action="store_true",
         help="Apply action planning",
+    )
+    parser.add_argument(
+        "--action_ex",
+        action="store_true",
+        help="Apply action planning",
+    )
+    parser.add_argument(
+        "--one_pass",
+        action="store_true",
+        help="Do not apply react",
     )
     return parser.parse_args()
 
@@ -324,6 +338,7 @@ def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False)
         agent_kb=args.agent_kb,
         top_k=args.top_k,
         retrieval_type=args.retrieval_type,
+        one_pass=args.one_pass,
     )
     return manager_agent
 
@@ -352,11 +367,11 @@ def answer_single_question(
     slm=False,
     model=None,
     model_search=None,
-    q_decomp=False,
-    q_decomp_ex=False,
-    p_rationale=False,
-    p_rationale_ex=False,
+    inter_decomp=False,
+    intra_inter_decomp=False,
+    decomp_ex=False,
     action_planning=False,
+    action_planning_ex=False,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -429,100 +444,35 @@ def answer_single_question(
 
     ## ============================== QUERY DECOMPOSITION / RATIONALE-BASED PLANNING ==============================##
     additional_knowledge = None
-    if q_decomp:
-        if q_decomp_ex:
-            subtasks = decompose_task(
-                example=example,
-                augmented_question=augmented_question,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method,
-                top_k=args.top_k,
-                return_as_str=not p_rationale,
-            )
-        else:
-            subtasks = decompose_task(
-                example=example,
-                augmented_question=augmented_question,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=None,
-                top_k=None,
-                return_as_str=not p_rationale,
-            )
-        print(
-            f"## ============================== QUERY DECOMPOSITION ============================== ##"
+    sub_tasks = decompose_task(
+        example=example,
+        augmented_question=augmented_question,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+        inter_decomp=inter_decomp,
+        intra_inter_decomp=intra_inter_decomp,
+        retrieval_method=None,
+        top_k=None,
+        return_as_str=True,
+    )
+    if action_planning:
+        action_plans = action_level_planning(
+            task=example["question"],
+            curruent_plans=sub_tasks,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+            retrieval_method=None,
+            top_k=None,
         )
-        print(subtasks)
-        print(
-            f"## ================================================================================= ##"
-        )
-        if p_rationale:
-            if p_rationale_ex:
-                subtask_plannings = subtask_planning(
-                    example=example,
-                    augmented_question=augmented_question,
-                    extracted_step_list=subtasks,
-                    model_name=model_name,
-                    key=key,
-                    url=url,
-                    model=model,
-                    slm=slm,
-                    retrieval_method=retrieval_method,
-                    top_k=args.top_k,
-                    return_as_str=not action_planning,
-                )
-            else:
-                subtask_plannings = subtask_planning(
-                    example=example,
-                    augmented_question=augmented_question,
-                    extracted_step_list=subtasks,
-                    model_name=model_name,
-                    key=key,
-                    url=url,
-                    model=model,
-                    slm=slm,
-                    retrieval_method=None,
-                    top_k=None,
-                    return_as_str=not action_planning,
-                )
-            print(
-                f"## ============================== RATIONALE-BASED PLANNING ============================== ##"
-            )
-            print(subtask_plannings)
-            print(
-                f"## ====================================================================================== ##"
-            )
-            additional_knowledge = subtask_plannings
-            if action_planning:
-                print(f"action_planning is called.")
-                action_plannings = action_level_planning(
-                    task=augmented_question,
-                    curruent_plans=subtask_plannings,
-                    key=key,
-                    url=url,
-                    model=model,
-                    model_name=model_name,
-                    retrieval_method=retrieval_method,
-                    top_k=args.top_k,
-                    slm=slm,
-                )
-                print(
-                    f"## ============================== ACTION-LEVEL PLANNING ============================== ##"
-                )
-                print(action_plannings)
-                print(
-                    f"## ====================================================================================== ##"
-                )
-                additional_knowledge = action_plannings
-        else:
-            additional_knowledge = subtasks
+        additional_knowledge = action_plans
+    else:
+        additional_knowledge = sub_tasks
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
@@ -677,11 +627,11 @@ def main():
                 args.slm,
                 model,
                 model_search,
-                args.qdecomp,
-                args.qdecomp_ex,
-                args.p_rationale,
-                args.p_rationale_ex,
+                args.inter_decomp,
+                args.intra_inter_decomp,
+                args.decomp_ex,
                 args.action,
+                args.action_ex,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
