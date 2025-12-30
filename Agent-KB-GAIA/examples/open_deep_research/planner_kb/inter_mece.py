@@ -8,8 +8,8 @@ from typing import Any, Callable, Dict, List, Optional
 import torch
 import torch.nn.functional as F
 
-from mece_utils import *
-from mece_common import *
+from .mece_utils import *
+from .mece_common import *
 
 
 class InterMeceEngine:
@@ -48,8 +48,8 @@ class InterMeceEngine:
     ) -> float:
         max_length = max_length or self.max_length
 
-        ctx = _tokenize_no_special(self.tok, context)
-        tgt = _tokenize_no_special(self.tok, target)
+        ctx = tokenize_no_special(self.tok, context)
+        tgt = tokenize_no_special(self.tok, target)
 
         ctx_ids = ctx["input_ids"]
         tgt_ids = tgt["input_ids"]
@@ -106,11 +106,11 @@ class InterMeceEngine:
 
         nll_task_base = self.conditional_nll_per_token("", task_text)
         nll_task_cond = self.conditional_nll_per_token(
-            _subtasks_context(subtasks), task_text
+            subtasks_context(subtasks), task_text
         )
 
         if math.isfinite(nll_task_base) and nll_task_base > 1e-8:
-            coverage = _clamp01((nll_task_base - nll_task_cond) / nll_task_base)
+            coverage = clamp01((nll_task_base - nll_task_cond) / nll_task_base)
         else:
             coverage = 0.0
 
@@ -118,17 +118,17 @@ class InterMeceEngine:
 
         overlaps = []
         for i, si in enumerate(subtasks):
-            ctx_i = _single_subtask_context(si)
+            ctx_i = single_subtask_context(si)
             for j, sj in enumerate(subtasks):
                 if i == j:
                     continue
                 nll_b = base_nll[j]
                 nll_c = self.conditional_nll_per_token(ctx_i, sj)
                 if math.isfinite(nll_b) and nll_b > 1e-8:
-                    overlaps.append(_clamp01((nll_b - nll_c) / nll_b))
+                    overlaps.append(clamp01((nll_b - nll_c) / nll_b))
 
         redundancy = sum(overlaps) / max(1, len(overlaps))
-        exclusivity = _clamp01(1.0 - redundancy)
+        exclusivity = clamp01(1.0 - redundancy)
         inter_mece = alpha * coverage + (1.0 - alpha) * exclusivity
 
         return MeceScore(
@@ -173,7 +173,7 @@ class InterMeceEngine:
         num_samples: int = 8,
         alpha: float = 0.5,
         min_subtasks: int = 2,
-        max_subtasks: int = 20,
+        max_subtasks: int = 10,
         dedup_raw: bool = True,
         seed: Optional[int] = None,
         return_topk: int = 1,
@@ -184,7 +184,7 @@ class InterMeceEngine:
         seen_raw = set()
         candidates: List[DecompCandidate] = []
 
-        for _ in range(num_samples):
+        for sample_num in range(num_samples):
             raw = self.call_model_fn(
                 query=task_decomposition_prompt,
                 **self.call_model_kwargs,
@@ -198,10 +198,13 @@ class InterMeceEngine:
             seen_raw.add(raw_norm)
 
             subtasks = parse_subtask(raw)
+            print(f"Generate {sample_num}th decomposition.:")
+            print(subtasks)
             if not (min_subtasks <= len(subtasks) <= max_subtasks):
                 continue
 
             mece = self.score(mode, subtasks, task_text, alpha=alpha)
+            print(f"Generate {sample_num}th subtasks.(score {mece})")
 
             candidates.append(
                 DecompCandidate(

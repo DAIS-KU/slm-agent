@@ -88,6 +88,13 @@ extract_step_list: |
   </output_format>
 
 
+task_decomposition_and_planning_with_retrieval_examples_prompt: |
+    Please provide a reasonable subgoal-based plan to solve the given task.  
+    Here is the task:
+    {{task}}
+
+    {{retrieval_examples}}
+
 task_decomposition_and_planning_with_icl_examples_prompt: |
     Please provide a reasonable subgoal-based plan to solve the given task.  
     Here is the task:

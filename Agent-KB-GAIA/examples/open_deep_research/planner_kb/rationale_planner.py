@@ -1,10 +1,16 @@
+from __future__ import annotations
+
+
 from smolagents.agents import populate_template
 import yaml
 from agent_kb.agent_kb_utils import call_model
 import ast
 import json
 import re
-from typing import List
+from typing import Any, Dict, List
+
+from .inter_mece import InterMeceEngine
+from .intra_mece import IntraMeceEngine
 
 
 def extract_steps(step_str, model_name, key, url, model, slm):
@@ -156,6 +162,92 @@ def load_prompts(path):
     return prompts
 
 
+def build_entities_example_string_no_actions(
+    entity: Dict[str, Any],
+    example_num: int = 1,
+    *,
+    indent: int = 4,
+    ensure_ascii: bool = False,
+) -> str:
+    """
+    TRANSFORM_SCHEMA 형태의 entity(dict)를 예시 포맷 문자열로 변환하되,
+    출력에서는 Actions를 제외한다.
+
+    Expected entity shape:
+    {
+      "task_id": str,
+      "task": str,
+      "subtasks": [
+        {"subgoal": str, "rationale": str, "actions": [str, ...]},
+        ...
+      ]
+    }
+
+    Output:
+      Example 1:
+         - Task: ...
+         - [{
+              "Subgoal 1": "...",
+              "Rationale 1": "..."
+          }, ...]
+    """
+    task = str(entity.get("task", ""))
+    subtasks: List[Dict[str, Any]] = entity.get("subtasks") or []
+    if not isinstance(subtasks, list):
+        raise TypeError("entity['subtasks'] must be a list")
+
+    def _q(s: str) -> str:
+        s = "" if s is None else str(s)
+        s = s.replace("\\", "\\\\").replace('"', '\\"')
+        if ensure_ascii:
+            s = s.encode("unicode_escape").decode("ascii")
+        return f'"{s}"'
+
+    ind1 = " " * indent
+    ind2 = " " * (indent * 2)
+    ind3 = " " * (indent * 3)
+
+    lines: List[str] = []
+    lines.append(f"Example {example_num}:")
+    lines.append(f"{ind1}- Task: {task}")
+    lines.append(f"{ind1}- [")
+
+    for i, st in enumerate(subtasks, start=1):
+        subgoal = st.get("subgoal", "")
+        rationale = st.get("rationale", "")
+
+        lines.append(f"{ind2}{{")
+        lines.append(f"{ind3}{_q(f'Subgoal {i}')}: {_q(subgoal)},")
+        lines.append(f"{ind3}{_q(f'Rationale {i}')}: {_q(rationale)}")
+
+        if i < len(subtasks):
+            lines.append(f"{ind2}}},")
+        else:
+            lines.append(f"{ind2}}}")
+
+    lines.append(f"{ind1}]")
+    return "\n".join(lines)
+
+
+def build_many_entities_examples_no_actions(
+    entities: List[Dict[str, Any]],
+    *,
+    start_example_num: int = 1,
+    indent: int = 4,
+    ensure_ascii: bool = False,
+    separator: str = "\n\n",
+) -> str:
+    """여러 entity를 Example 1/2/3...로 연속 출력 (Actions 제외)."""
+    parts: List[str] = []
+    for idx, e in enumerate(entities, start=start_example_num):
+        parts.append(
+            build_entities_example_string_no_actions(
+                e, example_num=idx, indent=indent, ensure_ascii=ensure_ascii
+            )
+        )
+    return separator.join(parts)
+
+
 def build_rationale_examples(
     entities, step_field="actions", rationale_field="rationale"
 ):
@@ -212,15 +304,15 @@ def decompose_task(
         rationale_retrieval_results = retrieval_method(example["question"], top_k=top_k)
         task_decomposition_prompt_template = load_prompts(
             path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-        )["task_decomposition_with_examples_prompt"]
-        step_rationale_examples = build_rationale_examples(
-            rationale_retrieval_results, "steps", "step_rationales"
+        )["task_decomposition_and_planning_with_retrieval_examples_prompt"]
+        step_rationale_examples = build_many_entities_examples_no_actions(
+            rationale_retrieval_results
         )
         task_decomposition_prompt = populate_template(
             task_decomposition_prompt_template,
             variables={
                 "task": augmented_question,
-                "decomposed_with_rationale_examples": step_rationale_examples,
+                "retrieval_examples": step_rationale_examples,
             },
         )
     if inter_decomp:
@@ -238,7 +330,7 @@ def decompose_task(
         )
 
         best = engine.pick_best(
-            task_text=task_text,
+            task_text=example["question"],
             task_decomposition_prompt=task_decomposition_prompt,
             mode="loss",
             num_samples=10,
@@ -257,8 +349,10 @@ def decompose_task(
                 "coverage:", best1.mece.coverage, "exclusivity:", best1.mece.exclusivity
             )
             print("subtasks:", best1.subtasks)
+            return "\n".join(best1.subtasks) if return_as_str else best1.subtasks
         else:
             print("No valid decomposition candidates.")
+            return ""
     elif intra_inter_decomp:
         intra_engine = IntraMeceEngine(
             model,  # (= tm)
@@ -274,10 +368,10 @@ def decompose_task(
         )
 
         topk = intra_engine.pick_topk(
-            task_text=task_text,
+            task_text=example["question"],
             task_decomposition_prompt=task_decomposition_prompt,
             mode="loss",
-            num_samples=40,
+            num_samples=10,
             top_k=5,
             alpha_inter=0.5,
             min_subtasks=2,
@@ -287,13 +381,16 @@ def decompose_task(
         if topk:
             best1 = topk[0]
             print("selection_score:", best1.score)
+            print("subset_intra_sum:", best1.details["subset_intra_sum"])
             print("inter_mece:", best1.mece.inter_mece)
             print(
                 "coverage:", best1.mece.coverage, "exclusivity:", best1.mece.exclusivity
             )
             print("subtasks:", best1.subtasks)
+            return "\n".join(best1.subtasks) if return_as_str else best1.subtasks
         else:
             print("No valid decomposition candidates.")
+            return ""
     else:
         task_decomposition_str = call_model(
             query=task_decomposition_prompt,
@@ -303,91 +400,9 @@ def decompose_task(
             model=model,
             slm=slm,
         )
-    print(f"decompose_task - task_decomposition_str: {task_decomposition_str}")
-    if return_as_str:
-        return task_decomposition_str
-    else:
-        # extract_step_list_template = load_prompts(
-        #     path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-        # )["extract_step_list"]
-        # extract_step_list_prompt = populate_template(
-        #     extract_step_list_template, variables={"steps": task_decomposition_result}
-        # )
-        # # print(f"extract_step_list_prompt: {extract_step_list_prompt}")
-        # extracted_steps = call_model(
-        #                 query=extract_step_list_prompt,
-        #                 model_name=model_name,
-        #                 key=key,
-        #                 url=url,
-        #                 model=model,
-        #                 slm=slm,
-        #             )
-        # # print(f"extracted_steps: {extracted_steps}")
-        extracted_step_list = parse_steps(task_decomposition_str)
-        # extracted_step_list =  extract_steps(task_decomposition_str, model_name, key,url,model,slm)
-        return extracted_step_list
-
-
-def subtask_planning(
-    example,
-    augmented_question,
-    extracted_step_list,
-    model_name,
-    key,
-    url,
-    model,
-    slm,
-    retrieval_method,
-    top_k,
-    return_as_str=False,
-):
-    subtask_plannings = []
-    for curruent_sub_task_number, curruent_sub_task in enumerate(extracted_step_list):
-        print(f"subtask planning #{curruent_sub_task_number}")
-        if retrieval_method is None:
-            subtask_planning_prompt_template = load_prompts(
-                path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-            )["subtask_planning_prompt"]
-            subtask_planning_prompt = populate_template(
-                subtask_planning_prompt_template,
-                variables={
-                    "task": augmented_question,
-                    "sub_tasks": extracted_step_list,
-                    "curruent_sub_task": curruent_sub_task,
-                },
-            )
-        else:
-            subtask_planning_with_examples_prompt_template = load_prompts(
-                path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-            )["subtask_planning_with_examples_prompt"]
-            rationale_retrieval_results = retrieval_method(
-                curruent_sub_task, top_k=top_k
-            )
-            step_rationale_examples = build_rationale_examples(
-                rationale_retrieval_results,
-                "steps",
-                "step_rationales",
-            )
-            subtask_planning_prompt = populate_template(
-                subtask_planning_with_examples_prompt_template,
-                variables={
-                    "task": augmented_question,
-                    "sub_tasks": extracted_step_list,
-                    "curruent_sub_task": curruent_sub_task,
-                    "planning_with_rationale_examples": step_rationale_examples,
-                },
-            )
-        sub_task_planning_result = call_model(
-            query=subtask_planning_prompt,
-            model_name=model_name,
-            key=key,
-            url=url,
-            model=model,
-            slm=slm,
+        print(f"decompose_task - task_decomposition_str: {task_decomposition_str}")
+        return (
+            task_decomposition_str
+            if return_as_str
+            else parse_steps(task_decomposition_str)
         )
-        subtask_plannings.append(sub_task_planning_result)
-    if return_as_str:
-        subtask_plannings_str = "\n".join(subtask_plannings)
-        return subtask_plannings_str
-    else:
-        return subtask_plannings

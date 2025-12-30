@@ -49,7 +49,7 @@ from scripts.automodel import (
 
 from agent_kb.agent_kb_utils_unified import AKBClient, call_model
 
-from planner_kb import decompose_task, subtask_planning, action_level_planning
+from planner_kb import decompose_task, action_level_planning
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
 from smolagents.agents import populate_template
@@ -203,6 +203,11 @@ def parse_args():
         help="agent kb model choice",
     )
     # decomp/rationale params
+    parser.add_argument(
+        "--decomp",
+        action="store_true",
+        help="Apply any task decomposition",
+    )
     parser.add_argument(
         "--inter_decomp",
         action="store_true",
@@ -367,6 +372,7 @@ def answer_single_question(
     slm=False,
     model=None,
     model_search=None,
+    decomp=False,
     inter_decomp=False,
     intra_inter_decomp=False,
     decomp_ex=False,
@@ -444,35 +450,36 @@ def answer_single_question(
 
     ## ============================== QUERY DECOMPOSITION / RATIONALE-BASED PLANNING ==============================##
     additional_knowledge = None
-    sub_tasks = decompose_task(
-        example=example,
-        augmented_question=augmented_question,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-        inter_decomp=inter_decomp,
-        intra_inter_decomp=intra_inter_decomp,
-        retrieval_method=None,
-        top_k=None,
-        return_as_str=True,
-    )
-    if action_planning:
-        action_plans = action_level_planning(
-            task=example["question"],
-            curruent_plans=sub_tasks,
+    if decomp:
+        sub_tasks = decompose_task(
+            example=example,
+            augmented_question=augmented_question,
             model_name=model_name,
             key=key,
             url=url,
             model=model,
             slm=slm,
-            retrieval_method=None,
-            top_k=None,
+            inter_decomp=inter_decomp,
+            intra_inter_decomp=intra_inter_decomp,
+            retrieval_method=retrieval_method if decomp_ex else None,
+            top_k=3 if decomp_ex else None,
+            return_as_str=True,
         )
-        additional_knowledge = action_plans
-    else:
-        additional_knowledge = sub_tasks
+        if action_planning:
+            action_plans = action_level_planning(
+                task=example["question"],
+                curruent_plans=sub_tasks,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method if action_planning_ex else None,
+                top_k=3 if action_planning_ex else None,
+            )
+            additional_knowledge = action_plans
+        else:
+            additional_knowledge = sub_tasks
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
@@ -599,7 +606,7 @@ def main():
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
-            temperature=0.1,
+            temperature=0.9,
         )
         model_search = TransformersModel(
             model_id=args.model_id_search,
@@ -607,7 +614,7 @@ def main():
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
-            temperature=0.1,
+            temperature=0.9,
         )
     else:
         model, model_search = None, None
@@ -627,6 +634,7 @@ def main():
                 args.slm,
                 model,
                 model_search,
+                args.decomp,
                 args.inter_decomp,
                 args.intra_inter_decomp,
                 args.decomp_ex,

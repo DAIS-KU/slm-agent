@@ -3,6 +3,7 @@ from typing import List
 import re
 import string
 import warnings
+from pathlib import Path
 
 
 def normalize_number_str(number_str: str) -> float:
@@ -156,23 +157,38 @@ def evaluate(input_path, output_path):
     print(f"결과 파일: {output_path}")
 
 
+def run_all_evaluations(
+    validation_dir: str,
+    evaluate_dir: str,
+    pattern: str = "*.jsonl",
+) -> None:
+    validation_path = Path(validation_dir)
+    evaluate_path = Path(evaluate_dir)
+    evaluate_path.mkdir(parents=True, exist_ok=True)
+
+    # validation/ 이하의 모든 jsonl 파일 수집 (재귀 탐색)
+    input_files = sorted(validation_path.rglob(pattern))
+
+    if not input_files:
+        print(f"[WARN] No files matched: {validation_path}/**/{pattern}")
+        return
+
+    for input_file in input_files:
+        # validation/ 기준 상대경로를 유지하면서 evaluate/에 같은 이름으로 저장
+        rel = input_file.relative_to(validation_path)
+        output_file = evaluate_path / rel
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        evaluate(
+            input_path=str(input_file),
+            output_path=str(output_file),
+        )
+        print(f"[OK] {input_file} -> {output_file}")
+
+
 if __name__ == "__main__":
-    evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-base.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-base.jsonl",
-    )
-
-    evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-subtask_ex.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-subtask_ex.jsonl",
-    )
-
-    evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-subtask_ex-prationale_ex.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-subtask_ex-prationale_ex.jsonl",
-    )
-
-    evaluate(
-        input_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation/qwen4-subtask_ex-prationale_ex-action.jsonl",
-        output_path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate/qwen4-subtask_ex-prationale_ex-action.jsonl",
+    run_all_evaluations(
+        validation_dir="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/validation",
+        evaluate_dir="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/output/evaluate",
+        pattern="*.jsonl",
     )

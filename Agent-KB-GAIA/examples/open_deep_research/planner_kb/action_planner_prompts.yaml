@@ -20,6 +20,15 @@ action_planning_with_examples_prompt: |
     {{action_sequence_examples}}
 
 
+action_planning_with_retrieval_examples_prompt: |
+    Please convert natural language plans into a series of subgoals and their corresponding actions that lead to the successful implementation with respect to the given instructions. 
+    Please use ‘R[number]’ to represent the intermediate results for each subgoal, without generating any exact values. 
+    Please also use functions to represent the corresponding actions. 
+    You can use action: Crawl, Search, TextInspector, VisualInspector, AudioInspector
+    Here is the sub-task(sub-query) plans:
+    {{curruent_plans}} 
+
+    {{retrieval_examples}}
 
 action_planning_with_icl_examples_prompt: |
     Please convert natural language plans into a series of subgoals and their corresponding actions that lead to the successful implementation with respect to the given instructions. 

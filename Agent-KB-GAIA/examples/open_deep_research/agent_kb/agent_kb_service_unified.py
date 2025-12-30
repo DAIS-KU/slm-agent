@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
-from agent_kb_retrieval import AKB_Manager
+from agent_kb_retrieval_unified import AKB_Manager
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 import time
