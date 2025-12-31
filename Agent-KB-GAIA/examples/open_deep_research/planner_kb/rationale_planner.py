@@ -289,6 +289,7 @@ def decompose_task(
     retrieval_method,
     top_k,
     return_as_str=False,
+    multiple_decomp=False,
 ):
     if retrieval_method is None:
         print(f"decompose_task - retrieval_method is None")
@@ -387,7 +388,10 @@ def decompose_task(
                 "coverage:", best1.mece.coverage, "exclusivity:", best1.mece.exclusivity
             )
             print("subtasks:", best1.subtasks)
-            return "\n".join(best1.subtasks) if return_as_str else best1.subtasks
+            if multiple_decomp:
+                return ["\n".join(cand.subtasks) for cand in topk]
+            else:
+                return "\n".join(best1.subtasks) if return_as_str else best1.subtasks
         else:
             print("No valid decomposition candidates.")
             return ""

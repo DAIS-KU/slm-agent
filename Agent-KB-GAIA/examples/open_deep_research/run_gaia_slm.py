@@ -243,6 +243,11 @@ def parse_args():
         action="store_true",
         help="Do not apply react",
     )
+    parser.add_argument(
+        "--multiple_decomp",
+        action="store_true",
+        help="Explore diverse initial planning",
+    )
     return parser.parse_args()
 
 
@@ -334,7 +339,7 @@ def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False)
             AudioInspectorTool(model, text_limit),
             TextInspectorTool(model, text_limit),
         ],
-        max_steps=args.max_steps,
+        max_steps=1 if args.one_pass or args.multiple_decomp else args.max_steps,
         verbosity_level=2,
         additional_authorized_imports=AUTHORIZED_IMPORTS,
         planning_interval=args.planning_interval,
@@ -343,7 +348,6 @@ def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False)
         agent_kb=args.agent_kb,
         top_k=args.top_k,
         retrieval_type=args.retrieval_type,
-        one_pass=args.one_pass,
     )
     return manager_agent
 
@@ -378,6 +382,7 @@ def answer_single_question(
     decomp_ex=False,
     action_planning=False,
     action_planning_ex=False,
+    multiple_decomp=False,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -464,6 +469,7 @@ def answer_single_question(
             retrieval_method=retrieval_method if decomp_ex else None,
             top_k=3 if decomp_ex else None,
             return_as_str=True,
+            multiple_decomp=multiple_decomp,
         )
         if action_planning:
             action_plans = action_level_planning(
@@ -483,13 +489,32 @@ def answer_single_question(
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
-        final_result = agent.run(
-            augmented_question, additional_knowledge=additional_knowledge
-        )
-        agent_memory = agent.write_memory_to_messages(summary_mode=True)
-        final_result = prepare_response(
-            augmented_question, agent_memory, reformulation_model=model
-        )
+        if multiple_decomp:
+            final_results = []
+            for ak in additional_knowledge:
+                final_result = agent.run(
+                    augmented_question, additional_knowledge=additional_knowledge
+                )
+                final_results.append(final_result)
+            agent_memory = agent.write_memory_to_messages(summary_mode=True)
+            final_result = prepare_response(
+                augmented_question,
+                final_results,
+                reformulation_model=model,
+                multiple=True,
+            )
+            print("=" * 30 + "Final Results." + "=" * 30)
+            print(f"final_results:{final_results}")
+            print(f"final_result:{final_result}")
+            print("=" * 30 + "Final Results." + "=" * 30)
+        else:
+            final_result = agent.run(
+                augmented_question, additional_knowledge=additional_knowledge
+            )
+            agent_memory = agent.write_memory_to_messages(summary_mode=True)
+            final_result = prepare_response(
+                augmented_question, agent_memory, reformulation_model=model
+            )
         output = str(final_result)
         print("=" * 30 + "Final Output." + "=" * 30)
         print(f"output:{output}")
@@ -640,6 +665,7 @@ def main():
                 args.decomp_ex,
                 args.action,
                 args.action_ex,
+                args.multiple_decomp,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
