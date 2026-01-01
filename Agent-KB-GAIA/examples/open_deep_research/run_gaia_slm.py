@@ -491,11 +491,11 @@ def answer_single_question(
     try:
         if multiple_decomp:
             final_results = []
-            for ak in additional_knowledge:
-                final_result = agent.run(
-                    augmented_question, additional_knowledge=additional_knowledge
-                )
+            for idx, ak in enumerate(additional_knowledge):
+                print(f"{idx+1}-th additional_knowledge")
+                final_result = agent.run(augmented_question, additional_knowledge=ak)
                 final_results.append(final_result)
+            print("agent.write_memory_to_messages Called.")
             agent_memory = agent.write_memory_to_messages(summary_mode=True)
             final_result = prepare_response(
                 augmented_question,

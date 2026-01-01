@@ -6,6 +6,7 @@ from smolagents.models import MessageRole, Model
 def prepare_response(
     original_task: str, inner_messages, reformulation_model: Model, multiple=False
 ) -> str:
+    print("prepare_response Called")
     messages = [
         {
             "role": MessageRole.SYSTEM,
@@ -23,21 +24,20 @@ Your team then worked diligently to address that request. Read below a transcrip
     ]
 
     try:
-        # for message in inner_messages:
-        #     if not message.get("content"):
-        #         continue
-        #     message = copy.deepcopy(message)
-        #     message["role"] = MessageRole.USER
-        #     messages.append(message)
-        for m in inner_messages:
-            if not multiple:
-                if not m.get("content"):
+        if multiple:
+            messages += [
+                {
+                    "role": MessageRole.USER,
+                    "content": [{"type": "text", "text": str(inner_messages)}],
+                }
+            ]
+        else:
+            for message in inner_messages:
+                if not message.get("content"):
                     continue
-                msg = copy.deepcopy(m)
-                msg["role"] = MessageRole.USER
-                messages.append(msg)
-            else:
-                messages.append({"role": MessageRole.USER, "content": m})
+                message = copy.deepcopy(message)
+                message["role"] = MessageRole.USER
+                messages.append(message)
     except Exception:
         messages += [{"role": MessageRole.ASSISTANT, "content": str(inner_messages)}]
 
@@ -66,6 +66,7 @@ FINAL ANSWER FORMAT: Your response must strictly follow these formatting rules:
             ],
         }
     )
+    print("reformulation_model Called")
     response = reformulation_model(messages).content
 
     final_answer = response.split("FINAL ANSWER: ")[-1].strip()
