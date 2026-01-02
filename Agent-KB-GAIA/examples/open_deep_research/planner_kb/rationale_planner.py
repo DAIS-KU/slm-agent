@@ -290,6 +290,7 @@ def decompose_task(
     top_k,
     return_as_str=False,
     multiple_decomp=False,
+    mode="loss",
 ):
     if retrieval_method is None:
         print(f"decompose_task - retrieval_method is None")
@@ -317,31 +318,49 @@ def decompose_task(
             },
         )
     if inter_decomp:
-        engine = InterMeceEngine(
-            model,  # (= tm)
-            call_model_fn=call_model,
-            call_model_kwargs={
-                "model_name": model_name,
-                "key": key,
-                "url": url,
-                "model": model,
-                "slm": slm,
-            },
-            max_length=2048,
-        )
+        if mode == "loss":
+            engine = InterMeceEngine(
+                model,  # (= tm)
+                call_model_fn=call_model,
+                call_model_kwargs={
+                    "model_name": model_name,
+                    "key": key,
+                    "url": url,
+                    "model": model,
+                    "slm": slm,
+                },
+                max_length=2048,
+            )
 
-        best = engine.pick_best(
-            task_text=example["question"],
-            task_decomposition_prompt=task_decomposition_prompt,
-            mode="loss",
-            num_samples=10,
-            alpha=0.5,
-            min_subtasks=2,
-            max_subtasks=10,
-            dedup_raw=True,
-            seed=None,
-            return_topk=1,
-        )
+            best = engine.pick_best(
+                task_text=example["question"],
+                task_decomposition_prompt=task_decomposition_prompt,
+                num_samples=10,
+                alpha=0.5,
+                min_subtasks=2,
+                max_subtasks=10,
+                dedup_raw=True,
+                seed=None,
+                return_topk=1,
+            )
+        else:
+            engine = SimInterMeceEngine(
+                tm,
+                call_model_fn=call_model_fn,
+                call_model_kwargs=call_model_kwargs,
+                # embed_texts_fn=embedder,
+            )
+
+            best = engine.pick_best(
+                task_text=task_text,
+                task_decomposition_prompt=prompt,
+                num_samples=8,
+                alpha=0.5,
+                score_kwargs={
+                    "coverage_mode": "relu_cos_mean",
+                    "redundancy_mode": "abs_cos_mean",
+                },
+            )
 
         if best:
             best1 = best[0]
@@ -355,30 +374,48 @@ def decompose_task(
             print("No valid decomposition candidates.")
             return ""
     elif intra_inter_decomp:
-        intra_engine = IntraMeceEngine(
-            model,  # (= tm)
-            call_model_fn=call_model,
-            call_model_kwargs={
-                "model_name": model_name,
-                "key": key,
-                "url": url,
-                "model": model,
-                "slm": slm,
-            },
-            max_length=2048,
-        )
+        if mode == "loss":
+            intra_engine = IntraMeceEngine(
+                model,  # (= tm)
+                call_model_fn=call_model,
+                call_model_kwargs={
+                    "model_name": model_name,
+                    "key": key,
+                    "url": url,
+                    "model": model,
+                    "slm": slm,
+                },
+                max_length=2048,
+            )
 
-        topk = intra_engine.pick_topk(
-            task_text=example["question"],
-            task_decomposition_prompt=task_decomposition_prompt,
-            mode="loss",
-            num_samples=10,
-            top_k=5,
-            alpha_inter=0.5,
-            min_subtasks=2,
-            max_subtasks=10,
-        )
-
+            topk = intra_engine.pick_topk(
+                task_text=example["question"],
+                task_decomposition_prompt=task_decomposition_prompt,
+                num_samples=10,
+                top_k=5,
+                alpha_inter=0.5,
+                min_subtasks=2,
+                max_subtasks=10,
+            )
+        else:
+            engine = SimBasedIntraMeceEngine(
+                tm,
+                call_model_fn=call_model_fn,
+                call_model_kwargs=call_model_kwargs,
+                embed_texts_fn=my_embedder,  # 있으면 강추
+            )
+            topk = engine.pick_topk(
+                task_text=task_text,
+                task_decomposition_prompt=prompt,
+                num_samples=20,
+                top_k=5,
+                alpha_inter=0.5,
+                pool_cap=30,
+                score_kwargs={
+                    "coverage_mode": "relu_cos_mean",
+                    "redundancy_mode": "abs_cos_mean",
+                },
+            )
         if topk:
             best1 = topk[0]
             print("selection_score:", best1.score)

@@ -204,6 +204,12 @@ def parse_args():
     )
     # decomp/rationale params
     parser.add_argument(
+        "--deocmp_mode",
+        type=str,
+        default="loss",
+        help="inter/intra-decomposition based on loss or sim",
+    )
+    parser.add_argument(
         "--decomp",
         action="store_true",
         help="Apply any task decomposition",
@@ -383,6 +389,7 @@ def answer_single_question(
     action_planning=False,
     action_planning_ex=False,
     multiple_decomp=False,
+    deocmp_mode="loss",
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -683,6 +690,7 @@ def main():
                 args.action,
                 args.action_ex,
                 args.multiple_decomp,
+                args.deocmp_mode,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
