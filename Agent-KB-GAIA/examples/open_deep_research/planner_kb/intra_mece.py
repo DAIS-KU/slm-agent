@@ -390,26 +390,13 @@ class IntraMeceEngine:
 
 
 class SimBasedIntraMeceEngine:
-    """
-    Sim-based Intra-MECE Engine (집합 간 MECE: silhouette 기반)
-
-    - SimInterMeceEngine(inter)를 인스턴스로 보유하고,
-      * 후보 decomposition의 inter-MECE(집합 내) 점수는 inter.score(...)로 계산
-      * 집합 간(intra) MECE는 "각 decomposition을 클러스터"로 보고,
-        subtask 임베딩 포인트들의 silhouette coefficient로 계산
-
-    반환은 요구사항대로:
-      - inter-MECE(sim) score 내림차순 정렬
-      - silhouette 결과는 cand.details에 포함
-    """
-
     def __init__(
         self,
         tm,
         *,
         call_model_fn,
         call_model_kwargs,
-        embed_texts_fn=None,  # optional external embedder: List[str] -> Tensor [N,D]
+        embed_texts_fn=None,
         max_length: int = 2048,
         eps: float = 1e-12,
     ):
@@ -425,7 +412,7 @@ class SimBasedIntraMeceEngine:
         self.eps = eps
 
     # -------------------------
-    # Candidate sampling (reuses inter_engine's call_model)
+    # Candidate sampling
     # -------------------------
     @torch.no_grad()
     def _sample_candidates(
@@ -440,12 +427,7 @@ class SimBasedIntraMeceEngine:
         dedup_raw: bool,
         score_kwargs: Optional[Dict] = None,
     ) -> List[DecompCandidate]:
-        """
-        SimInterMeceEngine처럼 샘플링하되, 점수는 inter.score("sim", ...)를 사용.
-        반환 타입은 기존 DecompCandidate 그대로 사용.
-        """
         score_kwargs = score_kwargs or {}
-
         seen_raw = set()
         out: List[DecompCandidate] = []
 
@@ -462,146 +444,325 @@ class SimBasedIntraMeceEngine:
             seen_raw.add(raw_norm)
 
             subtasks = parse_subtask(raw)
-            print(f"Generate {sample_num}th decomposition.:")
-            print(subtasks)
-
             if not (min_subtasks <= len(subtasks) <= max_subtasks):
                 continue
 
             mece = self.inter.score(
                 "sim", subtasks, task_text, alpha=alpha_inter, **score_kwargs
             )
-            print(f"Generate {sample_num}th subtasks.(score {mece})")
 
             out.append(
                 DecompCandidate(
                     subtasks=subtasks,
                     raw=raw,
-                    # 기본 score는 inter_mece로 두는 게 자연스러움 (요구사항 정렬 기준)
                     score=float(mece.inter_mece),
                     score_mode="sim",
                     mece=mece,
                     details={"alpha_inter": alpha_inter, **score_kwargs},
                 )
             )
-
         return out
 
-    # -------------------------
-    # Silhouette (cluster = decomposition, points = subtasks)
-    # -------------------------
+    # ============================================================
+    # Silhouette precompute for a pool: points embeddings & dist mat
+    # ============================================================
     @torch.no_grad()
-    def _compute_cluster_silhouettes(
+    def _build_point_view(
         self,
         pool: List[DecompCandidate],
         *,
-        metric: str = "cosine",  # only cosine supported here
-    ) -> Dict[int, float]:
+        metric: str = "cosine",
+    ):
         """
-        Returns: {cluster_index_in_pool: silhouette_mean}
-
-        Steps:
-          - Flatten all subtasks across candidates => points
-          - Embed all points
-          - Distance = 1 - cosine_similarity
-          - For each point:
-              a(i) = mean distance to points in same cluster (exclude itself)
-              b(i) = min over other clusters of mean distance to that cluster
-              s(i) = (b-a)/max(a,b)
-          - Cluster silhouette = mean s(i) over points in cluster
+        Build:
+          - points: all subtasks across pool
+          - labels: cluster id per point (0..n-1)
+          - cluster_points: {cluster_id: [point_idx,...]}
+          - Dist: [P,P] distance matrix among points
         """
         eps = self.eps
-
-        # 1) flatten points
         points: List[str] = []
-        labels: List[int] = []  # cluster id = index in pool
-        cluster_sizes: Dict[int, int] = {}
+        labels: List[int] = []
+        cluster_points: Dict[int, List[int]] = {}
 
         for ci, cand in enumerate(pool):
             subs = [s.strip() for s in cand.subtasks if s and s.strip()]
-            cluster_sizes[ci] = len(subs)
             for s in subs:
+                idx = len(points)
                 points.append(s)
                 labels.append(ci)
+                cluster_points.setdefault(ci, []).append(idx)
 
         if not points:
-            return {i: 0.0 for i in range(len(pool))}
+            # empty edge
+            P = 0
+            Dist = torch.empty((0, 0))
+            return points, labels, cluster_points, Dist
 
-        # if only 1 cluster exists, silhouettes are 0 by definition/use
-        if len(pool) <= 1:
-            return {0: 0.0}
-
-        # 2) embed points
-        E = self.inter.embed_texts(points)  # [P, D] on device
-        P = E.shape[0]
-
-        # 3) cosine distance matrix: D = 1 - cos
+        E = self.inter.embed_texts(points)  # [P,D]
         if metric != "cosine":
             raise ValueError("only metric='cosine' supported")
 
-        En = E / torch.linalg.norm(E, dim=-1, keepdim=True).clamp_min(eps)  # [P, D]
-        C = En @ En.T  # [P, P]
-        Dist = (1.0 - C).clamp_min(0.0)  # numerical safety
+        En = E / torch.linalg.norm(E, dim=-1, keepdim=True).clamp_min(eps)
+        C = En @ En.T
+        Dist = (1.0 - C).clamp_min(0.0)
+        return points, labels, cluster_points, Dist
 
-        # precompute indices per cluster
-        cluster_points: Dict[int, List[int]] = {}
-        for pi, ci in enumerate(labels):
-            cluster_points.setdefault(ci, []).append(pi)
+    # ============================================================
+    # Subset silhouette objective: mean silhouette over all points
+    # ============================================================
+    @torch.no_grad()
+    def _subset_silhouette_mean(
+        self,
+        subset_clusters: List[int],
+        *,
+        cluster_points: Dict[int, List[int]],
+        Dist: torch.Tensor,
+    ) -> float:
+        """
+        Compute mean silhouette over points belonging to subset_clusters only.
+        Return in [-1,1]. If invalid (e.g., <2 clusters or no points), return -1e9.
+        """
+        eps = self.eps
+        if len(subset_clusters) < 2:
+            return -1e9
 
-        # 4) silhouette per point
-        s_vals = torch.zeros((P,), device=E.device)
+        # collect points in subset
+        pts = []
+        for c in subset_clusters:
+            pts.extend(cluster_points.get(c, []))
+        if len(pts) == 0:
+            return -1e9
 
-        for i in range(P):
-            ci = labels[i]
+        # precompute list of clusters actually having >=1 point
+        active_clusters = [
+            c for c in subset_clusters if len(cluster_points.get(c, [])) > 0
+        ]
+        if len(active_clusters) < 2:
+            return -1e9
+
+        # silhouette per point
+        s_sum = 0.0
+        count = 0
+
+        for i in pts:
+            ci = None
+            # find i's cluster by scanning (fast enough if cluster_points is small; else build inverse map)
+            # We'll build inverse map once for speed:
+        # build inverse map for subset points
+        inv = {}
+        for c in active_clusters:
+            for p in cluster_points[c]:
+                inv[p] = c
+
+        for i in pts:
+            ci = inv[i]
             same = cluster_points[ci]
-
-            # a(i): mean distance to same cluster excluding itself
+            # a(i)
             if len(same) <= 1:
-                a = torch.tensor(0.0, device=E.device)
+                a = torch.tensor(0.0, device=Dist.device)
             else:
-                # sum distances to same cluster points, exclude i
-                # Dist[i, same] includes self-distance 0
                 a = Dist[i, same].sum() / (len(same) - 1)
 
-            # b(i): min mean distance to other clusters
+            # b(i)
             b = None
-            for cj, idxs in cluster_points.items():
+            for cj in active_clusters:
                 if cj == ci:
                     continue
-                # mean distance from i to cluster cj
+                idxs = cluster_points[cj]
                 mean_ij = Dist[i, idxs].mean()
                 b = mean_ij if b is None else torch.minimum(b, mean_ij)
 
             if b is None:
-                # no other clusters
-                s = torch.tensor(0.0, device=E.device)
-            else:
-                denom = torch.maximum(a, b).clamp_min(eps)
-                s = (b - a) / denom
+                continue
 
-            s_vals[i] = s
+            denom = torch.maximum(a, b).clamp_min(eps)
+            s = (b - a) / denom
+            s_sum += float(s.item())
+            count += 1
 
-        # 5) cluster mean silhouette
-        out: Dict[int, float] = {}
-        for ci, idxs in cluster_points.items():
-            out[ci] = float(s_vals[idxs].mean().item()) if idxs else 0.0
+        if count == 0:
+            return -1e9
+        return s_sum / count
 
-        # clusters that had 0 subtasks (shouldn't happen) -> 0
-        for ci in range(len(pool)):
-            out.setdefault(ci, 0.0)
-
-        return out
-
-    # -------------------------
-    # Main API: sample -> compute silhouettes -> sort by inter-mece desc -> return top_k
-    # -------------------------
+    # ============================================================
+    # Select K clusters maximizing subset silhouette
+    #  - exact when feasible
+    #  - else greedy + local swaps (+ restarts)
+    # ============================================================
     @torch.no_grad()
-    def pick_topk(
+    def _select_subset_max_silhouette(
+        self,
+        *,
+        pool: List[DecompCandidate],
+        k: int,
+        metric: str = "cosine",
+        # exact caps
+        exact_max_pool: int = 18,
+        exact_max_comb: int = 200_000,
+        # approximate knobs
+        restarts: int = 8,
+        local_iters: int = 250,
+        seed: Optional[int] = None,
+    ) -> Tuple[List[int], float, Dict]:
+        """
+        Returns:
+          (selected_cluster_indices_in_pool, best_sil_mean, debug)
+        """
+        if seed is not None:
+            random.seed(seed)
+
+        n = len(pool)
+        k = max(1, min(k, n))
+        if k == 1:
+            return [0], -1e9, {"reason": "k=1 silhouette undefined"}
+
+        # build global point view once
+        points, labels, cluster_points, Dist = self._build_point_view(
+            pool, metric=metric
+        )
+
+        # if not enough clusters with points
+        nonempty_clusters = [i for i in range(n) if len(cluster_points.get(i, [])) > 0]
+        if len(nonempty_clusters) < 2:
+            return (
+                nonempty_clusters[:k],
+                -1e9,
+                {"reason": "not enough non-empty clusters"},
+            )
+
+        # ---- exact if feasible
+        if n <= exact_max_pool:
+
+            def nCk(nn: int, kk: int) -> int:
+                kk = min(kk, nn - kk)
+                if kk < 0:
+                    return 0
+                num = 1
+                den = 1
+                for t in range(1, kk + 1):
+                    num *= nn - kk + t
+                    den *= t
+                return num // den
+
+            combs = nCk(n, k)
+            if combs <= exact_max_comb:
+                best_S = []
+                best_v = -1e18
+                for S in itertools.combinations(range(n), k):
+                    v = self._subset_silhouette_mean(
+                        list(S), cluster_points=cluster_points, Dist=Dist
+                    )
+                    if v > best_v:
+                        best_v = v
+                        best_S = list(S)
+                return (
+                    best_S,
+                    float(best_v),
+                    {"mode": "exact", "combs": combs, "P": len(points)},
+                )
+
+        # ---- approximate: greedy forward + local swap, with restarts
+        all_clusters = list(range(n))
+
+        def greedy_start(start_pair: Tuple[int, int]) -> List[int]:
+            sel = [start_pair[0], start_pair[1]]
+            remaining = [c for c in all_clusters if c not in sel]
+            while len(sel) < k:
+                best_c = None
+                best_v = -1e18
+                # try each candidate addition
+                for c in remaining:
+                    v = self._subset_silhouette_mean(
+                        sel + [c], cluster_points=cluster_points, Dist=Dist
+                    )
+                    if v > best_v:
+                        best_v = v
+                        best_c = c
+                sel.append(best_c)  # type: ignore[arg-type]
+                remaining.remove(best_c)  # type: ignore[arg-type]
+            return sel
+
+        def local_swap(sel: List[int]) -> List[int]:
+            cur = sel[:]
+            cur_val = self._subset_silhouette_mean(
+                cur, cluster_points=cluster_points, Dist=Dist
+            )
+            non_sel = [c for c in all_clusters if c not in cur]
+
+            for _ in range(local_iters):
+                improved = False
+                # limited random trials per iter
+                for _trial in range(min(60, len(cur) * max(1, len(non_sel)))):
+                    out_c = random.choice(cur)
+                    in_c = random.choice(non_sel)
+                    new = cur[:]
+                    new.remove(out_c)
+                    new.append(in_c)
+                    v = self._subset_silhouette_mean(
+                        new, cluster_points=cluster_points, Dist=Dist
+                    )
+                    if v > cur_val + 1e-8:
+                        non_sel.remove(in_c)
+                        non_sel.append(out_c)
+                        cur = new
+                        cur_val = v
+                        improved = True
+                        break
+                if not improved:
+                    break
+            return cur
+
+        # pick restart seeds: choose some top inter-mece pairs + random pairs
+        # (silhouette는 inter-mece와 별개지만, 좋은 후보에서 시작하면 대체로 성능 좋음)
+        order = list(range(n))
+        order.sort(key=lambda i: float(pool[i].mece.inter_mece), reverse=True)
+
+        start_pairs: List[Tuple[int, int]] = []
+        top_m = min(n, max(6, restarts))
+        for i in range(top_m):
+            for j in range(i + 1, top_m):
+                start_pairs.append((order[i], order[j]))
+                if len(start_pairs) >= restarts:
+                    break
+            if len(start_pairs) >= restarts:
+                break
+        while len(start_pairs) < restarts:
+            a = random.randrange(n)
+            b = random.randrange(n)
+            if a != b:
+                start_pairs.append((a, b))
+
+        best_S: List[int] = []
+        best_v = -1e18
+
+        for sp in start_pairs:
+            sel = greedy_start(sp)
+            sel = local_swap(sel)
+            v = self._subset_silhouette_mean(
+                sel, cluster_points=cluster_points, Dist=Dist
+            )
+            if v > best_v:
+                best_v = v
+                best_S = sel
+
+        return (
+            best_S,
+            float(best_v),
+            {"mode": "approx", "restarts": restarts, "P": len(points)},
+        )
+
+    # ============================================================
+    # Public API: pick K by silhouette-optimal subset,
+    # then return sorted by inter-mece desc
+    # ============================================================
+    @torch.no_grad()
+    def pick_topk_by_silhouette(
         self,
         *,
         task_text: str,
         task_decomposition_prompt: str,
-        num_samples: int = 10,
+        num_samples: int = 20,
         top_k: int = 5,
         alpha_inter: float = 0.5,
         # filtering
@@ -609,25 +770,17 @@ class SimBasedIntraMeceEngine:
         max_subtasks: int = 10,
         dedup_raw: bool = True,
         seed: Optional[int] = None,
-        # pool control
+        # performance cap before silhouette selection (optional but recommended)
         pool_cap: int = 30,
         # sim scoring knobs forwarded to SimInterMeceEngine.score
         score_kwargs: Optional[Dict] = None,
-        # silhouette metric
+        # silhouette selection knobs
         silhouette_metric: str = "cosine",
+        exact_max_pool: int = 18,
+        exact_max_comb: int = 200_000,
+        restarts: int = 8,
+        local_iters: int = 250,
     ) -> List[DecompCandidate]:
-        """
-        Behavior:
-          1) sample candidates, compute sim inter-MECE for each
-          2) (optional) cap pool size for silhouette tractability
-          3) treat each candidate's subtask-set as a cluster, compute silhouette per cluster
-          4) attach silhouette MECE diagnostics into cand.details
-          5) return top_k sorted by sim inter-MECE desc (요구사항)
-
-        Notes:
-          - silhouette is computed across the (capped) pool. pool_cap affects silhouette values.
-          - silhouette range is [-1, 1]. We also provide mapped [0,1] via (s+1)/2.
-        """
         if seed is not None:
             random.seed(seed)
 
@@ -644,33 +797,45 @@ class SimBasedIntraMeceEngine:
         if not candidates:
             return []
 
-        # Cap pool for performance (silhouette cost ~ O(P^2))
+        # pool cap for tractability (silhouette is O(P^2))
         if pool_cap and pool_cap > 0 and len(candidates) > pool_cap:
-            # pool selection 기준은 inter_mece가 자연스러움
             candidates.sort(key=lambda c: float(c.mece.inter_mece), reverse=True)
             pool = candidates[:pool_cap]
         else:
             pool = candidates
 
-        # compute silhouette per cluster in pool
-        sil_by_cluster = self._compute_cluster_silhouettes(
-            pool, metric=silhouette_metric
+        k = max(1, min(top_k, len(pool)))
+        if k < 2:
+            # silhouette undefined; just return top inter-mece
+            pool.sort(key=lambda c: float(c.mece.inter_mece), reverse=True)
+            return pool[:k]
+
+        idxs, best_sil, dbg = self._select_subset_max_silhouette(
+            pool=pool,
+            k=k,
+            metric=silhouette_metric,
+            exact_max_pool=exact_max_pool,
+            exact_max_comb=exact_max_comb,
+            restarts=restarts,
+            local_iters=local_iters,
+            seed=seed,
         )
 
-        # attach into details; keep score as inter_mece (sort key)
-        for ci, cand in enumerate(pool):
-            sil = float(sil_by_cluster.get(ci, 0.0))
+        selected = [pool[i] for i in idxs]
+
+        # attach diagnostics
+        for cand in selected:
             cand.details = {
                 **cand.details,
-                "intra_objective": "silhouette_over_subtasks",
-                "silhouette": sil,  # [-1, 1]
-                "intra_mece_silhouette_01": float(clamp01((sil + 1.0) * 0.5)),  # [0, 1]
+                "selection_objective": "maximize_subset_silhouette",
+                "subset_silhouette_mean": float(best_sil),  # [-1,1]
+                "subset_silhouette_01": float(clamp01((best_sil + 1.0) * 0.5)),  # [0,1]
                 "silhouette_metric": silhouette_metric,
+                "silhouette_debug": dbg,
                 "silhouette_pool_size": len(pool),
+                "selected_k": k,
             }
 
-        # 요구사항: 유사도 기반 inter-MECE 내림차순 정렬
-        pool.sort(key=lambda c: float(c.mece.inter_mece), reverse=True)
-
-        k = max(1, min(top_k, len(pool)))
-        return pool[:k]
+        # 요구사항: 선택된 K개를 inter-MECE(sim) 내림차순으로 정렬해서 반환
+        selected.sort(key=lambda c: float(c.mece.inter_mece), reverse=True)
+        return selected
