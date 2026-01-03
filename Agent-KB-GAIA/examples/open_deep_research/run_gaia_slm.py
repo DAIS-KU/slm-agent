@@ -463,6 +463,7 @@ def answer_single_question(
     ## ============================== QUERY DECOMPOSITION / RATIONALE-BASED PLANNING ==============================##
     additional_knowledge = None
     if decomp:
+        logger.info(f"Starting decomp(deocmp_mode {deocmp_mode})")
         sub_tasks = decompose_task(
             example=example,
             augmented_question=augmented_question,

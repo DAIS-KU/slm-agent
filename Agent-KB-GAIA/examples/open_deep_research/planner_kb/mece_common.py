@@ -16,7 +16,6 @@ class DecompCandidate:
     subtasks: List[str]
     raw: str
     score: float
-    score_mode: str
     mece: MeceScore
     details: Dict[str, Any]
 

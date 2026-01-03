@@ -9,8 +9,8 @@ import json
 import re
 from typing import Any, Dict, List
 
-from .inter_mece import InterMeceEngine
-from .intra_mece import IntraMeceEngine
+from .inter_mece import InterMeceEngine, SimInterMeceEngine
+from .intra_mece import IntraMeceEngine, SimIntraMeceEngine
 
 
 def extract_steps(step_str, model_name, key, url, model, slm):

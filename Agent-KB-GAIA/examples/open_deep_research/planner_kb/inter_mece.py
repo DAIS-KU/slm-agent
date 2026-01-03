@@ -458,7 +458,6 @@ class SimInterMeceEngine:
                     subtasks=subtasks,
                     raw=raw,
                     score=mece.inter_mece,
-                    score_mode="sim",
                     mece=mece,
                     details={"alpha": alpha, **score_kwargs},
                 )

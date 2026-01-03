@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import torch
 import itertools
 import math
 import random
@@ -389,7 +390,7 @@ class IntraMeceEngine:
         return selected
 
 
-class SimBasedIntraMeceEngine:
+class SimIntraMeceEngine:
     def __init__(
         self,
         tm,
