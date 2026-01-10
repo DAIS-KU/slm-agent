@@ -236,9 +236,9 @@ class QdrantStorage(BaseVectorStorage):
         collection_info = self._client.get_collection(collection_name=collection_name)
         vector_config = collection_info.config.params.vectors
         return {
-            "vector_dim": vector_config.size
-            if isinstance(vector_config, VectorParams)
-            else None,
+            "vector_dim": (
+                vector_config.size if isinstance(vector_config, VectorParams) else None
+            ),
             "vector_count": collection_info.points_count,
             "status": collection_info.status,
             "vectors_count": collection_info.vectors_count,

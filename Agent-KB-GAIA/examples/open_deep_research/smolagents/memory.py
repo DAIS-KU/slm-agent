@@ -83,9 +83,9 @@ class ActionStep(MemoryStep):
         # We overwrite the method to parse the tool_calls and action_output manually
         return {
             "model_input_messages": self.model_input_messages,
-            "tool_calls": [tc.dict() for tc in self.tool_calls]
-            if self.tool_calls
-            else [],
+            "tool_calls": (
+                [tc.dict() for tc in self.tool_calls] if self.tool_calls else []
+            ),
             "start_time": self.start_time,
             "end_time": self.end_time,
             "step": self.step_number,

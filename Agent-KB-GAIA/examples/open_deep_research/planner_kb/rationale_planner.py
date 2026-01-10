@@ -9,14 +9,18 @@ import json
 import re
 from typing import Any, Dict, List
 
-from .inter_mece import InterMeceEngine
-from .intra_mece import IntraMeceEngine
+from .inter_mece import InterMeceEngine, SimInterMeceEngine
+from .intra_mece import IntraMeceEngine, SimIntraMeceEngine
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def extract_steps(step_str, model_name, key, url, model, slm):
-    print("extract steps.")
+    logger.info("extract steps.")
     extract_steps_prompt_template = load_prompts(
-        path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
+        path="/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
     )
     extract_step_number_prompt = populate_template(
         extract_steps_prompt_template["count_steps"],
@@ -26,7 +30,7 @@ def extract_steps(step_str, model_name, key, url, model, slm):
         extract_step_number_prompt, model_name, key, url, model, slm
     )
     step_number = int(step_number)
-    print(f"extract {step_number} steps.")
+    logger.info(f"extract {step_number} steps.")
 
     steps = []
     for i in range(step_number):
@@ -42,7 +46,7 @@ def extract_steps(step_str, model_name, key, url, model, slm):
 
 
 def parse_steps(output: str) -> List[str]:
-    print(f"parse_steps output:{output}")
+    logger.info(f"parse_steps output:{output}")
     """
     Supported patterns (앞뒤에 잡소리 텍스트가 있어도 허용):
 
@@ -290,89 +294,133 @@ def decompose_task(
     top_k,
     return_as_str=False,
     multiple_decomp=False,
-    mode="loss",
+    mode="max_surprise",
+    outline=None,
 ):
     if retrieval_method is None:
-        print(f"decompose_task - retrieval_method is None")
+        logger.info(f"decompose_task - retrieval_method is None")
         task_decomposition_prompt_template = load_prompts(
-            path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-        )["task_decomposition_and_planning_with_icl_examples_prompt"]
-        task_decomposition_prompt = populate_template(
-            task_decomposition_prompt_template,
-            variables={"task": augmented_question},
+            path="/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
         )
+        if outline:
+            task_decomposition_prompt_template = task_decomposition_prompt_template[
+                "task_decomposition_and_planning_with_icl_examples_prompt"
+            ]
+            task_decomposition_prompt = populate_template(
+                task_decomposition_prompt_template,
+                variables={"task": augmented_question},
+            )
+        else:
+            task_decomposition_prompt_template = task_decomposition_prompt_template[
+                "task_decomposition_and_planning_with_outline_and_icl_examples_prompt"
+            ]
+            task_decomposition_prompt = populate_template(
+                task_decomposition_prompt_template,
+                variables={"task": augmented_question, "approach": outline},
+            )
     else:
-        print(f"decompose_task - retrieval_method is not None")
+        logger.info(f"decompose_task - retrieval_method is not None")
         rationale_retrieval_results = retrieval_method(example["question"], top_k=top_k)
         task_decomposition_prompt_template = load_prompts(
-            path="/home/work/.default/huijeong/agentkb/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-        )["task_decomposition_and_planning_with_retrieval_examples_prompt"]
+            path="/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
+        )
         step_rationale_examples = build_many_entities_examples_no_actions(
             rationale_retrieval_results
         )
-        task_decomposition_prompt = populate_template(
-            task_decomposition_prompt_template,
-            variables={
-                "task": augmented_question,
-                "retrieval_examples": step_rationale_examples,
-            },
-        )
+        if outline:
+            task_decomposition_prompt_template = task_decomposition_prompt_template[
+                "task_decomposition_and_planning_with_outline_and_retrieval_examples_prompt"
+            ]
+            task_decomposition_prompt = populate_template(
+                task_decomposition_prompt_template,
+                variables={
+                    "task": augmented_question,
+                    "approach": outline,
+                    "retrieval_examples": step_rationale_examples,
+                },
+            )
+        else:
+            task_decomposition_prompt_template = task_decomposition_prompt_template[
+                "task_decomposition_and_planning_with_retrieval_examples_prompt"
+            ]
+            task_decomposition_prompt = populate_template(
+                task_decomposition_prompt_template,
+                variables={
+                    "task": augmented_question,
+                    "retrieval_examples": step_rationale_examples,
+                },
+            )
     if inter_decomp:
-        if mode == "loss":
-            engine = InterMeceEngine(
-                model,  # (= tm)
+        logger.info(f"inter_decomp (mode {mode})")
+        if mode == "min_surprise" or mode == "max_surprise":
+            engine = SurpriseInterMeceEngine(
+                tm=tm,
                 call_model_fn=call_model,
                 call_model_kwargs={
-                    "model_name": model_name,
-                    "key": key,
-                    "url": url,
-                    "model": model,
-                    "slm": slm,
+                    "temperature": 0.8,
+                    "max_tokens": 512,
                 },
                 max_length=2048,
             )
-
-            best = engine.pick_best(
-                task_text=example["question"],
-                task_decomposition_prompt=task_decomposition_prompt,
-                num_samples=10,
-                alpha=0.5,
-                min_subtasks=2,
-                max_subtasks=10,
-                dedup_raw=True,
-                seed=None,
-                return_topk=1,
-            )
-        else:
-            engine = SimInterMeceEngine(
-                tm,
-                call_model_fn=call_model_fn,
-                call_model_kwargs=call_model_kwargs,
-                # embed_texts_fn=embedder,
-            )
-
             best = engine.pick_best(
                 task_text=task_text,
-                task_decomposition_prompt=prompt,
+                outline_text=outline,
+                task_decomposition_prompt=task_decomposition_prompt,
                 num_samples=8,
-                alpha=0.5,
-                score_kwargs={
-                    "coverage_mode": "relu_cos_mean",
-                    "redundancy_mode": "abs_cos_mean",
+                objective="min" if mode == "min_surprise" else "max",
+                return_topk=1,
+            )
+            best = best[0]
+            print(best_candidate.subtasks)
+            print(best_candidate.surprise.total_surprise)
+        elif mode == "sim":
+            engine = SimInterMeceEngine(
+                tm=tm,
+                call_model_fn=call_model,
+                call_model_kwargs={
+                    "temperature": 0.8,
+                    "max_tokens": 512,
                 },
+                max_length=2048,
             )
-
-        if best:
-            best1 = best[0]
-            print("inter_mece:", best1.score)
+            cands = engine.pick_best(
+                task_text=task_text,
+                outline_text=outline,
+                task_decomposition_prompt=task_decomposition_prompt,
+                num_samples=8,
+                return_topk=1,
+            )
+            best = cands[0]
+            print(best.subtasks)
+            print(best.score)
+            print(best.mece.redundancy)
+        elif mode == "entropy":
+            engine = EntropyInterMeceEngine(
+                tm=tm,
+                call_model_fn=call_model,
+                call_model_kwargs={
+                    "temperature": 0.8,
+                    "max_tokens": 512,
+                },
+                max_length=2048,
+            )
+            best = engine.pick_best(
+                task_text=task_text,
+                outline_text=outline,
+                task_decomposition_prompt=task_decomposition_prompt,
+                num_samples=8,
+                return_topk=1,
+            )
+            cand = best[0]
+            print(cand.subtasks)
             print(
-                "coverage:", best1.mece.coverage, "exclusivity:", best1.mece.exclusivity
+                "mean_JS:",
+                cand.entropy.pairwise_js_mean,
+                "pairs:",
+                cand.entropy.pair_count,
             )
-            print("subtasks:", best1.subtasks)
-            return "\n".join(best1.subtasks) if return_as_str else best1.subtasks
         else:
-            print("No valid decomposition candidates.")
-            return ""
+            raise NotImplementedError(f"inter_decomp (mode {mode})")
     elif intra_inter_decomp:
         if mode == "loss":
             intra_engine = IntraMeceEngine(
@@ -418,19 +466,19 @@ def decompose_task(
             )
         if topk:
             best1 = topk[0]
-            print("selection_score:", best1.score)
-            print("subset_intra_sum:", best1.details["subset_intra_sum"])
-            print("inter_mece:", best1.mece.inter_mece)
-            print(
-                "coverage:", best1.mece.coverage, "exclusivity:", best1.mece.exclusivity
+            logger.info(f"selection_score: {best1.score}")
+            logger.info(f"subset_intra_sum: {best1.details['subset_intra_sum']}")
+            logger.info(f"inter_mece: {best1.mece.inter_mece}")
+            logger.info(
+                f"coverage: {best1.mece.coverage}, exclusivity: {best1.mece.exclusivity}"
             )
-            print("subtasks:", best1.subtasks)
+            logger.info(f"subtasks: {best1.subtasks}")
             if multiple_decomp:
                 return ["\n".join(cand.subtasks) for cand in topk]
             else:
                 return "\n".join(best1.subtasks) if return_as_str else best1.subtasks
         else:
-            print("No valid decomposition candidates.")
+            logger.info("No valid decomposition candidates.")
             return ""
     else:
         task_decomposition_str = call_model(
@@ -441,7 +489,9 @@ def decompose_task(
             model=model,
             slm=slm,
         )
-        print(f"decompose_task - task_decomposition_str: {task_decomposition_str}")
+        logger.info(
+            f"decompose_task - task_decomposition_str: {task_decomposition_str}"
+        )
         return (
             task_decomposition_str
             if return_as_str

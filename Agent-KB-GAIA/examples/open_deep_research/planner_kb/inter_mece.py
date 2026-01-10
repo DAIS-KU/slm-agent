@@ -11,13 +11,43 @@ import torch.nn.functional as F
 from .mece_utils import *
 from .mece_common import *
 
+import logging
 
-class InterMeceEngine:
+logger = logging.getLogger(__name__)
+
+
+def format_execute_prompt(
+    *,
+    task_text: str,
+    outline_text: Optional[str],
+    subtask_text: str,
+) -> str:
     """
-    Inter-MECE Engine
+    (t, o, s_i)를 주고 '실행하라'고 했을 때의 분포를 보고 싶으므로,
+    "NEXT:" 형태로 모델이 다음 토큰을 생성하게 만드는 cue를 둡니다.
+    """
+    parts: List[str] = []
+    parts.append("TASK:\n" + task_text.strip())
+
+    if outline_text is not None and outline_text.strip():
+        parts.append("OUTLINE:\n" + outline_text.strip())
+
+    parts.append("SUBTASK:\n" + subtask_text.strip())
+    parts.append("\nExecute the subtask. Produce the next step.\n\nNEXT:\n")
+    return "\n\n".join(parts)
+
+
+# -------------------------
+# JS only
+# -------------------------
+class EntropyInterMeceEngine:
+    """
+    Entropy / Divergence-based Inter-MECE Engine (JS only)
     - decomposition sampling
-    - MECE scoring (loss-based)
-    - best candidate selection
+    - for each subtask s_i: get next-token distribution p_i under prompt (t, o?, s_i, "execute")
+    - score candidate set by maximizing mean pairwise JS divergence between {p_i}
+
+    JS(p,q) = 0.5 KL(p||m) + 0.5 KL(q||m), m = 0.5(p+q)
     """
 
     def __init__(
@@ -27,133 +57,119 @@ class InterMeceEngine:
         call_model_fn: Callable[..., str],
         call_model_kwargs: Dict[str, Any],
         max_length: int = 2048,
+        eps: float = 1e-12,
     ):
         self.tm = tm
         self.tok = tm.tokenizer
         self.hf = tm.model
         self.device = self.hf.device
         self.max_length = max_length
+        self.eps = eps
 
         self.call_model_fn = call_model_fn
         self.call_model_kwargs = call_model_kwargs
 
-    # -------- loss-based core --------
+    # -------------------------
+    # Next-token distributions
+    # -------------------------
     @torch.no_grad()
-    def conditional_nll_per_token(
-        self,
-        context: str,
-        target: str,
-        *,
-        max_length: Optional[int] = None,
-    ) -> float:
-        max_length = max_length or self.max_length
+    def _next_token_logprobs_batch(self, prompts: List[str]) -> torch.Tensor:
+        """
+        Returns log-prob vectors for next token at end of each prompt: [B, V]
+        """
+        enc = self.tok(
+            prompts,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=self.max_length,
+            add_special_tokens=False,
+        )
+        input_ids = enc["input_ids"].to(self.device)
+        attn = enc.get("attention_mask", torch.ones_like(input_ids)).to(self.device)
 
-        ctx = tokenize_no_special(self.tok, context)
-        tgt = tokenize_no_special(self.tok, target)
+        out = self.hf(input_ids=input_ids, attention_mask=attn)
+        logits = out.logits  # [B, L, V]
 
-        ctx_ids = ctx["input_ids"]
-        tgt_ids = tgt["input_ids"]
+        lengths = attn.sum(dim=1)  # [B]
+        last_idx = (lengths - 1).clamp_min(0)  # [B]
 
-        if tgt_ids.numel() == 0:
-            return float("inf")
+        B, L, V = logits.shape
+        batch_idx = torch.arange(B, device=logits.device)
+        last_logits = logits[batch_idx, last_idx, :]  # [B, V]
 
-        input_ids = torch.cat([ctx_ids, tgt_ids], dim=1).to(self.device)
+        return F.log_softmax(last_logits, dim=-1)  # [B, V]
 
-        if max_length is not None and input_ids.shape[1] > max_length:
-            tgt_len = tgt_ids.shape[1]
-            keep = min(max_length, tgt_len + max(0, max_length - tgt_len))
-            input_ids = input_ids[:, -keep:]
-            new_ctx_len = max(0, input_ids.shape[1] - tgt_len)
-        else:
-            tgt_len = tgt_ids.shape[1]
-            new_ctx_len = ctx_ids.shape[1]
-
-        logits = self.hf(input_ids=input_ids).logits
-
-        shift_logits = logits[:, :-1, :]
-        shift_labels = input_ids[:, 1:]
-        Lm1 = shift_labels.shape[1]
-
-        start = 0 if new_ctx_len == 0 else (new_ctx_len - 1)
-        end = min(start + tgt_len, Lm1)
-        if start >= end:
-            return float("inf")
-
-        mask = torch.zeros((1, Lm1), dtype=torch.bool, device=self.device)
-        mask[:, start:end] = True
-
-        vocab = shift_logits.shape[-1]
-        ce = F.cross_entropy(
-            shift_logits.reshape(-1, vocab),
-            shift_labels.reshape(-1),
-            reduction="none",
-        ).reshape(1, -1)
-
-        return float(ce[mask].mean().item())
-
-    # -------- MECE (loss-based) --------
+    # -------------------------
+    # JS divergence
+    # -------------------------
     @torch.no_grad()
-    def score_loss_mece(
+    def _js_div_from_logp(self, logp: torch.Tensor, logq: torch.Tensor) -> torch.Tensor:
+        """
+        Jensen–Shannon divergence between two distributions given log-probs.
+        Returns scalar tensor.
+        """
+        p = logp.exp()
+        q = logq.exp()
+        m = 0.5 * (p + q)
+
+        logm = (m + self.eps).log()
+        kl_pm = (p * (logp - logm)).sum()
+        kl_qm = (q * (logq - logm)).sum()
+        return 0.5 * (kl_pm + kl_qm)
+
+    # -------------------------
+    # Scoring: maximize pairwise JS
+    # -------------------------
+    @torch.no_grad()
+    def score_js_diversity(
         self,
         decomposition: List[str],
         task_text: str,
         *,
-        alpha: float = 0.5,
-    ) -> MeceScore:
+        outline_text: Optional[str] = None,
+    ) -> EntropyScore:
         subtasks = [s.strip() for s in decomposition if s and s.strip()]
-        if not subtasks:
-            return MeceScore(0.0, 0.0, 1.0, 0.0, {"reason": "empty"})
+        if len(subtasks) < 2:
+            return EntropyScore(
+                pairwise_js_mean=0.0,
+                pairwise_js_min=0.0,
+                pairwise_js_max=0.0,
+                pair_count=0,
+                details={"reason": "too_few_subtasks"},
+            )
 
-        nll_task_base = self.conditional_nll_per_token("", task_text)
-        nll_task_cond = self.conditional_nll_per_token(
-            subtasks_context(subtasks), task_text
-        )
+        prompts = [
+            format_execute_prompt(
+                task_text=task_text,
+                outline_text=outline_text,
+                subtask_text=s,
+            )
+            for s in subtasks
+        ]
 
-        if math.isfinite(nll_task_base) and nll_task_base > 1e-8:
-            coverage = clamp01((nll_task_base - nll_task_cond) / nll_task_base)
-        else:
-            coverage = 0.0
+        logP = self._next_token_logprobs_batch(prompts)  # [N, V]
+        N = logP.shape[0]
 
-        base_nll = [self.conditional_nll_per_token("", s) for s in subtasks]
+        divs: List[torch.Tensor] = []
+        for i in range(N):
+            for j in range(i + 1, N):
+                divs.append(self._js_div_from_logp(logP[i], logP[j]))
 
-        overlaps = []
-        for i, si in enumerate(subtasks):
-            ctx_i = single_subtask_context(si)
-            for j, sj in enumerate(subtasks):
-                if i == j:
-                    continue
-                nll_b = base_nll[j]
-                nll_c = self.conditional_nll_per_token(ctx_i, sj)
-                if math.isfinite(nll_b) and nll_b > 1e-8:
-                    overlaps.append(clamp01((nll_b - nll_c) / nll_b))
+        if not divs:
+            return EntropyScore(0.0, 0.0, 0.0, 0, {"reason": "no_pairs"})
 
-        redundancy = sum(overlaps) / max(1, len(overlaps))
-        exclusivity = clamp01(1.0 - redundancy)
-        inter_mece = alpha * coverage + (1.0 - alpha) * exclusivity
-
-        return MeceScore(
-            coverage=coverage,
-            redundancy=redundancy,
-            exclusivity=exclusivity,
-            inter_mece=inter_mece,
+        div_t = torch.stack(divs)  # [pairs]
+        return EntropyScore(
+            pairwise_js_mean=float(div_t.mean().item()),
+            pairwise_js_min=float(div_t.min().item()),
+            pairwise_js_max=float(div_t.max().item()),
+            pair_count=len(divs),
             details={
-                "alpha": alpha,
-                "nll_task_base": nll_task_base,
-                "nll_task_cond": nll_task_cond,
-                "pair_count": len(overlaps),
+                "num_subtasks": N,
+                "used_outline": bool(outline_text is not None and outline_text.strip()),
             },
         )
-
-    # -------- unified entry --------
-    @torch.no_grad()
-    def score(
-        self,
-        decomposition: List[str],
-        task_text: str,
-        *,
-        alpha: float = 0.5,
-    ) -> MeceScore:
-        return self.score_loss_mece(decomposition, task_text, alpha=alpha)
 
     # -------------------------
     # Decomposition picking
@@ -164,8 +180,8 @@ class InterMeceEngine:
         *,
         task_text: str,
         task_decomposition_prompt: str,
+        outline_text: Optional[str] = None,
         num_samples: int = 8,
-        alpha: float = 0.5,
         min_subtasks: int = 2,
         max_subtasks: int = 10,
         dedup_raw: bool = True,
@@ -192,21 +208,28 @@ class InterMeceEngine:
             seen_raw.add(raw_norm)
 
             subtasks = parse_subtask(raw)
-            print(f"Generate {sample_num}th decomposition.:")
-            print(subtasks)
+            logger.info(f"Generate {sample_num}th decomposition.")
+            logger.info(subtasks)
+
             if not (min_subtasks <= len(subtasks) <= max_subtasks):
                 continue
 
-            mece = self.score(subtasks, task_text, alpha=alpha)
-            print(f"Generate {sample_num}th subtasks.(score {mece})")
+            ent = self.score_js_diversity(
+                subtasks,
+                task_text,
+                outline_text=outline_text,
+            )
+
+            # maximize mean JS divergence
+            score = ent.pairwise_js_mean
 
             candidates.append(
                 DecompCandidate(
                     subtasks=subtasks,
                     raw=raw,
-                    score=mece.inter_mece,
-                    mece=mece,
-                    details={"alpha": alpha},
+                    score=score,
+                    entropy=ent,
+                    details={"used_outline": ent.details.get("used_outline", False)},
                 )
             )
 
@@ -214,23 +237,258 @@ class InterMeceEngine:
         return candidates[: max(1, return_topk)]
 
 
+# -------------------------
+# Surprise-based
+# -------------------------
+class SurpriseInterMeceEngine:
+    """
+    Surprise-based Engine
+    - decomposition sampling
+    - score by total surprise = sum_i -log P(si | prompt)
+    - pick min or max total surprise candidate
+    """
+
+    def __init__(
+        self,
+        tm,
+        *,
+        call_model_fn: Callable[..., str],
+        call_model_kwargs: Dict[str, Any],
+        max_length: int = 2048,
+    ):
+        self.tm = tm
+        self.tok = tm.tokenizer
+        self.hf = tm.model
+        self.device = self.hf.device
+        self.max_length = max_length
+
+        self.call_model_fn = call_model_fn
+        self.call_model_kwargs = call_model_kwargs
+
+    # -------- core: -log P(target | context) (sum over target tokens) --------
+    @torch.no_grad()
+    def conditional_surprise_sum(
+        self,
+        context: str,
+        target: str,
+        *,
+        max_length: Optional[int] = None,
+    ) -> float:
+        """
+        Returns: surprise = -log P(target | context) = sum_t CE_t  (teacher forcing)
+        """
+        max_length = max_length or self.max_length
+
+        ctx = tokenize_no_special(self.tok, context)
+        tgt = tokenize_no_special(self.tok, target)
+
+        ctx_ids = ctx["input_ids"]
+        tgt_ids = tgt["input_ids"]
+
+        if tgt_ids.numel() == 0:
+            return float("inf")
+
+        input_ids = torch.cat([ctx_ids, tgt_ids], dim=1).to(self.device)
+
+        # Truncation (keep the tail so that all target tokens remain if possible)
+        if max_length is not None and input_ids.shape[1] > max_length:
+            tgt_len = tgt_ids.shape[1]
+            keep = min(max_length, tgt_len + max(0, max_length - tgt_len))
+            input_ids = input_ids[:, -keep:]
+            new_ctx_len = max(0, input_ids.shape[1] - tgt_len)
+        else:
+            tgt_len = tgt_ids.shape[1]
+            new_ctx_len = ctx_ids.shape[1]
+
+        logits = self.hf(input_ids=input_ids).logits  # [1, L, V]
+
+        shift_logits = logits[:, :-1, :]  # predicts next token
+        shift_labels = input_ids[:, 1:]  # next token labels
+        Lm1 = shift_labels.shape[1]
+
+        # target tokens in shift space:
+        # If context length is new_ctx_len, the first target label position is:
+        # start = (new_ctx_len - 1) if new_ctx_len>0 else 0
+        start = 0 if new_ctx_len == 0 else (new_ctx_len - 1)
+        end = min(start + tgt_len, Lm1)
+        if start >= end:
+            return float("inf")
+
+        mask = torch.zeros((1, Lm1), dtype=torch.bool, device=self.device)
+        mask[:, start:end] = True
+
+        vocab = shift_logits.shape[-1]
+        ce = F.cross_entropy(
+            shift_logits.reshape(-1, vocab),
+            shift_labels.reshape(-1),
+            reduction="none",
+        ).reshape(
+            1, -1
+        )  # per-token NLL
+
+        # sum over target tokens = -log P(target|context)
+        return float(ce[mask].sum().item())
+
+    # -------- scoring: total surprise across subtasks --------
+    @torch.no_grad()
+    def score_surprise(
+        self,
+        decomposition: List[str],
+        task_text: str,
+        *,
+        outline_text: Optional[str] = None,
+        max_length: Optional[int] = None,
+    ) -> SurpriseScore:
+        subtasks = [s.strip() for s in decomposition if s and s.strip()]
+        if not subtasks:
+            return SurpriseScore(
+                total_surprise=float("inf"),
+                per_subtask_surprise=[],
+                details={"reason": "empty"},
+            )
+
+        per: List[float] = []
+        prev: List[str] = []
+
+        for i, si in enumerate(subtasks):
+            prompt = format_prompt(
+                task_text=task_text,
+                outline_text=outline_text,
+                prev_subtasks=prev,
+            )
+            # NOTE: 모델이 "NEXT SUBTASK:" 다음에 si를 생성한다고 가정하고,
+            #       teacher forcing으로 si의 조건부 확률을 계산.
+            s_i = self.conditional_surprise_sum(prompt, si, max_length=max_length)
+            per.append(s_i)
+            prev.append(si)
+
+        total = float(sum(per))
+        return SurpriseScore(
+            total_surprise=total,
+            per_subtask_surprise=per,
+            details={
+                "used_outline": bool(outline_text is not None and outline_text.strip()),
+                "num_subtasks": len(subtasks),
+            },
+        )
+
+    # -------- pick best candidate by min/max total surprise --------
+    @torch.no_grad()
+    def pick_best(
+        self,
+        *,
+        task_text: str,
+        task_decomposition_prompt: str,
+        outline_text: Optional[str] = None,
+        num_samples: int = 8,
+        min_subtasks: int = 2,
+        max_subtasks: int = 10,
+        dedup_raw: bool = True,
+        seed: Optional[int] = None,
+        return_topk: int = 1,
+        objective: Literal[
+            "min", "max"
+        ] = "min",  # "min" => 최소 surprise, "max" => 최대 surprise
+        max_length: Optional[int] = None,
+    ) -> List[DecompCandidate]:
+        if seed is not None:
+            random.seed(seed)
+
+        seen_raw = set()
+        candidates: List[DecompCandidate] = []
+
+        for sample_num in range(num_samples):
+            raw = self.call_model_fn(
+                query=task_decomposition_prompt,
+                **self.call_model_kwargs,
+            )
+            if not raw or not isinstance(raw, str):
+                continue
+
+            raw_norm = " ".join(raw.split())
+            if dedup_raw and raw_norm in seen_raw:
+                continue
+            seen_raw.add(raw_norm)
+
+            subtasks = parse_subtask(raw)
+            logger.info(f"Generate {sample_num}th decomposition.:")
+            logger.info(subtasks)
+
+            if not (min_subtasks <= len(subtasks) <= max_subtasks):
+                continue
+
+            sscore = self.score_surprise(
+                subtasks,
+                task_text,
+                outline_text=outline_text,
+                max_length=max_length,
+            )
+
+            # selection score:
+            # - objective=min: smaller total_surprise is better => sort ascending by total_surprise
+            # - objective=max: larger total_surprise is better => sort descending by total_surprise
+            # 여기서는 일관되게 "score가 클수록 좋다"로 맞추기 위해,
+            # min이면 score = -total_surprise, max이면 score = +total_surprise로 둡니다.
+            if objective == "min":
+                score = -sscore.total_surprise
+            elif objective == "max":
+                score = sscore.total_surprise
+            else:
+                raise ValueError("objective must be 'min' or 'max'")
+
+            logger.info(
+                f"Candidate {sample_num}: total_surprise={sscore.total_surprise:.4f}, score={score:.4f}"
+            )
+
+            candidates.append(
+                DecompCandidate(
+                    subtasks=subtasks,
+                    raw=raw,
+                    score=float(score),
+                    surprise=sscore,
+                    details={
+                        "objective": objective,
+                        "used_outline": sscore.details.get("used_outline", False),
+                    },
+                )
+            )
+
+        # score 큰 순으로 정렬(위에서 min/max를 score 변환으로 통일했기 때문)
+        candidates.sort(key=lambda c: c.score, reverse=True)
+        return candidates[: max(1, return_topk)]
+
+
+# -------------------------
+# redundancy-only, optional outline-aware vertical
+# -------------------------
 class SimInterMeceEngine:
     """
-    Sim-based Inter-MECE Engine (separate class)
+    Redundancy-only Inter-MECE Engine
     - decomposition sampling
-    - MECE scoring (embedding cosine, task-parallel/orthogonal decomposition)
+    - redundancy scoring (vertical / orthogonal decomposition)
     - best candidate selection
 
     Definitions:
       task embedding t, subtask embedding e_i
       t_hat = t / ||t||
-      v_i  = (e_i · t_hat) t_hat         (horizontal / parallel)
-      v_iT = e_i - v_i                    (vertical / orthogonal)
 
-      coverage    = mean_i relu(cos(e_i, t))
-      redundancy  = mean_{i<j} |cos(v_iT, v_jT)|
-      exclusivity = 1 - redundancy
-      inter_mece  = alpha*coverage + (1-alpha)*exclusivity
+      (optional) outline embedding o
+      o_hat = o / ||o||
+
+    Vertical component:
+      - If outline_text is None:
+          v_v = e_i - proj_{t_hat}(e_i)
+      - If outline_text is provided:
+          Remove components parallel to BOTH task and outline directions
+          using a 2D orthonormal basis (Gram-Schmidt):
+            b1 = t_hat
+            b2 = normalize(o_hat - (o_hat·b1)b1)   (if non-degenerate)
+          then:
+            v_v = e_i - proj_{b1}(e_i) - proj_{b2}(e_i)
+
+    redundancy  = mean_{i<j} |cos(v_v_i, v_v_j)|   (or mean cos^2)
+    exclusivity = 1 - redundancy
+    inter_mece  = exclusivity
     """
 
     def __init__(
@@ -298,62 +556,72 @@ class SimInterMeceEngine:
         return E
 
     # -------------------------
-    # MECE scoring (sim-based)
+    # Redundancy-only scoring
     # -------------------------
     @torch.no_grad()
-    def score(
+    def score_redundancy_only(
         self,
-        mode: str,  # kept for interface-compat; expect "sim"
         decomposition: List[str],
         task_text: str,
         *,
-        alpha: float = 0.5,
-        coverage_mode: str = "relu_cos_mean",  # or "proj_norm_mean"
+        outline_text: Optional[str] = None,
         redundancy_mode: str = "abs_cos_mean",  # or "cos2_mean"
     ) -> MeceScore:
-        if mode != "sim":
-            raise ValueError("SimInterMeceEngine only supports mode='sim'")
-
         subtasks = [s.strip() for s in decomposition if s and s.strip()]
         if not subtasks:
-            return MeceScore(0.0, 0.0, 1.0, 0.0, {"reason": "empty"})
-
-        texts = [task_text] + subtasks
-        E = self.embed_texts(texts)  # [1+N, D]
-        task_e = E[0]  # [D]
-        sub_e = E[1:]  # [N, D]
-        N = sub_e.shape[0]
+            return MeceScore(
+                redundancy=0.0,
+                exclusivity=1.0,
+                inter_mece=1.0,
+                details={"reason": "empty"},
+            )
 
         eps = self.eps
 
-        # task unit vector
-        t_hat = task_e / torch.linalg.norm(task_e).clamp_min(eps)  # [D]
-
-        # cos(e_i, t)
-        sub_n = sub_e / torch.linalg.norm(sub_e, dim=-1, keepdim=True).clamp_min(eps)
-        cos_et = (sub_n * t_hat.unsqueeze(0)).sum(dim=-1)  # [N]
-
-        # decompose: parallel & orthogonal
-        coeff = (sub_e * t_hat.unsqueeze(0)).sum(dim=-1)  # [N]
-        v_h = coeff.unsqueeze(-1) * t_hat.unsqueeze(0)  # [N, D]
-        v_v = sub_e - v_h  # [N, D]
-
-        # ---- coverage ----
-        if coverage_mode == "relu_cos_mean":
-            coverage_t = torch.relu(cos_et).mean()
-        elif coverage_mode == "proj_norm_mean":
-            # |e_i·t_hat| / ||e_i||  (≈ |cos|)
-            coverage_t = (
-                coeff.abs() / torch.linalg.norm(sub_e, dim=-1).clamp_min(eps)
-            ).mean()
+        # Embed:
+        # - always need task to define vertical
+        # - optionally outline adds another "to-be-removed" parallel direction
+        if outline_text is not None and outline_text.strip():
+            texts = [task_text, outline_text] + subtasks
+            E = self.embed_texts(texts)  # [2+N, D]
+            task_e = E[0]
+            outline_e = E[1]
+            sub_e = E[2:]
+            used_outline = True
         else:
-            raise ValueError(
-                "coverage_mode must be 'relu_cos_mean' or 'proj_norm_mean'"
-            )
+            texts = [task_text] + subtasks
+            E = self.embed_texts(texts)  # [1+N, D]
+            task_e = E[0]
+            outline_e = None
+            sub_e = E[1:]
+            used_outline = False
 
-        coverage = float(clamp01(coverage_t.item()))
+        N = sub_e.shape[0]
 
-        # ---- redundancy (vertical components orthogonality) ----
+        # ---- Build orthonormal basis to remove parallel components ----
+        # b1 = normalized task
+        b1 = task_e / torch.linalg.norm(task_e).clamp_min(eps)  # [D]
+
+        # v_v = e - proj_b1(e) [- proj_b2(e) if outline provided]
+        coeff1 = (sub_e * b1.unsqueeze(0)).sum(dim=-1)  # [N]
+        proj1 = coeff1.unsqueeze(-1) * b1.unsqueeze(0)  # [N, D]
+        v_v = sub_e - proj1  # [N, D]
+
+        b2 = None
+        if used_outline and outline_e is not None:
+            o_hat = outline_e / torch.linalg.norm(outline_e).clamp_min(eps)  # [D]
+            # Gram-Schmidt: make outline orthogonal to b1
+            o_ortho = o_hat - (o_hat * b1).sum() * b1  # [D]
+            o_ortho_norm = torch.linalg.norm(o_ortho)
+
+            # If outline is not almost colinear with task, use it as b2
+            if o_ortho_norm > (10 * eps):
+                b2 = o_ortho / o_ortho_norm.clamp_min(eps)  # [D]
+                coeff2 = (v_v * b2.unsqueeze(0)).sum(dim=-1)  # [N]
+                proj2 = coeff2.unsqueeze(-1) * b2.unsqueeze(0)  # [N, D]
+                v_v = v_v - proj2
+
+        # ---- redundancy on (task & outline)-vertical components ----
         v_v_norm = torch.linalg.norm(v_v, dim=-1)  # [N]
         valid = v_v_norm > (10 * eps)
         idx = torch.where(valid)[0]
@@ -364,7 +632,8 @@ class SimInterMeceEngine:
             C = vv_n @ vv_n.T  # [M, M]
             m = C.shape[0]
             triu = torch.triu(
-                torch.ones((m, m), dtype=torch.bool, device=C.device), diagonal=1
+                torch.ones((m, m), dtype=torch.bool, device=C.device),
+                diagonal=1,
             )
             vals = C[triu]  # [M*(M-1)/2]
 
@@ -379,27 +648,23 @@ class SimInterMeceEngine:
         else:
             redundancy_t = torch.tensor(0.0, device=self.device)
 
-        redundancy = float(clamp01(redundancy_t.item()))
+        redundancy = clamp01(float(redundancy_t.item()))
         exclusivity = clamp01(1.0 - redundancy)
-        inter_mece = clamp01(alpha * coverage + (1.0 - alpha) * exclusivity)
+        inter_mece = exclusivity  # objective: minimize redundancy
 
         return MeceScore(
-            coverage=coverage,
             redundancy=redundancy,
             exclusivity=exclusivity,
             inter_mece=inter_mece,
             details={
-                "alpha": alpha,
-                "coverage_mode": coverage_mode,
+                "objective": "redundancy_only",
                 "redundancy_mode": redundancy_mode,
                 "num_subtasks": N,
+                "used_outline": bool(used_outline and (b2 is not None)),
                 "num_vertical_valid": int(valid.sum().item()),
-                "pair_count": int(idx.numel() * (idx.numel() - 1) // 2)
-                if idx.numel() >= 2
-                else 0,
-                "cos_task_sub_mean": float(cos_et.mean().item()),
-                "cos_task_sub_min": float(cos_et.min().item()),
-                "cos_task_sub_max": float(cos_et.max().item()),
+                "pair_count": (
+                    int(idx.numel() * (idx.numel() - 1) // 2) if idx.numel() >= 2 else 0
+                ),
             },
         )
 
@@ -412,20 +677,17 @@ class SimInterMeceEngine:
         *,
         task_text: str,
         task_decomposition_prompt: str,
-        mode: str = "sim",
+        outline_text: Optional[str] = None,
         num_samples: int = 8,
-        alpha: float = 0.5,
         min_subtasks: int = 2,
         max_subtasks: int = 10,
         dedup_raw: bool = True,
         seed: Optional[int] = None,
         return_topk: int = 1,
-        score_kwargs: Optional[Dict[str, Any]] = None,
+        redundancy_mode: str = "abs_cos_mean",
     ) -> List[DecompCandidate]:
         if seed is not None:
             random.seed(seed)
-
-        score_kwargs = score_kwargs or {}
 
         seen_raw = set()
         candidates: List[DecompCandidate] = []
@@ -444,23 +706,30 @@ class SimInterMeceEngine:
             seen_raw.add(raw_norm)
 
             subtasks = parse_subtask(raw)
-            print(f"Generate {sample_num}th decomposition.:")
-            print(subtasks)
+            logger.info(f"Generate {sample_num}th decomposition.")
+            logger.info(subtasks)
 
             if not (min_subtasks <= len(subtasks) <= max_subtasks):
                 continue
 
-            mece = self.score("sim", subtasks, task_text, alpha=alpha, **score_kwargs)
-            print(f"Generate {sample_num}th subtasks.(score {mece})")
+            mece = self.score_redundancy_only(
+                subtasks,
+                task_text,
+                outline_text=outline_text,
+                redundancy_mode=redundancy_mode,
+            )
+            logger.info(f"Generate {sample_num}th subtasks. (score {mece.inter_mece})")
 
             candidates.append(
                 DecompCandidate(
                     subtasks=subtasks,
                     raw=raw,
-                    score=mece.inter_mece,
-                    score_mode="sim",
+                    score=mece.inter_mece,  # == 1 - redundancy
                     mece=mece,
-                    details={"alpha": alpha, **score_kwargs},
+                    details={
+                        "redundancy_mode": redundancy_mode,
+                        "outline_used": mece.details.get("used_outline", False),
+                    },
                 )
             )
 

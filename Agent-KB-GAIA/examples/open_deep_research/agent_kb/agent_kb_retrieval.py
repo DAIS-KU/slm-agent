@@ -10,6 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import torch
 from sentence_transformers import SentenceTransformer
 
+
 # TODO Action용 분리
 @dataclass
 class WorkflowInstance:

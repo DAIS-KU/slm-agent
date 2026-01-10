@@ -8,6 +8,48 @@ from typing import List
 _CODE_FENCE_RE = re.compile(r"```(?:json|yaml|txt)?\s*([\s\S]*?)\s*```", re.IGNORECASE)
 
 
+def load_prompts(path):
+    with open(path, "r") as f:
+        prompts = yaml.safe_load(f)
+    return prompts
+
+
+def tokenize_no_special(tokenizer, text: str):
+    return tokenizer(
+        text,
+        return_tensors="pt",
+        add_special_tokens=False,
+        padding=False,
+        truncation=False,
+    )
+
+
+def format_prompt(
+    *,
+    task_text: str,
+    outline_text: Optional[str],
+    prev_subtasks: List[str],
+) -> str:
+    """
+    Prompt = (t, [o], s1..s{i-1}) 를 한 문자열로 구성.
+    포맷은 프로젝트 스타일에 맞게 바꿔도 됩니다(핵심은 일관성).
+    """
+    parts: List[str] = []
+    parts.append("TASK:\n" + task_text.strip())
+
+    if outline_text is not None and outline_text.strip():
+        parts.append("OUTLINE:\n" + outline_text.strip())
+
+    if prev_subtasks:
+        # 이전 subtasks를 모델 입력에 명확히 주기 위해 번호/불릿 유지
+        st = "\n".join([f"- {s.strip()}" for s in prev_subtasks if s and s.strip()])
+        parts.append("SUBTASKS SO FAR:\n" + st)
+
+    # 다음 subtask 생성 유도용 cue
+    parts.append("NEXT SUBTASK:\n")
+    return "\n\n".join(parts)
+
+
 def strip_code_fences(text: str) -> str:
     m = _CODE_FENCE_RE.search(text)
     return m.group(1).strip() if m else text.strip()

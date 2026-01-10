@@ -825,9 +825,11 @@ class TransformersModel(Model):
             images = [Image.open(image) for image in images] if images else None
             prompt_tensor = self.processor.apply_chat_template(
                 messages,
-                tools=[get_tool_json_schema(tool) for tool in tools_to_call_from]
-                if tools_to_call_from
-                else None,
+                tools=(
+                    [get_tool_json_schema(tool) for tool in tools_to_call_from]
+                    if tools_to_call_from
+                    else None
+                ),
                 return_tensors="pt",
                 tokenize=True,
                 return_dict=True,
@@ -837,9 +839,11 @@ class TransformersModel(Model):
         else:
             prompt_tensor = self.tokenizer.apply_chat_template(
                 messages,
-                tools=[get_tool_json_schema(tool) for tool in tools_to_call_from]
-                if tools_to_call_from
-                else None,
+                tools=(
+                    [get_tool_json_schema(tool) for tool in tools_to_call_from]
+                    if tools_to_call_from
+                    else None
+                ),
                 return_tensors="pt",
                 return_dict=True,
                 add_generation_prompt=True if tools_to_call_from else False,
@@ -851,9 +855,9 @@ class TransformersModel(Model):
         if stop_sequences:
             stopping_criteria = self.make_stopping_criteria(
                 stop_sequences,
-                tokenizer=self.processor
-                if hasattr(self, "processor")
-                else self.tokenizer,
+                tokenizer=(
+                    self.processor if hasattr(self, "processor") else self.tokenizer
+                ),
             )
         else:
             stopping_criteria = None

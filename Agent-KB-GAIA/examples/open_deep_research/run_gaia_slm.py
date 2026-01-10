@@ -268,7 +268,7 @@ SET = "validation"
 custom_role_conversions = {"tool-call": "assistant", "tool-response": "user"}
 
 eval_ds = datasets.load_dataset(
-    "gaia-benchmark/GAIA", "2023_all", trust_remote_code=True, num_proc=1
+    "gaia-benchmark/GAIA", "2023_all", num_proc=1  # , trust_remote_code=True
 )[SET]
 eval_ds = eval_ds.rename_columns(
     {"Question": "question", "Final answer": "true_answer", "Level": "task"}
@@ -463,6 +463,7 @@ def answer_single_question(
     ## ============================== QUERY DECOMPOSITION / RATIONALE-BASED PLANNING ==============================##
     additional_knowledge = None
     if decomp:
+        logger.info(f"Starting decomp(deocmp_mode {deocmp_mode})")
         sub_tasks = decompose_task(
             example=example,
             augmented_question=augmented_question,
@@ -514,31 +515,31 @@ def answer_single_question(
             print(f"final_result:{final_result}")
             print("=" * 30 + "Final Results." + "=" * 30)
         else:
-            final_results = []
-            for idx in range(5):
-                print(f"{idx+1}-th tries")
-                final_result = agent.run(
-                    augmented_question, additional_knowledge=additional_knowledge
-                )
-                final_results.append(final_result)
-            agent_memory = agent.write_memory_to_messages(summary_mode=True)
-            final_result = prepare_response(
-                augmented_question,
-                final_results,
-                reformulation_model=model,
-                multiple=True,
-            )
-            print("=" * 30 + "Final Results." + "=" * 30)
-            print(f"final_results:{final_results}")
-            print(f"final_result:{final_result}")
-            print("=" * 30 + "Final Results." + "=" * 30)
-            # final_result = agent.run(
-            #     augmented_question, additional_knowledge=additional_knowledge
-            # )
+            # final_results = []
+            # for idx in range(5):
+            #     print(f"{idx+1}-th tries")
+            #     final_result = agent.run(
+            #         augmented_question, additional_knowledge=additional_knowledge
+            #     )
+            #     final_results.append(final_result)
             # agent_memory = agent.write_memory_to_messages(summary_mode=True)
             # final_result = prepare_response(
-            #     augmented_question, agent_memory, reformulation_model=model
+            #     augmented_question,
+            #     final_results,
+            #     reformulation_model=model,
+            #     multiple=True,
             # )
+            # print("=" * 30 + "Final Results." + "=" * 30)
+            # print(f"final_results:{final_results}")
+            # print(f"final_result:{final_result}")
+            # print("=" * 30 + "Final Results." + "=" * 30)
+            final_result = agent.run(
+                augmented_question, additional_knowledge=additional_knowledge
+            )
+            agent_memory = agent.write_memory_to_messages(summary_mode=True)
+            final_result = prepare_response(
+                augmented_question, agent_memory, reformulation_model=model
+            )
         output = str(final_result)
         print("=" * 30 + "Final Output." + "=" * 30)
         print(f"output:{output}")
@@ -669,6 +670,7 @@ def main():
         model, model_search = None, None
 
     if args.debug or args.concurrency == 1:
+        logger.info(f"Starting answer_single_question #{len(tasks_to_run)}")
         for example in tasks_to_run:
             answer_single_question(
                 example,

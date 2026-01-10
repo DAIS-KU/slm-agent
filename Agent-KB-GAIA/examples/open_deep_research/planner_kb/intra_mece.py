@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import torch
 import itertools
 import math
 import random
@@ -8,6 +9,10 @@ from typing import Dict, List, Optional, Tuple
 from .inter_mece import InterMeceEngine, SimInterMeceEngine
 from .mece_utils import *
 from .mece_common import *
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class IntraMeceEngine:
@@ -116,13 +121,13 @@ class IntraMeceEngine:
             seen_raw.add(raw_norm)
 
             subtasks = parse_subtask(raw)
-            print(f"Generate {sample_num}th decomposition.:")
-            print(subtasks)
+            logger.info(f"Generate {sample_num}th decomposition.:")
+            logger.info(subtasks)
             if not (min_subtasks <= len(subtasks) <= max_subtasks):
                 continue
 
             mece = self.inter.score(subtasks, task_text, alpha=alpha_inter)
-            print(f"Generate {sample_num}th subtasks.(score {mece})")
+            logger.info(f"Generate {sample_num}th subtasks.(score {mece})")
 
             out.append(
                 DecompCandidate(
@@ -389,7 +394,7 @@ class IntraMeceEngine:
         return selected
 
 
-class SimBasedIntraMeceEngine:
+class SimIntraMeceEngine:
     def __init__(
         self,
         tm,

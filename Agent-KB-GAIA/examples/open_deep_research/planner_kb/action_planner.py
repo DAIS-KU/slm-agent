@@ -8,6 +8,10 @@ import json
 import re
 from typing import Any, Dict, List
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def parse_tag_array(text: str) -> List[str]:
     """
@@ -107,7 +111,7 @@ def load_prompts(path):
 def build_action_level_planning_subseq_examples(entities):
     step_and_rationaleses = []
     for entity in entities:
-        # print(f"entity :{entity}")
+        # logger.info(f"entity :{entity}")
         lines = []
         macro_description = entity.get("macro_description")
         lines.append(f"Similar actions: {macro_description}")
@@ -210,7 +214,7 @@ def action_level_planning(
             model=model,
             slm=slm,
         )
-        print(f"action_planning_result: {action_planning_result}")
+        logger.info(f"action_planning_result: {action_planning_result}")
         return action_planning_result
     else:
         if tag_retrieval:
@@ -220,8 +224,10 @@ def action_level_planning(
             generate_tag_prompt_template = prompt["generate_tag_prompt"]
             action_planning_results = []
             for plan_number, curruent_plan in enumerate(curruent_plans):
-                print(f"action_level_planning #{plan_number}/{len(curruent_plans)}")
-                print(f"curruent_plan: {curruent_plan}")
+                logger.info(
+                    f"action_level_planning #{plan_number}/{len(curruent_plans)}"
+                )
+                logger.info(f"curruent_plan: {curruent_plan}")
                 generate_tag_prompt = populate_template(
                     generate_tag_prompt_template,
                     variables={
@@ -238,9 +244,9 @@ def action_level_planning(
                     model=model,
                     slm=slm,
                 )
-                print(f"action_tags: {action_tags}")
+                logger.info(f"action_tags: {action_tags}")
                 action_tag_list = parse_tag_array(action_tags)
-                print(f"action_tag_list: {action_tag_list}")
+                logger.info(f"action_tag_list: {action_tag_list}")
                 retrieval_results = []
                 for action_tag in action_tag_list:
                     retrieval_result = retrieval_method(
@@ -293,5 +299,5 @@ def action_level_planning(
                 model=model,
                 slm=slm,
             )
-            print(f"action_planning_result: {action_planning_result}")
+            logger.info(f"action_planning_result: {action_planning_result}")
             return action_planning_result

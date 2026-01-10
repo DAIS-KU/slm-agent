@@ -191,9 +191,9 @@ class SerpSearcher(BaseSearcher):
         }
 
         if filter_year is not None:
-            params[
-                "tbs"
-            ] = f"cdr:1,cd_min:01/01/{filter_year},cd_max:12/31/{filter_year}"
+            params["tbs"] = (
+                f"cdr:1,cd_min:01/01/{filter_year},cd_max:12/31/{filter_year}"
+            )
 
         if self.engine == "google":
             params["q"] = query

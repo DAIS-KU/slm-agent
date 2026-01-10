@@ -178,7 +178,9 @@ async def text_search(request: SearchRequest):
                     task_id=core["task_id"],
                     task=core["task"],
                     subtasks=core["subtasks"],
-                    total_score=item.get("score"),  # text 검색은 score를 total_score로 매핑
+                    total_score=item.get(
+                        "score"
+                    ),  # text 검색은 score를 total_score로 매핑
                 )
             )
 

@@ -3,11 +3,18 @@ from typing import Any, Callable, Dict, List, Optional
 
 
 @dataclass
-class MeceScore:
-    coverage: float
-    redundancy: float
-    exclusivity: float
-    inter_mece: float
+class EntropyScore:
+    pairwise_js_mean: float
+    pairwise_js_min: float
+    pairwise_js_max: float
+    pair_count: int
+    details: Dict[str, Any]
+
+
+@dataclass
+class SurpriseScore:
+    total_surprise: float  # sum_i -log P(si | prompt)
+    per_subtask_surprise: List[float]  # each -logP
     details: Dict[str, Any]
 
 
@@ -16,15 +23,9 @@ class DecompCandidate:
     subtasks: List[str]
     raw: str
     score: float
-    score_mode: str
-    mece: MeceScore
-    details: Dict[str, Any]
-
-
-@dataclass
-class IntraPickDetails:
-    """디버깅용: 집합 간 MECE 관련 계산들을 담는다."""
-
-    selection_objective: float
-    avg_intra_mece_to_selected: float
-    intra_mece_to_selected: List[float]
+    # optional payloads (engine-specific but standardized)
+    mece: Optional[Any] = None  # MeceScore (loss-based or sim-based)
+    surprise: Optional[Any] = None  # SurpriseScore
+    entropy: Optional[Any] = None  # EntropyScore
+    # always safe to attach extra info
+    details: Dict[str, Any] = field(default_factory=dict)
