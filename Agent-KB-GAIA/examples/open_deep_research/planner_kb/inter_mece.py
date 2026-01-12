@@ -195,19 +195,23 @@ class EntropyInterMeceEngine:
         candidates: List[DecompCandidate] = []
 
         for sample_num in range(num_samples):
-            raw = self.call_model_fn(
-                query=task_decomposition_prompt,
-                **self.call_model_kwargs,
-            )
-            if not raw or not isinstance(raw, str):
-                continue
+            subtasks = []
+            while subtasks == []:
+                raw = self.call_model_fn(
+                    query=task_decomposition_prompt,
+                    **self.call_model_kwargs,
+                )
+                if not raw or not isinstance(raw, str):
+                    continue
 
-            raw_norm = " ".join(raw.split())
-            if dedup_raw and raw_norm in seen_raw:
-                continue
-            seen_raw.add(raw_norm)
+                raw_norm = " ".join(raw.split())
+                if dedup_raw and raw_norm in seen_raw:
+                    continue
+                seen_raw.add(raw_norm)
 
-            subtasks = parse_subtask(raw)
+                subtasks = parse_subtask(raw)
+                if subtasks == []:
+                    logger.info("Failed to generate subtasks.")
             logger.info(f"Generate {sample_num}th decomposition.")
             logger.info(subtasks)
 
@@ -398,19 +402,23 @@ class SurpriseInterMeceEngine:
         candidates: List[DecompCandidate] = []
 
         for sample_num in range(num_samples):
-            raw = self.call_model_fn(
-                query=task_decomposition_prompt,
-                **self.call_model_kwargs,
-            )
-            if not raw or not isinstance(raw, str):
-                continue
+            subtasks = []
+            while subtasks == []:
+                raw = self.call_model_fn(
+                    query=task_decomposition_prompt,
+                    **self.call_model_kwargs,
+                )
+                if not raw or not isinstance(raw, str):
+                    continue
 
-            raw_norm = " ".join(raw.split())
-            if dedup_raw and raw_norm in seen_raw:
-                continue
-            seen_raw.add(raw_norm)
+                raw_norm = " ".join(raw.split())
+                if dedup_raw and raw_norm in seen_raw:
+                    continue
+                seen_raw.add(raw_norm)
 
-            subtasks = parse_subtask(raw)
+                subtasks = parse_subtask(raw)
+                if subtasks == []:
+                    logger.info("Failed to generate subtasks.")
             logger.info(f"Generate {sample_num}th decomposition.:")
             logger.info(subtasks)
 
@@ -519,10 +527,6 @@ class SimInterMeceEngine:
     # -------------------------
     @torch.no_grad()
     def _embed_fallback_lm(self, texts: List[str]) -> torch.Tensor:
-        """
-        Fallback embedding using underlying HF LM: mean pool last_hidden_state.
-        Returns [N, D].
-        """
         enc = self.tok(
             texts,
             return_tensors="pt",
@@ -534,12 +538,19 @@ class SimInterMeceEngine:
         input_ids = enc["input_ids"].to(self.device)
         attn = enc.get("attention_mask", torch.ones_like(input_ids)).to(self.device)
 
-        out = self.hf(input_ids=input_ids, attention_mask=attn)
-        hs = out.last_hidden_state  # [N, L, D]
+        out = self.hf(
+            input_ids=input_ids,
+            attention_mask=attn,
+            output_hidden_states=True,
+            return_dict=True,
+            use_cache=False,  # embedding 용도면 끄는 게 보통 이득
+        )
+        # CausalLMOutputWithPast 에서는 hidden_states[-1]가 정답
+        hs = out.hidden_states[-1]  # [N, L, D]
 
         attn_f = attn.unsqueeze(-1).to(hs.dtype)  # [N, L, 1]
         summed = (hs * attn_f).sum(dim=1)  # [N, D]
-        denom = attn_f.sum(dim=1).clamp_min(self.eps)  # [N, 1]
+        denom = attn_f.sum(dim=1).clamp_min(self.eps)
         return summed / denom
 
     @torch.no_grad()
@@ -566,10 +577,10 @@ class SimInterMeceEngine:
         *,
         outline_text: Optional[str] = None,
         redundancy_mode: str = "abs_cos_mean",  # or "cos2_mean"
-    ) -> MeceScore:
+    ) -> SimScore:
         subtasks = [s.strip() for s in decomposition if s and s.strip()]
         if not subtasks:
-            return MeceScore(
+            return SimScore(
                 redundancy=0.0,
                 exclusivity=1.0,
                 inter_mece=1.0,
@@ -652,7 +663,7 @@ class SimInterMeceEngine:
         exclusivity = clamp01(1.0 - redundancy)
         inter_mece = exclusivity  # objective: minimize redundancy
 
-        return MeceScore(
+        return SimScore(
             redundancy=redundancy,
             exclusivity=exclusivity,
             inter_mece=inter_mece,
@@ -693,19 +704,23 @@ class SimInterMeceEngine:
         candidates: List[DecompCandidate] = []
 
         for sample_num in range(num_samples):
-            raw = self.call_model_fn(
-                query=task_decomposition_prompt,
-                **self.call_model_kwargs,
-            )
-            if not raw or not isinstance(raw, str):
-                continue
+            subtasks = []
+            while subtasks == []:
+                raw = self.call_model_fn(
+                    query=task_decomposition_prompt,
+                    **self.call_model_kwargs,
+                )
+                if not raw or not isinstance(raw, str):
+                    continue
 
-            raw_norm = " ".join(raw.split())
-            if dedup_raw and raw_norm in seen_raw:
-                continue
-            seen_raw.add(raw_norm)
+                raw_norm = " ".join(raw.split())
+                if dedup_raw and raw_norm in seen_raw:
+                    continue
+                seen_raw.add(raw_norm)
 
-            subtasks = parse_subtask(raw)
+                subtasks = parse_subtask(raw)
+                if subtasks == []:
+                    logger.info("Failed to generate subtasks.")
             logger.info(f"Generate {sample_num}th decomposition.")
             logger.info(subtasks)
 

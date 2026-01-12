@@ -9,161 +9,13 @@ import json
 import re
 from typing import Any, Dict, List
 
-from .inter_mece import InterMeceEngine, SimInterMeceEngine
-from .intra_mece import IntraMeceEngine, SimIntraMeceEngine
+from .inter_mece import *
+from .intra_mece import *
+from .mece_utils import load_prompts
 
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-def extract_steps(step_str, model_name, key, url, model, slm):
-    logger.info("extract steps.")
-    extract_steps_prompt_template = load_prompts(
-        path="/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
-    )
-    extract_step_number_prompt = populate_template(
-        extract_steps_prompt_template["count_steps"],
-        variables={"steps": step_str},
-    )
-    step_number = call_model(
-        extract_step_number_prompt, model_name, key, url, model, slm
-    )
-    step_number = int(step_number)
-    logger.info(f"extract {step_number} steps.")
-
-    steps = []
-    for i in range(step_number):
-        extract_specific_step_prompt = populate_template(
-            extract_steps_prompt_template["extract_specific_step"],
-            variables={"step_number": step_number + 1, "steps": step_str},
-        )
-        step = call_model(
-            extract_specific_step_prompt, model_name, key, url, model, slm
-        )
-        steps.appen(step)
-    return steps
-
-
-def parse_steps(output: str) -> List[str]:
-    logger.info(f"parse_steps output:{output}")
-    """
-    Supported patterns (앞뒤에 잡소리 텍스트가 있어도 허용):
-
-    1) JSON 배열:
-       ["Step 1: ...", "Step 2: ..."]
-
-    2) 파이썬 리스트/튜플 리터럴:
-       ['Step 1: ...', 'Step 2: ...']
-       ("Step 1: ...", "Step 2: ...")
-
-    3) 그냥 문자열 나열:
-       "Step 1: ...", "Step 2: ...", "Step 3: ..."
-
-    4) Markdown 번호 리스트:
-       1. Step 1 ...
-          - sub bullet ...
-
-       2. Step 2 ...
-          - ...
-
-    5) 'Step 1: ...', 'Step 2: ...' 처럼
-       각 Step 헤더와 그 아래 여러 줄이 한 블록인 형식
-    """
-    text = output.strip()
-
-    # 1) 코드블럭 제거 (``` ... ```)
-    if text.startswith("```"):
-        lines = text.splitlines()
-        if lines and lines[0].startswith("```"):
-            lines = lines[1:]
-        if lines and lines[-1].startswith("```"):
-            lines = lines[:-1]
-        text = "\n".join(lines).strip()
-
-    # 2) 우선 [] / () 로 전체가 감싸져 있는 경우 처리
-    stripped = text.lstrip()
-    candidate = None
-    result = None
-
-    # (a) 텍스트 맨 앞이 [ 또는 ( 인 경우
-    if stripped.startswith(("[", "(")):
-        candidate = stripped
-    else:
-        # (b) "output str:(...)" 같은 형태: 콜론/등호 뒤에서부터 [ 또는 ( 찾기
-        m = re.search(r"[:=]\s*([\[\(].*)$", text, re.DOTALL)
-        if m:
-            candidate = m.group(1).strip()
-
-    if candidate:
-        try:
-            if candidate.startswith("["):
-                # 먼저 JSON 시도
-                try:
-                    result = json.loads(candidate)
-                except json.JSONDecodeError:
-                    # 안 되면 파이썬 literal 로
-                    result = ast.literal_eval(candidate)
-            else:
-                # "(" 로 시작하면 파이썬 tuple/list literal 로 간주
-                result = ast.literal_eval(candidate)
-
-            if isinstance(result, tuple):
-                result = list(result)
-
-            if isinstance(result, list) and all(isinstance(x, str) for x in result):
-                return result
-        except Exception:
-            # candidate 파싱 실패하면 fallback 으로
-            result = None
-
-    # 3) Fallback 1: Markdown 번호 리스트 (1. ..., 2. ..., ...)
-    #    각 번호 블록을 하나의 step 으로 취급
-    numbered_pattern = r"^\s*\d+\.\s+(.+?)(?=^\s*\d+\.|\Z)"
-    blocks = re.findall(
-        numbered_pattern,
-        text.strip(),
-        flags=re.MULTILINE | re.DOTALL,
-    )
-    if blocks:
-        steps = [b.strip() for b in blocks]
-        return steps
-
-    # 3.5) Fallback 1.5: "Step N:" 으로 시작하는 블록들
-    #      예: Step 1: ... \n - ... \n\n Step 2: ...
-    step_pattern = r"^Step\s+\d+:\s*(.*?)(?=^Step\s+\d+:\s*|\Z)"
-    step_blocks = re.findall(
-        step_pattern,
-        text.strip(),
-        flags=re.MULTILINE | re.DOTALL | re.IGNORECASE,
-    )
-    if step_blocks:
-        steps = [b.strip() for b in step_blocks]
-        return steps
-
-    # 4) Fallback 2: 따옴표로 된 문자열들을 전부 추출해서 리스트로 사용
-    #   -> "Step 1: ...", "Step 2: ...", ... 같은 케이스 처리
-    pattern = r'"([^"\\]*(?:\\.[^"\\]*)*)"|\'([^\'\\]*(?:\\.[^\'\\]*)*)\''
-    matches = re.findall(pattern, text)
-
-    if not matches:
-        raise ValueError(f"Could not parse steps from: {output!r}")
-
-    steps: List[str] = []
-    for g1, g2 in matches:
-        s = g1 or g2  # "..." 에서 잡힌 그룹 또는 '...' 에서 잡힌 그룹
-        steps.append(s)
-
-    if not steps:
-        raise ValueError("No steps extracted from output.")
-
-    return steps
-
-
-def load_prompts(path):
-    with open(path, "r") as f:
-        prompts = yaml.safe_load(f)
-    return prompts
 
 
 def build_entities_example_string_no_actions(
@@ -288,29 +140,72 @@ def decompose_task(
     url,
     model,
     slm,
-    inter_decomp,
-    intra_inter_decomp,
     retrieval_method,
     top_k,
-    return_as_str=False,
-    multiple_decomp=False,
-    mode="max_surprise",
-    outline=None,
 ):
     if retrieval_method is None:
         logger.info(f"decompose_task - retrieval_method is None")
         task_decomposition_prompt_template = load_prompts(
             path="/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
         )
+        task_decomposition_prompt_template = task_decomposition_prompt_template[
+            "task_decomposition_and_planning_with_icl_examples_prompt"
+        ]
+        task_decomposition_prompt = populate_template(
+            task_decomposition_prompt_template,
+            variables={"task": augmented_question},
+        )
+    else:
+        logger.info(f"decompose_task - retrieval_method is not None")
+        rationale_retrieval_results = retrieval_method(example["question"], top_k=top_k)
+        task_decomposition_prompt_template = load_prompts(
+            path="/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
+        )
+        step_rationale_examples = build_many_entities_examples_no_actions(
+            rationale_retrieval_results
+        )
+        task_decomposition_prompt_template = task_decomposition_prompt_template[
+            "task_decomposition_and_planning_with_retrieval_examples_prompt"
+        ]
+        task_decomposition_prompt = populate_template(
+            task_decomposition_prompt_template,
+            variables={
+                "task": augmented_question,
+                "retrieval_examples": step_rationale_examples,
+            },
+        )
+    task_decomposition_str = call_model(
+        query=task_decomposition_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info(f"decompose_task - task_decomposition_str: {task_decomposition_str}")
+    return task_decomposition_str
+
+
+def decompose_task_single(
+    example,
+    augmented_question,
+    model_name,
+    key,
+    url,
+    model,
+    slm,
+    retrieval_method,
+    top_k,
+    mode="max_surprise",
+    outline=None,
+    subtask_str_only=True,
+):
+    if retrieval_method is None:
+        logger.info(f"decompose_task_single - retrieval_method is None")
+        task_decomposition_prompt_template = load_prompts(
+            path="/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
+        )
         if outline:
-            task_decomposition_prompt_template = task_decomposition_prompt_template[
-                "task_decomposition_and_planning_with_icl_examples_prompt"
-            ]
-            task_decomposition_prompt = populate_template(
-                task_decomposition_prompt_template,
-                variables={"task": augmented_question},
-            )
-        else:
             task_decomposition_prompt_template = task_decomposition_prompt_template[
                 "task_decomposition_and_planning_with_outline_and_icl_examples_prompt"
             ]
@@ -318,8 +213,16 @@ def decompose_task(
                 task_decomposition_prompt_template,
                 variables={"task": augmented_question, "approach": outline},
             )
+        else:
+            task_decomposition_prompt_template = task_decomposition_prompt_template[
+                "task_decomposition_and_planning_with_icl_examples_prompt"
+            ]
+            task_decomposition_prompt = populate_template(
+                task_decomposition_prompt_template,
+                variables={"task": augmented_question},
+            )
     else:
-        logger.info(f"decompose_task - retrieval_method is not None")
+        logger.info(f"decompose_task_single - retrieval_method is not None")
         rationale_retrieval_results = retrieval_method(example["question"], top_k=top_k)
         task_decomposition_prompt_template = load_prompts(
             path="/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/rationale_planner_prompts.yaml"
@@ -350,150 +253,147 @@ def decompose_task(
                     "retrieval_examples": step_rationale_examples,
                 },
             )
-    if inter_decomp:
-        logger.info(f"inter_decomp (mode {mode})")
-        if mode == "min_surprise" or mode == "max_surprise":
-            engine = SurpriseInterMeceEngine(
-                tm=tm,
-                call_model_fn=call_model,
-                call_model_kwargs={
-                    "temperature": 0.8,
-                    "max_tokens": 512,
-                },
-                max_length=2048,
-            )
-            best = engine.pick_best(
-                task_text=task_text,
-                outline_text=outline,
-                task_decomposition_prompt=task_decomposition_prompt,
-                num_samples=8,
-                objective="min" if mode == "min_surprise" else "max",
-                return_topk=1,
-            )
-            best = best[0]
-            print(best_candidate.subtasks)
-            print(best_candidate.surprise.total_surprise)
-        elif mode == "sim":
-            engine = SimInterMeceEngine(
-                tm=tm,
-                call_model_fn=call_model,
-                call_model_kwargs={
-                    "temperature": 0.8,
-                    "max_tokens": 512,
-                },
-                max_length=2048,
-            )
-            cands = engine.pick_best(
-                task_text=task_text,
-                outline_text=outline,
-                task_decomposition_prompt=task_decomposition_prompt,
-                num_samples=8,
-                return_topk=1,
-            )
-            best = cands[0]
-            print(best.subtasks)
-            print(best.score)
-            print(best.mece.redundancy)
-        elif mode == "entropy":
-            engine = EntropyInterMeceEngine(
-                tm=tm,
-                call_model_fn=call_model,
-                call_model_kwargs={
-                    "temperature": 0.8,
-                    "max_tokens": 512,
-                },
-                max_length=2048,
-            )
-            best = engine.pick_best(
-                task_text=task_text,
-                outline_text=outline,
-                task_decomposition_prompt=task_decomposition_prompt,
-                num_samples=8,
-                return_topk=1,
-            )
-            cand = best[0]
-            print(cand.subtasks)
-            print(
-                "mean_JS:",
-                cand.entropy.pairwise_js_mean,
-                "pairs:",
-                cand.entropy.pair_count,
-            )
-        else:
-            raise NotImplementedError(f"inter_decomp (mode {mode})")
-    elif intra_inter_decomp:
-        if mode == "loss":
-            intra_engine = IntraMeceEngine(
-                model,  # (= tm)
-                call_model_fn=call_model,
-                call_model_kwargs={
-                    "model_name": model_name,
-                    "key": key,
-                    "url": url,
-                    "model": model,
-                    "slm": slm,
-                },
-                max_length=2048,
-            )
 
-            topk = intra_engine.pick_topk(
-                task_text=example["question"],
-                task_decomposition_prompt=task_decomposition_prompt,
-                num_samples=10,
-                top_k=5,
-                alpha_inter=0.5,
-                min_subtasks=2,
-                max_subtasks=10,
-            )
-        else:
-            engine = SimBasedIntraMeceEngine(
-                tm,
-                call_model_fn=call_model_fn,
-                call_model_kwargs=call_model_kwargs,
-                embed_texts_fn=my_embedder,  # 있으면 강추
-            )
-            topk = engine.pick_topk(
-                task_text=task_text,
-                task_decomposition_prompt=prompt,
-                num_samples=20,
-                top_k=5,
-                alpha_inter=0.5,
-                pool_cap=30,
-                score_kwargs={
-                    "coverage_mode": "relu_cos_mean",
-                    "redundancy_mode": "abs_cos_mean",
-                },
-            )
-        if topk:
-            best1 = topk[0]
-            logger.info(f"selection_score: {best1.score}")
-            logger.info(f"subset_intra_sum: {best1.details['subset_intra_sum']}")
-            logger.info(f"inter_mece: {best1.mece.inter_mece}")
-            logger.info(
-                f"coverage: {best1.mece.coverage}, exclusivity: {best1.mece.exclusivity}"
-            )
-            logger.info(f"subtasks: {best1.subtasks}")
-            if multiple_decomp:
-                return ["\n".join(cand.subtasks) for cand in topk]
-            else:
-                return "\n".join(best1.subtasks) if return_as_str else best1.subtasks
-        else:
-            logger.info("No valid decomposition candidates.")
-            return ""
+    logger.info(f"decompose_task_single (mode {mode})")
+    score = None
+    if mode == "min_surprise" or mode == "max_surprise":
+        engine = SurpriseInterMeceEngine(
+            tm=model,
+            call_model_fn=call_model,
+            call_model_kwargs={
+                "model_name": model_name,
+                "key": key,
+                "url": url,
+                "model": model,
+                "slm": slm,
+            },
+            max_length=2048,
+        )
+        cands = engine.pick_best(
+            task_text=augmented_question,
+            outline_text=outline,
+            task_decomposition_prompt=task_decomposition_prompt,
+            num_samples=8,
+            objective="min" if mode == "min_surprise" else "max",
+            return_topk=1,
+        )
+        best = cands[0]
+        score = best.surprise.total_surprise
+        logger.info(f"best.subtasks: {best.subtasks}")
+        logger.info(f"best.surprise.total_surprise: {best.surprise.total_surprise}")
+    elif mode == "sim":
+        engine = SimInterMeceEngine(
+            tm=model,
+            call_model_fn=call_model,
+            call_model_kwargs={
+                "model_name": model_name,
+                "key": key,
+                "url": url,
+                "model": model,
+                "slm": slm,
+            },
+            max_length=2048,
+        )
+        cands = engine.pick_best(
+            task_text=augmented_question,
+            outline_text=outline,
+            task_decomposition_prompt=task_decomposition_prompt,
+            num_samples=8,
+            return_topk=1,
+        )
+        best = cands[0]
+        score = best.mece.inter_mece
+        logger.info(f"best.subtasks: {best.subtasks}")
+        logger.info(f"best.score: {best.subtasks}")
+        logger.info(f"best.mece.redundancy: {best.mece.redundancy}")
+    elif mode == "entropy":
+        engine = EntropyInterMeceEngine(
+            tm=model,
+            call_model_fn=call_model,
+            call_model_kwargs={
+                "model_name": model_name,
+                "key": key,
+                "url": url,
+                "model": model,
+                "slm": slm,
+            },
+            max_length=2048,
+        )
+        cands = engine.pick_best(
+            task_text=augmented_question,
+            outline_text=outline,
+            task_decomposition_prompt=task_decomposition_prompt,
+            num_samples=8,
+            return_topk=1,
+        )
+        best = cands[0]
+        score = best.entropy.pairwise_js_mean
+        logger.info(f"best.subtasks: {best.subtasks}")
+        logger.info(f"best.entropy.pairwise_js_mean: {best.entropy.pairwise_js_mean}")
     else:
-        task_decomposition_str = call_model(
-            query=task_decomposition_prompt,
+        raise NotImplementedError(f"decompose_task_single (mode {mode})")
+
+    task_decomposition_str = call_model(
+        query=task_decomposition_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info(
+        f"decompose_task_single - task_decomposition_str: {task_decomposition_str}"
+    )
+    return task_decomposition_str if subtask_str_only else task_decomposition_str, score
+
+
+def decompose_task_multiple(
+    example,
+    augmented_question,
+    model_name,
+    key,
+    url,
+    model,
+    slm,
+    retrieval_method,
+    top_k,
+    outline_mode="direction_only",
+    inter_mode="max_surprise",
+    multiple_n=12,
+    multiple_k=5,
+):
+    engine = OutlineMeceEngine(
+        tm=model,
+        call_model_fn=call_model,
+        call_model_kwargs=dict(
             model_name=model_name,
             key=key,
             url=url,
             model=model,
             slm=slm,
+        ),
+    )
+    picked = engine.sample_and_pick(
+        task_text=augmented_question, n=multiple_n, k=multiple_k, mode=outline_mode
+    )
+    outlines = picked.outlines
+    logger.info(f"outline candidates: {outlines}")
+
+    candidates = []
+    for outline in outlines:
+        decomposition_str, score = decompose_task_single(
+            example=example,
+            augmented_question=augmented_question,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+            retrieval_method=retrieval_method,
+            top_k=top_k,
+            mode=inter_mode,
+            outline=outline,
+            subtask_str_only=False,
         )
-        logger.info(
-            f"decompose_task - task_decomposition_str: {task_decomposition_str}"
-        )
-        return (
-            task_decomposition_str
-            if return_as_str
-            else parse_steps(task_decomposition_str)
-        )
+        candidates.append((decomposition_str, score))
+    candidates.sort(key=lambda c: c[1], reverse=True)

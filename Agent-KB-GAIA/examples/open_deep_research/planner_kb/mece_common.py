@@ -1,5 +1,13 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
+
+
+@dataclass
+class SimScore:
+    redundancy: float
+    exclusivity: float
+    inter_mece: float
+    details: Dict[str, Any]
 
 
 @dataclass
@@ -29,3 +37,11 @@ class DecompCandidate:
     entropy: Optional[Any] = None  # EntropyScore
     # always safe to attach extra info
     details: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class OutlinePick:
+    outlines: List[str]
+    indices: List[int]
+    score: float
+    details: Dict[str, Any]

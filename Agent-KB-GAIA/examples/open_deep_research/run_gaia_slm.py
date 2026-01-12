@@ -49,7 +49,12 @@ from scripts.automodel import (
 
 from agent_kb.agent_kb_utils_unified import AKBClient, call_model
 
-from planner_kb import decompose_task, action_level_planning
+from planner_kb import (
+    decompose_task,
+    decompose_task_single,
+    decompose_task_multiple,
+    action_level_planning,
+)
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
 from smolagents.agents import populate_template
@@ -204,30 +209,31 @@ def parse_args():
     )
     # decomp/rationale params
     parser.add_argument(
-        "--deocmp_mode",
-        type=str,
-        default="loss",
-        help="inter/intra-decomposition based on loss or sim",
-    )
-    parser.add_argument(
         "--decomp",
         action="store_true",
         help="Apply any task decomposition",
     )
     parser.add_argument(
+        "--intra_decomp",
+        action="store_true",
+        help="Measuring intra-MECE after task decomposition",
+    )
+    parser.add_argument(
+        "--intra_mode",
+        type=str,
+        default="max_surprise",
+        help="max_surprise/min_surprise/sim/entropy",
+    )
+    parser.add_argument(
         "--inter_decomp",
         action="store_true",
-        help="Measuring inter-MECE after task decomposition",
+        help="Measuring inter-intra-MECE after task decomposition",
     )
     parser.add_argument(
-        "--intra_inter_decomp",
-        action="store_true",
-        help="Measuring intra-inter-MECE after task decomposition",
-    )
-    parser.add_argument(
-        "--incre_mece",
-        action="store_true",
-        help="Stop when mece is lower than threshold",
+        "--outline_mode",
+        type=str,
+        default="direction_only",
+        help="direction_only/surprise/sim/entropy",
     )
     parser.add_argument(
         "--decomp_ex",
@@ -243,11 +249,6 @@ def parse_args():
         "--action_ex",
         action="store_true",
         help="Apply action planning",
-    )
-    parser.add_argument(
-        "--one_pass",
-        action="store_true",
-        help="Do not apply react",
     )
     parser.add_argument(
         "--multiple_decomp",
@@ -298,6 +299,22 @@ BROWSER_CONFIG = {
 }
 
 os.makedirs(f"./{BROWSER_CONFIG['downloads_folder']}", exist_ok=True)
+
+
+def make_decomp_answers_file(answers_file: str, decomp_idx: int) -> str:
+    """
+    answers_file이 '.../run_name.jsonl' 이면:
+      idx=0 -> 그대로
+      idx=1 -> .../run_name_1.jsonl
+      idx=2 -> .../run_name_2.jsonl
+    확장자가 없으면 뒤에 _{idx}를 그냥 붙임.
+    """
+    if decomp_idx == 0:
+        return answers_file
+    base, ext = os.path.splitext(answers_file)
+    if ext:
+        return f"{base}_{decomp_idx}{ext}"
+    return f"{answers_file}_{decomp_idx}.jsonl"
 
 
 def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False):
@@ -383,13 +400,14 @@ def answer_single_question(
     model=None,
     model_search=None,
     decomp=False,
+    intra_decomp=False,
+    intra_mode=None,
     inter_decomp=False,
-    intra_inter_decomp=False,
+    outline_mode=None,
     decomp_ex=False,
     action_planning=False,
     action_planning_ex=False,
     multiple_decomp=False,
-    deocmp_mode="loss",
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -399,10 +417,8 @@ def answer_single_question(
         model_name_search, key_search, url_search, model_wrapper_search = get_api_model(
             model_id_search
         )
-
         kwargs = prepare_model_kwargs(model_id, args)
         kwargs_search = prepare_model_kwargs(model_id_search, args)
-
         model = model_wrapper(
             model_name,
             custom_role_conversions=custom_role_conversions,
@@ -460,11 +476,10 @@ def answer_single_question(
             )
         augmented_question += prompt_use_files
 
-    ## ============================== QUERY DECOMPOSITION / RATIONALE-BASED PLANNING ==============================##
     additional_knowledge = None
     if decomp:
-        logger.info(f"Starting decomp(deocmp_mode {deocmp_mode})")
-        sub_tasks = decompose_task(
+        logger.info(f"Starting decomposition - direction only")
+        additional_knowledge = decompose_task(
             example=example,
             augmented_question=augmented_question,
             model_name=model_name,
@@ -472,137 +487,203 @@ def answer_single_question(
             url=url,
             model=model,
             slm=slm,
-            inter_decomp=inter_decomp,
-            intra_inter_decomp=intra_inter_decomp,
             retrieval_method=retrieval_method if decomp_ex else None,
             top_k=3 if decomp_ex else None,
-            return_as_str=True,
-            multiple_decomp=multiple_decomp,
         )
-        if action_planning:
-            action_plans = action_level_planning(
-                task=example["question"],
-                curruent_plans=sub_tasks,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method if action_planning_ex else None,
-                top_k=3 if action_planning_ex else None,
-            )
-            additional_knowledge = action_plans
-        else:
-            additional_knowledge = sub_tasks
+    elif intra_decomp:
+        logger.info(f"Starting Intra-decomposition - {intra_mode}")
+        additional_knowledge = decompose_task_single(
+            example=example,
+            augmented_question=augmented_question,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+            retrieval_method=retrieval_method if decomp_ex else None,
+            top_k=3 if decomp_ex else None,
+            mode=intra_mode,
+        )
+    elif inter_decomp:
+        logger.info(f"Starting Inter-decomposition - {outline_mode}/{intra_mode}")
+        additional_knowledge = decompose_task_multiple(
+            example=example,
+            augmented_question=augmented_question,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+            retrieval_method=retrieval_method if decomp_ex else None,
+            top_k=3 if decomp_ex else None,
+            outline_mode=outline_mode,
+            inter_mode=intra_mode,
+            multiple_k=5 if multiple_decomp else 1,
+        )
+    else:
+        logger.info(
+            f"Without any decomposition. (decomp: {decomp}, intra_decomp:{intra_decomp}, inter_decomp:{inter_decomp})"
+        )
 
-    start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
         if multiple_decomp:
-            final_results = []
-            for idx, ak in enumerate(additional_knowledge):
-                print(f"{idx+1}-th additional_knowledge")
-                final_result = agent.run(augmented_question, additional_knowledge=ak)
-                final_results.append(final_result)
-            agent_memory = agent.write_memory_to_messages(summary_mode=True)
-            final_result = prepare_response(
-                augmented_question,
-                final_results,
-                reformulation_model=model,
-                multiple=True,
-            )
-            print("=" * 30 + "Final Results." + "=" * 30)
-            print(f"final_results:{final_results}")
-            print(f"final_result:{final_result}")
-            print("=" * 30 + "Final Results." + "=" * 30)
+            for decomp_idx, additional_knowledge_i in enumerate(decomp_list):
+                decomp_answers_file = make_decomp_answers_file(answers_file, decomp_idx)
+                os.makedirs(os.path.dirname(decomp_answers_file), exist_ok=True)
+                start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                # ✅ decomp 단위로 try/except: 하나 실패해도 다음 decomp 진행
+                try:
+                    final_result = agent.run(
+                        augmented_question, additional_knowledge=additional_knowledge_i
+                    )
+                    agent_memory = agent.write_memory_to_messages(summary_mode=True)
+                    final_result = prepare_response(
+                        augmented_question, agent_memory, reformulation_model=model
+                    )
+                    output = str(final_result)
+
+                    print("=" * 30 + f" Final Output (decomp {decomp_idx}) " + "=" * 30)
+                    print(f"output:{output}")
+                    print("=" * 30 + f" Final Output (decomp {decomp_idx}) " + "=" * 30)
+
+                    intermediate_steps = []
+                    for memory_step in agent.memory.steps:
+                        memory_step.model_input_messages = None
+                        step_dict = memory_step.dict()
+                        if isinstance(memory_step, ActionStep):
+                            step_dict["step_type"] = "action"
+                            step_dict.pop("model_output_message", None)
+                        elif isinstance(memory_step, TaskStep):
+                            step_dict["step_type"] = "task"
+                        elif isinstance(memory_step, PlanningStep):
+                            step_dict["step_type"] = "planning"
+                            step_dict.pop("model_output_message_facts", None)
+                            step_dict.pop("model_output_message_plan", None)
+                        else:
+                            step_dict["step_type"] = "unknown"
+                        intermediate_steps.append(step_dict)
+
+                    intermediate_steps_check = [
+                        str(step) for step in agent.memory.steps
+                    ]
+                    parsing_error = any(
+                        "AgentParsingError" in step for step in intermediate_steps_check
+                    )
+                    iteration_limit_exceeded = (
+                        "Agent stopped due to iteration limit or time limit." in output
+                    )
+                    agent_error = None
+
+                except Exception as e:
+                    logger.error(
+                        f"Error on task {example['task_id']} (decomp {decomp_idx})\n{e}"
+                    )
+                    # ✅ 실패해도 "실패한대로" 기록
+                    output = None
+                    intermediate_steps = []
+                    parsing_error = False
+                    iteration_limit_exceeded = False
+                    agent_error = str(e)
+
+                end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                annotated_example = {
+                    "agent_name": model.model_id,
+                    "question": example["question"],
+                    "augmented_question": augmented_question,  # 공통
+                    "prediction": output,  # 성공이면 str, 실패면 None
+                    "true_answer": example["true_answer"],
+                    "intermediate_steps": intermediate_steps,  # 성공이면 steps, 실패면 []
+                    "parsing_error": parsing_error,
+                    "iteration_limit_exceeded": iteration_limit_exceeded,
+                    "agent_error": agent_error,  # ✅ 성공 None / 실패 str(e)
+                    "start_time": start_time,
+                    "end_time": end_time,
+                    "task": example["task"],
+                    "task_id": example["task_id"],
+                    "decomp_idx": decomp_idx,
+                    "decomp_input": additional_knowledge_i,
+                    "search_agent_actions": agent.managed_agents[
+                        "search_agent"
+                    ].task_records,
+                }
+                append_answer(annotated_example, decomp_answers_file, jsonl_lock)
+
         else:
-            # final_results = []
-            # for idx in range(5):
-            #     print(f"{idx+1}-th tries")
-            #     final_result = agent.run(
-            #         augmented_question, additional_knowledge=additional_knowledge
-            #     )
-            #     final_results.append(final_result)
-            # agent_memory = agent.write_memory_to_messages(summary_mode=True)
-            # final_result = prepare_response(
-            #     augmented_question,
-            #     final_results,
-            #     reformulation_model=model,
-            #     multiple=True,
-            # )
-            # print("=" * 30 + "Final Results." + "=" * 30)
-            # print(f"final_results:{final_results}")
-            # print(f"final_result:{final_result}")
-            # print("=" * 30 + "Final Results." + "=" * 30)
-            final_result = agent.run(
-                augmented_question, additional_knowledge=additional_knowledge
-            )
-            agent_memory = agent.write_memory_to_messages(summary_mode=True)
-            final_result = prepare_response(
-                augmented_question, agent_memory, reformulation_model=model
-            )
-        output = str(final_result)
-        print("=" * 30 + "Final Output." + "=" * 30)
-        print(f"output:{output}")
-        print("=" * 30 + "Final Output." + "=" * 30)
+            os.makedirs(os.path.dirname(answers_file), exist_ok=True)
+            start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            try:
+                final_result = agent.run(
+                    augmented_question, additional_knowledge=additional_knowledge
+                )
+                agent_memory = agent.write_memory_to_messages(summary_mode=True)
+                final_result = prepare_response(
+                    augmented_question, agent_memory, reformulation_model=model
+                )
+                output = str(final_result)
 
-        intermediate_steps = []
-        for memory_step in agent.memory.steps:
-            memory_step.model_input_messages = None
-            step_dict = memory_step.dict()
-            if isinstance(memory_step, ActionStep):
-                step_dict["step_type"] = "action"
-                step_dict.pop("model_output_message", None)
-            elif isinstance(memory_step, TaskStep):
-                step_dict["step_type"] = "task"
-            elif isinstance(memory_step, PlanningStep):
-                step_dict["step_type"] = "planning"
-                step_dict.pop("model_output_message_facts", None)
-                step_dict.pop("model_output_message_plan", None)
-            else:
-                step_dict["step_type"] = "unknown"
-            intermediate_steps.append(step_dict)
+                print("=" * 30 + "Final Output." + "=" * 30)
+                print(f"output:{output}")
+                print("=" * 30 + "Final Output." + "=" * 30)
 
-        intermediate_steps_check = [str(step) for step in agent.memory.steps]
-        parsing_error = (
-            True
-            if any(["AgentParsingError" in step for step in intermediate_steps_check])
-            else False
-        )
+                intermediate_steps = []
+                for memory_step in agent.memory.steps:
+                    memory_step.model_input_messages = None
+                    step_dict = memory_step.dict()
+                    if isinstance(memory_step, ActionStep):
+                        step_dict["step_type"] = "action"
+                        step_dict.pop("model_output_message", None)
+                    elif isinstance(memory_step, TaskStep):
+                        step_dict["step_type"] = "task"
+                    elif isinstance(memory_step, PlanningStep):
+                        step_dict["step_type"] = "planning"
+                        step_dict.pop("model_output_message_facts", None)
+                        step_dict.pop("model_output_message_plan", None)
+                    else:
+                        step_dict["step_type"] = "unknown"
+                    intermediate_steps.append(step_dict)
 
-        iteration_limit_exceeded = (
-            True
-            if "Agent stopped due to iteration limit or time limit." in output
-            else False
-        )
-        raised_exception = False
+                intermediate_steps_check = [str(step) for step in agent.memory.steps]
+                parsing_error = any(
+                    "AgentParsingError" in step for step in intermediate_steps_check
+                )
+                iteration_limit_exceeded = (
+                    "Agent stopped due to iteration limit or time limit." in output
+                )
+                agent_error = None
 
+            except Exception as e:
+                logger.error(f"Error on task {example['task_id']}\n{e}")
+                output = None
+                intermediate_steps = []
+                parsing_error = False
+                iteration_limit_exceeded = False
+                agent_error = str(e)
+            end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            annotated_example = {
+                "agent_name": model.model_id,
+                "question": example["question"],
+                "augmented_question": augmented_question,
+                "prediction": output,
+                "true_answer": example["true_answer"],
+                "intermediate_steps": intermediate_steps,
+                "parsing_error": parsing_error,
+                "iteration_limit_exceeded": iteration_limit_exceeded,
+                "agent_error": agent_error,  # ✅ 성공 None / 실패 str(e)
+                "start_time": start_time,
+                "end_time": end_time,
+                "task": example["task"],
+                "task_id": example["task_id"],
+                "search_agent_actions": agent.managed_agents[
+                    "search_agent"
+                ].task_records,
+            }
+            append_answer(annotated_example, answers_file, jsonl_lock)
     except Exception as e:
-        logger.error(f"Error on task {example['task_id']}\n{e}")
-        output = None
-        intermediate_steps = []
-        action_trajectory = []
-        parsing_error = False
-        iteration_limit_exceeded = False
-        exception = e
-        raised_exception = True
-    end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    annotated_example = {
-        "agent_name": model.model_id,
-        "question": example["question"],
-        "augmented_question": augmented_question,
-        "prediction": output,
-        "true_answer": example["true_answer"],
-        "intermediate_steps": intermediate_steps,
-        "parsing_error": parsing_error,
-        "iteration_limit_exceeded": iteration_limit_exceeded,
-        "agent_error": str(exception) if raised_exception else None,
-        "start_time": start_time,
-        "end_time": end_time,
-        "task": example["task"],
-        "task_id": example["task_id"],
-        "search_agent_actions": agent.managed_agents["search_agent"].task_records,
-    }
-    append_answer(annotated_example, answers_file, jsonl_lock)
+        logger.error(f"Fatal error on task {example.get('task_id')}\n{e}")
+        raise
 
 
 def get_examples_to_answer(
@@ -673,26 +754,27 @@ def main():
         logger.info(f"Starting answer_single_question #{len(tasks_to_run)}")
         for example in tasks_to_run:
             answer_single_question(
-                example,
-                args,
-                args.model_id,
-                args.model_id_search,
-                answers_file,
-                args.debug,
-                args.agent_kb,
-                args.apply_student,
-                args.apply_teacher,
-                args.slm,
-                model,
-                model_search,
-                args.decomp,
-                args.inter_decomp,
-                args.intra_inter_decomp,
-                args.decomp_ex,
-                args.action,
-                args.action_ex,
-                args.multiple_decomp,
-                args.deocmp_mode,
+                example=example,
+                args=args,
+                model_id=args.model_id,
+                model_id_search=args.model_id_search,
+                answers_file=answers_file,
+                debug=args.debug,
+                retrieval=args.agent_kb,
+                apply_student=args.apply_student,
+                apply_teacher=args.apply_teacher,
+                slm=args.slm,
+                model=model,
+                model_search=model_search,
+                decomp=args.decomp,
+                intra_decomp=args.intra_decomp,
+                intra_mode=args.intra_mode,
+                inter_decomp=args.inter_decomp,
+                outline_mode=args.outline_mode,
+                decomp_ex=args.decomp_ex,
+                action_planning=args.action,
+                action_planning_ex=args.action_ex,
+                multiple_decomp=args.multiple_decomp,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
