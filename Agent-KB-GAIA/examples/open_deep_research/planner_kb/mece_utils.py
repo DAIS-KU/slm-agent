@@ -143,38 +143,51 @@ def split_by_semicolons(text: str) -> List[str]:
     return parts
 
 
+
 def parse_subtask(output: str) -> List[str]:
     """
     Extract Subgoal text and return as:
       ['Subgoal 1: ...', 'Subgoal 2: ...', ...]
 
-    - Supports JSON-ish: "Subgoal 1": "..."
-    - Supports plain text: 'Subgoal: ...' / 'Subgoal 3: ...' etc.
-    - Always assigns numbers sequentially in appearance order (ignores any given numbers).
+    Handles examples like:
+      - Subgoal 1: ...
+      * Subgoal 2 - ...
+      Subgoal: ...
+      "Subgoal 3": "..."
+
+    Notes:
+      - Accepts common bullet prefixes (-, *, •).
+      - Ignores any provided numbers and auto-assigns sequential numbers
+        in the order Subgoals appear in the text.
+      - De-duplicates identical Subgoal texts while preserving first occurrence.
     """
-    results: List[str] = []
-
-    # 1) JSON-like: "Subgoal 1": "..."
-    json_pattern = r'"Subgoal\s*\d*"\s*:\s*"([^"]+)"'
-    results += [text.strip() for text in re.findall(json_pattern, output)]
-
-    # 2) Plain text: Subgoal: ...  /  Subgoal 3: ...
-    #    (also allow '-' as delimiter)
-    text_pattern = re.compile(
-        r'^\s*Subgoal\s*(?:\d+\s*)?[:\-]\s*(.+?)\s*$',
-        re.IGNORECASE | re.MULTILINE
+    pattern = re.compile(
+        r'''
+        # (A) JSON-ish: "Subgoal 1": "text"
+        "Subgoal\s*\d*"\s*:\s*"([^"]+)"
+        |
+        # (B) Plain text line (optionally bulleted): - Subgoal 1: text
+        ^\s*(?:[-*•]\s+)?Subgoal\s*(?:\d+\s*)?[:\-]\s*(.+?)\s*$
+        ''',
+        re.IGNORECASE | re.MULTILINE | re.VERBOSE
     )
-    results += [text.strip() for text in text_pattern.findall(output)]
 
-    # De-duplicate while preserving order (in case the same content matches both patterns)
+    found: List[str] = []
+    for m in pattern.finditer(output):
+        text = m.group(1) or m.group(2)
+        if text:
+            found.append(text.strip())
+
+    # De-duplicate while preserving order
     seen = set()
     ordered: List[str] = []
-    for t in results:
-        if t and t not in seen:
+    for t in found:
+        if t not in seen:
             seen.add(t)
             ordered.append(t)
 
     return [f"Subgoal {i}: {text}" for i, text in enumerate(ordered, start=1)]
+    
 
 def clamp01(x: float) -> float:
     return max(0.0, min(1.0, x))
