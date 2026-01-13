@@ -377,7 +377,7 @@ def decompose_task_multiple(
         task_text=augmented_question, n=multiple_n, k=multiple_k, mode=outline_mode
     )
     outlines = picked.outlines
-    logger.info(f"outline candidates: {outlines}")
+    logger.info(f"outline candidates({multiple_k}/{multiple_n}): {outlines}")
 
     candidates = []
     for outline in outlines:

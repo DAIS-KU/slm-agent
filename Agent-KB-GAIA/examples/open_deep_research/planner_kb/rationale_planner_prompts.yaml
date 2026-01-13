@@ -1,10 +1,10 @@
 task_decomposition_prompt: |
-    You have one question to answer. Break it down into sub-tasks(sub-queries) to reach the goal. Do not actually compute the answer.
+    You have one question to answer. Break it down into sub-tasks(sub-queries) to reach the goal. Do not actually compute the answer. Be sure to include the Subgoal and Rationale fields in the response.
     Here is the task:
     {{task}}
 
 task_decomposition_with_examples_prompt: |
-    You have one question to answer. Break it down into sub-tasks(sub-queries) to reach the goal. Do not actually compute the answer.
+    You have one question to answer. Break it down into sub-tasks(sub-queries) to reach the goal. Do not actually compute the answer. Be sure to include the Subgoal and Rationale fields in the response.
     Here is the task:
     {{task}}
     You must decompose the above task with reference to the similar task-decomposition rationales below.
@@ -98,14 +98,14 @@ extract_step_list: |
 
 
 task_decomposition_and_planning_with_retrieval_examples_prompt: |
-    Please provide a reasonable subgoal-based plan to solve the given task.  
+    Please provide a reasonable subgoal-based plan to solve the given task. Be sure to include the Subgoal and Rationale fields in the response.  
     Here is the task:
     {{task}}
 
     {{retrieval_examples}}
 
 task_decomposition_and_planning_with_outline_and_retrieval_examples_prompt: |
-    Please provide a reasonable subgoal-based plan to solve the given task.  
+    Please provide a reasonable subgoal-based plan to solve the given task. Be sure to include the Subgoal and Rationale fields in the response. 
     Here is the task:
     {{task}}
     And the approach to solving this problem is as follows:{{approach}}
@@ -113,7 +113,7 @@ task_decomposition_and_planning_with_outline_and_retrieval_examples_prompt: |
     {{retrieval_examples}}
 
 task_decomposition_and_planning_with_icl_examples_prompt: |
-    Please provide a reasonable subgoal-based plan to solve the given task.  
+    Please provide a reasonable subgoal-based plan to solve the given task. Be sure to include the Subgoal and Rationale fields in the response. 
     Here is the task:
     {{task}}
 
@@ -179,7 +179,7 @@ task_decomposition_and_planning_with_icl_examples_prompt: |
 
 
 task_decomposition_and_planning_with_outline_and_icl_examples_prompt: |
-    Please provide a reasonable subgoal-based plan to solve the given task.  
+    Please provide a reasonable subgoal-based plan to solve the given task. Be sure to include the Subgoal and Rationale fields in the response. 
     Here is the task:
     {{task}}
     And the approach to solving this problem is as follows:{{approach}}

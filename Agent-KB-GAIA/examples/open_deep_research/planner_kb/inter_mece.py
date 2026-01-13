@@ -211,7 +211,7 @@ class EntropyInterMeceEngine:
 
                 subtasks = parse_subtask(raw)
                 if subtasks == []:
-                    logger.info("Failed to generate subtasks.")
+                    logger.info(f"Failed to generate subtasks.{raw}")
             logger.info(f"Generate {sample_num}th decomposition.")
             logger.info(subtasks)
 
@@ -418,7 +418,7 @@ class SurpriseInterMeceEngine:
 
                 subtasks = parse_subtask(raw)
                 if subtasks == []:
-                    logger.info("Failed to generate subtasks.")
+                    logger.info(f"Failed to generate subtasks.{raw}")
             logger.info(f"Generate {sample_num}th decomposition.:")
             logger.info(subtasks)
 
@@ -720,7 +720,7 @@ class SimInterMeceEngine:
 
                 subtasks = parse_subtask(raw)
                 if subtasks == []:
-                    logger.info("Failed to generate subtasks.")
+                    logger.info(f"Failed to generate subtasks.{raw}")
             logger.info(f"Generate {sample_num}th decomposition.")
             logger.info(subtasks)
 

@@ -145,13 +145,36 @@ def split_by_semicolons(text: str) -> List[str]:
 
 def parse_subtask(output: str) -> List[str]:
     """
-    Extract Subgoal number + text (e.g., 'Subgoal 1: ...') from the given string.
-    """
-    pattern = r'"Subgoal\s*(\d+)"\s*:\s*"([^"]+)"'
-    matches = re.findall(pattern, output)
-    # preserve order as they appear
-    return [f"Subgoal {num}: {text}" for num, text in matches]
+    Extract Subgoal text and return as:
+      ['Subgoal 1: ...', 'Subgoal 2: ...', ...]
 
+    - Supports JSON-ish: "Subgoal 1": "..."
+    - Supports plain text: 'Subgoal: ...' / 'Subgoal 3: ...' etc.
+    - Always assigns numbers sequentially in appearance order (ignores any given numbers).
+    """
+    results: List[str] = []
+
+    # 1) JSON-like: "Subgoal 1": "..."
+    json_pattern = r'"Subgoal\s*\d*"\s*:\s*"([^"]+)"'
+    results += [text.strip() for text in re.findall(json_pattern, output)]
+
+    # 2) Plain text: Subgoal: ...  /  Subgoal 3: ...
+    #    (also allow '-' as delimiter)
+    text_pattern = re.compile(
+        r'^\s*Subgoal\s*(?:\d+\s*)?[:\-]\s*(.+?)\s*$',
+        re.IGNORECASE | re.MULTILINE
+    )
+    results += [text.strip() for text in text_pattern.findall(output)]
+
+    # De-duplicate while preserving order (in case the same content matches both patterns)
+    seen = set()
+    ordered: List[str] = []
+    for t in results:
+        if t and t not in seen:
+            seen.add(t)
+            ordered.append(t)
+
+    return [f"Subgoal {i}: {text}" for i, text in enumerate(ordered, start=1)]
 
 def clamp01(x: float) -> float:
     return max(0.0, min(1.0, x))
