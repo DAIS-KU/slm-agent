@@ -527,7 +527,7 @@ def answer_single_question(
 
     try:
         if multiple_decomp:
-            for decomp_idx, additional_knowledge_i in enumerate(decomp_list):
+            for decomp_idx, additional_knowledge_i in enumerate(additional_knowledge):
                 decomp_answers_file = make_decomp_answers_file(answers_file, decomp_idx)
                 os.makedirs(os.path.dirname(decomp_answers_file), exist_ok=True)
                 start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

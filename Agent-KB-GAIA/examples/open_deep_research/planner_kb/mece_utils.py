@@ -143,7 +143,6 @@ def split_by_semicolons(text: str) -> List[str]:
     return parts
 
 
-
 def parse_subtask(output: str) -> List[str]:
     """
     Extract Subgoal text and return as:
@@ -162,14 +161,14 @@ def parse_subtask(output: str) -> List[str]:
       - De-duplicates identical Subgoal texts while preserving first occurrence.
     """
     pattern = re.compile(
-        r'''
+        r"""
         # (A) JSON-ish: "Subgoal 1": "text"
         "Subgoal\s*\d*"\s*:\s*"([^"]+)"
         |
         # (B) Plain text line (optionally bulleted): - Subgoal 1: text
         ^\s*(?:[-*•]\s+)?Subgoal\s*(?:\d+\s*)?[:\-]\s*(.+?)\s*$
-        ''',
-        re.IGNORECASE | re.MULTILINE | re.VERBOSE
+        """,
+        re.IGNORECASE | re.MULTILINE | re.VERBOSE,
     )
 
     found: List[str] = []
@@ -187,7 +186,7 @@ def parse_subtask(output: str) -> List[str]:
             ordered.append(t)
 
     return [f"Subgoal {i}: {text}" for i, text in enumerate(ordered, start=1)]
-    
+
 
 def clamp01(x: float) -> float:
     return max(0.0, min(1.0, x))

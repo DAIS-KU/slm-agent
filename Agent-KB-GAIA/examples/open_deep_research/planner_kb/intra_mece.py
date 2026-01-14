@@ -83,25 +83,26 @@ class OutlineMeceEngine:
     # Sampling
     # -------------------------
     def sample_outlines(
-        self,
-        *,
-        task_text: str,
-        n: int,
-        seed: Optional[int] = None,
-        dedup: bool = True,
+        self, *, task_text: str, n: int, seed: Optional[int] = None, dedup: bool = True
     ) -> List[str]:
         if seed is not None:
             random.seed(seed)
 
         outlines: List[str] = []
         seen = set()
+        attempts = 0
+        max_attempts = n * 10  # 상황에 맞게 조절
 
-        for _ in range(n):
+        while len(outlines) < n and attempts < max_attempts:
+            attempts += 1
             prompt = format_generate_outline_prompt(task_text, outlines)
             o = self.call_model_fn(query=prompt, **self.call_model_kwargs)
-            if not o or not isinstance(o, str):
+
+            if not isinstance(o, str):
                 continue
             o = o.strip()
+            if not o:
+                continue
 
             if dedup:
                 key = " ".join(o.split())
@@ -110,7 +111,6 @@ class OutlineMeceEngine:
                 seen.add(key)
 
             outlines.append(o)
-
         return outlines
 
     # -------------------------

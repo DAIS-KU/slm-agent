@@ -326,6 +326,7 @@ def decompose_task_single(
             num_samples=8,
             return_topk=1,
         )
+        logger.info(f"cands:{cands}")
         best = cands[0]
         score = best.entropy.pairwise_js_mean
         logger.info(f"best.subtasks: {best.subtasks}")
@@ -397,3 +398,4 @@ def decompose_task_multiple(
         )
         candidates.append((decomposition_str, score))
     candidates.sort(key=lambda c: c[1], reverse=True)
+    return candidates
