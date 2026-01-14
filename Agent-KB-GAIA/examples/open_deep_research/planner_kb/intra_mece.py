@@ -9,6 +9,10 @@ import torch
 import torch.nn.functional as F
 from .mece_common import *
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 Mode = Literal["direction_only", "sim", "surprise", "entropy"]
 
 
