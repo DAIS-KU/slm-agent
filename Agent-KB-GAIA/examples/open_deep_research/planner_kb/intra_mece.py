@@ -90,10 +90,8 @@ class OutlineMeceEngine:
 
         outlines: List[str] = []
         seen = set()
-        attempts = 0
-        max_attempts = n * 10  # 상황에 맞게 조절
 
-        while len(outlines) < n and attempts < max_attempts:
+        while len(outlines) < n:
             attempts += 1
             prompt = format_generate_outline_prompt(task_text, outlines)
             o = self.call_model_fn(query=prompt, **self.call_model_kwargs)
