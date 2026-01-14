@@ -518,7 +518,7 @@ def answer_single_question(
             top_k=3 if decomp_ex else None,
             outline_mode=outline_mode,
             inter_mode=intra_mode,
-            multiple_k=5 if multiple_decomp else 1,
+            multiple_k=3 if multiple_decomp else 1,
         )
     else:
         logger.info(

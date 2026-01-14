@@ -90,8 +90,11 @@ class OutlineMeceEngine:
 
         outlines: List[str] = []
         seen = set()
+        attempts = 1
 
         while len(outlines) < n:
+            logger.info(f"Try to generate {attempts}-th outline.")
+            attempts += 1
             prompt = format_generate_outline_prompt(task_text, outlines)
             o = self.call_model_fn(query=prompt, **self.call_model_kwargs)
 

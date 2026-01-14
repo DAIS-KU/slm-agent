@@ -360,8 +360,8 @@ def decompose_task_multiple(
     top_k,
     outline_mode="direction_only",
     inter_mode="max_surprise",
-    multiple_n=12,
-    multiple_k=5,
+    multiple_n=8,
+    multiple_k=3,
 ):
     engine = OutlineMeceEngine(
         tm=model,
