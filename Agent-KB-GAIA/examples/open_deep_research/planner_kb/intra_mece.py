@@ -109,11 +109,11 @@ class OutlineMeceEngine:
             if not o:
                 continue
 
-            if dedup:
-                key = " ".join(o.split())
-                if key in seen:
-                    continue
-                seen.add(key)
+            # if dedup:
+            #     key = " ".join(o.split())
+            #     if key in seen:
+            #         continue
+            #     seen.add(key)
 
             outlines.append(o)
         return outlines
