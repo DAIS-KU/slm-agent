@@ -105,9 +105,9 @@ class OutlineMeceEngine:
 
             if not isinstance(o, str):
                 continue
-            o = o.strip()
-            if not o:
-                continue
+            # o = o.strip()
+            # if not o:
+            #     continue
 
             # if dedup:
             #     key = " ".join(o.split())
