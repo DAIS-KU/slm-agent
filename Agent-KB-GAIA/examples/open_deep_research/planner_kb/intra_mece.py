@@ -23,7 +23,7 @@ Return only the newly generated approach, excluding the task description and any
 
 Task: {task_text}
 Approaches: {existing}
-""".strip()
+"""
 
 
 def format_surprise_prompt(task_text: str, given_outline: str) -> str:
@@ -34,7 +34,7 @@ Return only the new approach in one or two sentences.
 Task: {task_text}
 Existing approach: {given_outline}
 New approach:
-""".strip()
+"""
 
 
 def format_execute_prompt(task_text: str, outline_text: str) -> str:
@@ -45,7 +45,7 @@ Be concise but actionable.
 Task: {task_text}
 Approach: {outline_text}
 Steps:
-""".strip()
+"""
 
 
 class OutlineMeceEngine:
