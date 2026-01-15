@@ -101,10 +101,11 @@ class OutlineMeceEngine:
             attempts += 1
             prompt = format_generate_outline_prompt(task_text, outlines)
             o = self.call_model_fn(query=prompt, **self.call_model_kwargs)
+            o = "New approach: " + str(o)
             logger.info(f"Generated raw outline. :{o}")
-
-            if not isinstance(o, str):
-                continue
+            
+            # if not isinstance(o, str):
+            #     continue
             # o = o.strip()
             # if not o:
             #     continue
