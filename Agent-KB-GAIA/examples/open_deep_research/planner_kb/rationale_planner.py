@@ -277,6 +277,7 @@ def decompose_task_single(
             objective="min" if mode == "min_surprise" else "max",
             return_topk=1,
         )
+        logger.info(f"cands:{cands}")
         best = cands[0]
         score = best.surprise.total_surprise
         logger.info(f"best.subtasks: {best.subtasks}")
@@ -301,6 +302,7 @@ def decompose_task_single(
             num_samples=8,
             return_topk=1,
         )
+        logger.info(f"cands:{cands}")
         best = cands[0]
         score = best.mece.inter_mece
         logger.info(f"best.subtasks: {best.subtasks}")
