@@ -515,31 +515,31 @@ def answer_single_question(
             print(f"final_result:{final_result}")
             print("=" * 30 + "Final Results." + "=" * 30)
         else:
-            final_results = []
-            for idx in range(5):
-                print(f"{idx+1}-th tries")
-                final_result = agent.run(
-                    augmented_question, additional_knowledge=additional_knowledge
-                )
-                final_results.append(final_result)
-            agent_memory = agent.write_memory_to_messages(summary_mode=True)
-            final_result = prepare_response(
-                augmented_question,
-                final_results,
-                reformulation_model=model,
-                multiple=True,
-            )
-            print("=" * 30 + "Final Results." + "=" * 30)
-            print(f"final_results:{final_results}")
-            print(f"final_result:{final_result}")
-            print("=" * 30 + "Final Results." + "=" * 30)
-            # final_result = agent.run(
-            #     augmented_question, additional_knowledge=additional_knowledge
-            # )
+            # final_results = []
+            # for idx in range(5):
+            #     print(f"{idx+1}-th tries")
+            #     final_result = agent.run(
+            #         augmented_question, additional_knowledge=additional_knowledge
+            #     )
+            #     final_results.append(final_result)
             # agent_memory = agent.write_memory_to_messages(summary_mode=True)
             # final_result = prepare_response(
-            #     augmented_question, agent_memory, reformulation_model=model
+            #     augmented_question,
+            #     final_results,
+            #     reformulation_model=model,
+            #     multiple=True,
             # )
+            # print("=" * 30 + "Final Results." + "=" * 30)
+            # print(f"final_results:{final_results}")
+            # print(f"final_result:{final_result}")
+            # print("=" * 30 + "Final Results." + "=" * 30)
+            final_result = agent.run(
+                augmented_question, additional_knowledge=additional_knowledge
+            )
+            agent_memory = agent.write_memory_to_messages(summary_mode=True)
+            final_result = prepare_response(
+                augmented_question, agent_memory, reformulation_model=model
+            )
         output = str(final_result)
         print("=" * 30 + "Final Output." + "=" * 30)
         print(f"output:{output}")
