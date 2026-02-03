@@ -27,7 +27,6 @@ from PIL.Image import Image as ImageType
 
 from .utils import _is_package_available
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -1005,8 +1005,7 @@ You have been provided with these additional arguments, that you can access usin
         managed_agent_relative_path = (
             relative_path + "." if relative_path is not None else ""
         )
-        app_template = textwrap.dedent(
-            """
+        app_template = textwrap.dedent("""
             import yaml
             import os
             from smolagents import GradioUI, {{ class_name }}, {{ agent_dict['model']['class'] }}
@@ -1043,8 +1042,7 @@ You have been provided with these additional arguments, that you can access usin
             )
             if __name__ == "__main__":
                 GradioUI({{ agent_name }}).launch()
-            """
-        ).strip()
+            """).strip()
         template_env = jinja2.Environment(
             loader=jinja2.BaseLoader(), undefined=jinja2.StrictUndefined
         )

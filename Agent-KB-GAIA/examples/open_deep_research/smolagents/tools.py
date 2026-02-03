@@ -55,7 +55,6 @@ from .utils import (
     instance_to_source,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -226,8 +225,7 @@ class Tool:
                 raise (ValueError("\n".join(method_checker.errors)))
 
             forward_source_code = get_source(self.forward)
-            tool_code = textwrap.dedent(
-                f"""
+            tool_code = textwrap.dedent(f"""
             from smolagents import Tool
             from typing import Any, Optional
 
@@ -236,8 +234,7 @@ class Tool:
                 description = {json.dumps(textwrap.dedent(self.description).strip())}
                 inputs = {json.dumps(self.inputs, separators=(",", ":"))}
                 output_type = "{self.output_type}"
-            """
-            ).strip()
+            """).strip()
             import re
 
             def add_self_argument(source_code: str) -> str:
@@ -314,18 +311,14 @@ class Tool:
             # Save app file
             app_file = os.path.join(output_dir, "app.py")
             with open(app_file, "w", encoding="utf-8") as f:
-                f.write(
-                    textwrap.dedent(
-                        f"""
+                f.write(textwrap.dedent(f"""
                 from smolagents import launch_gradio_demo
                 from {tool_file_name} import {class_name}
 
                 tool = {class_name}()
 
                 launch_gradio_demo(tool)
-                """
-                    ).lstrip()
-                )
+                """).lstrip())
 
             # Save requirements file
             requirements_file = os.path.join(output_dir, "requirements.txt")

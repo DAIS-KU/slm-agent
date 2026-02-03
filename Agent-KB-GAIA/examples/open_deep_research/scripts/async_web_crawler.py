@@ -89,9 +89,14 @@ class SimpleCrawler:
                 f"cdr:1,cd_min:01/01/{filter_year},cd_max:12/31/{filter_year}"
             )
 
-        search = GoogleSearch(params)
+        # search = GoogleSearch(params)
+        # results = search.get_dict()
+        resp = requests.get(
+            "https://www.searchapi.io/api/v1/search", params=params, timeout=100
+        )
+        resp.raise_for_status()
+        results = resp.json()
 
-        results = search.get_dict()
         """
         @ serp result format -> json dict
         dict_keys(['search_metadata', 

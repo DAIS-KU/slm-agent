@@ -13,7 +13,6 @@ from smolagents import CodeAgent, DuckDuckGoSearchTool, tool
 from smolagents.agents import ActionStep
 from smolagents.cli import load_model
 
-
 github_request = """
 I'm trying to find how hard I have to work to get a repo in github.com/trending.
 Can you navigate to the profile for the top author of the top trending repo, and give me their total number of commits over the last year?

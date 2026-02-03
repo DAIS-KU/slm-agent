@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 try:
     from unstructured.documents.elements import Element
 except ImportError:
-    Element = None  # type:ignore[misc,assignment]
+    Element = None  # type: ignore[misc,assignment]
 
 
 class Node(BaseModel):
@@ -76,7 +76,5 @@ class GraphElement(BaseModel):
 
     def __post_init__(self):
         if "Element" not in globals():
-            raise ImportError(
-                """The 'unstructured' package is required to use
-                              the 'source' attribute."""
-            )
+            raise ImportError("""The 'unstructured' package is required to use
+                              the 'source' attribute.""")

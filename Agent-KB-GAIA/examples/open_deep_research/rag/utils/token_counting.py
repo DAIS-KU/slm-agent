@@ -34,7 +34,7 @@ from rag.types import (
 from rag.utils import dependencies_required
 
 if TYPE_CHECKING:
-    from mistral_common.protocol.instruct.request import (  # type:ignore[import-not-found]
+    from mistral_common.protocol.instruct.request import (  # type: ignore[import-not-found]
         ChatCompletionRequest,
     )
 
@@ -366,7 +366,7 @@ class MistralTokenCounter(BaseTokenCounter):
             model_type (ModelType): Model type for which tokens will be
                 counted.
         """
-        from mistral_common.tokens.tokenizers.mistral import (  # type:ignore[import-not-found]
+        from mistral_common.tokens.tokenizers.mistral import (  # type: ignore[import-not-found]
             MistralTokenizer,
         )
 
@@ -419,7 +419,7 @@ class MistralTokenCounter(BaseTokenCounter):
         """
 
         from mistral_common.protocol.instruct.request import (
-            ChatCompletionRequest,  # type:ignore[import-not-found]
+            ChatCompletionRequest,  # type: ignore[import-not-found]
         )
 
         mistral_request = ChatCompletionRequest(  # type: ignore[type-var]

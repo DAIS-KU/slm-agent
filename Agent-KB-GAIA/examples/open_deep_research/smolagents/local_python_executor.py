@@ -31,7 +31,6 @@ import pandas as pd
 
 from .utils import BASE_BUILTIN_MODULES, truncate_content
 
-
 logger = logging.getLogger(__name__)
 
 

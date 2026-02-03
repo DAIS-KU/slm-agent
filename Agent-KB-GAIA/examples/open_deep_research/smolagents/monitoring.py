@@ -30,7 +30,6 @@ from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
 
-
 __all__ = ["AgentLogger", "LogLevel", "Monitor"]
 
 

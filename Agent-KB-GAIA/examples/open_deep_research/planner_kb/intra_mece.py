@@ -103,7 +103,7 @@ class OutlineMeceEngine:
             o = self.call_model_fn(query=prompt, **self.call_model_kwargs)
             o = "New approach: " + str(o)
             logger.info(f"Generated raw outline. :{o}")
-            
+
             # if not isinstance(o, str):
             #     continue
             # o = o.strip()

@@ -24,7 +24,6 @@ from smolagents.models import ChatMessage, MessageRole
 from smolagents.monitoring import AgentLogger
 from smolagents.utils import AgentError, make_json_serializable
 
-
 if TYPE_CHECKING:
     from smolagents.models import ChatMessage
     from smolagents.monitoring import AgentLogger

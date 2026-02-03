@@ -49,7 +49,7 @@ from scripts.automodel import (
 
 from agent_kb.agent_kb_utils import AKBClient, call_model
 
-from planner_kb import decompose_task, subtask_planning
+from planner_kb import decompose_task
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
 from smolagents.agents import populate_template
@@ -61,8 +61,6 @@ from smolagents import (
     Model,
     ToolCallingAgent,
     TransformersModel,
-    AdvancedCodeAgent,
-    AdvancedToolCallingAgent,
 )
 from dotenv import load_dotenv
 
@@ -204,23 +202,6 @@ def parse_args():
         default="gpt-4.1",
         help="agent kb model choice",
     )
-    # decomp/rationale params
-    parser.add_argument(
-        "--qdecomp", action="store_true", help="Planning after task decomposition"
-    )
-    parser.add_argument(
-        "--qdecomp_ex",
-        action="store_true",
-        help="Using rationales when decomposing a task",
-    )
-    parser.add_argument(
-        "--p_rationale", action="store_true", help="Enable LLM rationale-based planning"
-    )
-    parser.add_argument(
-        "--p_rationale_ex",
-        action="store_true",
-        help="Using rationales when planning",
-    )
     return parser.parse_args()
 
 
@@ -271,7 +252,7 @@ def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False)
     crawler = SimpleCrawler(serpapi_key=os.getenv("SERP_API_KEY"))
     text_limit = 100000
 
-    search_types = ["wiki", "google", "baidu", "bing", "duckduckgo"]
+    search_types = ["google", "baidu", "bing", "duckduckgo"]
     search_tools = [SearchTool(search_type=st, reflection=False) for st in search_types]
 
     WEB_TOOLS = [
@@ -281,7 +262,7 @@ def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False)
     ]
     WEB_TOOLS += search_tools
 
-    text_webbrowser_agent = AdvancedToolCallingAgent(
+    text_webbrowser_agent = ToolCallingAgent(
         model=model_search,
         tools=WEB_TOOLS,
         max_steps=args.max_steps,
@@ -299,17 +280,13 @@ def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False)
         agent_kb=args.agent_kb,
         top_k=args.top_k,
         retrieval_type=args.retrieval_type,
-        q_decomp=args.qdecomp,
-        q_decomp_ex=args.qdecomp_ex,
-        p_rationale=args.p_rationale,
-        p_rationale_ex=args.p_rationale_ex,
     )
     text_webbrowser_agent.prompt_templates["managed_agent"][
         "task"
     ] += """You can navigate to .txt online files.
     If a non-html page is in another format, especially .pdf or a Youtube video, use tool 'inspect_file_as_text' to inspect it.
     Additionally, if after some searching you find out that you need more information to answer the question, you can use `final_answer` with your request for clarification as argument to request for more information."""
-    manager_agent = AdvancedCodeAgent(
+    manager_agent = CodeAgent(
         model=model,
         tools=[
             VisualInspectorTool(model, text_limit),
@@ -325,10 +302,6 @@ def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False)
         agent_kb=args.agent_kb,
         top_k=args.top_k,
         retrieval_type=args.retrieval_type,
-        q_decomp=args.qdecomp,
-        q_decomp_ex=args.qdecomp_ex,
-        p_rationale=args.p_rationale,
-        p_rationale_ex=args.p_rationale_ex,
     )
     return manager_agent
 
@@ -357,10 +330,6 @@ def answer_single_question(
     slm=False,
     model=None,
     model_search=None,
-    q_decomp=False,
-    q_decomp_ex=False,
-    p_rationale=False,
-    p_rationale_ex=False,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -433,7 +402,20 @@ def answer_single_question(
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
-        final_result = agent.run(augmented_question)
+        additional_knowledge = decompose_task(
+            example=example,
+            augmented_question=augmented_question,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+            retrieval_method=retrieval_method,
+            top_k=3,
+        )
+        final_result = agent.run(
+            augmented_question, additional_knowledge=additional_knowledge
+        )
         agent_memory = agent.write_memory_to_messages(summary_mode=True)
         final_result = prepare_response(
             augmented_question, agent_memory, reformulation_model=model
@@ -549,22 +531,20 @@ def main():
     if args.slm:
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
-            # model_id=args.model_id,
-            model_id="/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/models/Qwen3-4B-Instruct-2507",
-            device_map="cuda:0",
+            model_id=args.model_id,
+            device_map="auto",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
-            temperature=0.1,
+            temperature=0.7,
         )
         model_search = TransformersModel(
-            # model_id=args.model_id_search,
-            model_id="/home/work/huijeong/agent/Agent-KB-GAIA/examples/open_deep_research/models/Qwen3-4B-Instruct-2507",
-            device_map="cuda:0",
+            model_id=args.model_id_search,
+            device_map="auto",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
-            temperature=0.1,
+            temperature=0.7,
         )
     else:
         model, model_search = None, None
@@ -584,10 +564,6 @@ def main():
                 args.slm,
                 model,
                 model_search,
-                args.qdecomp,
-                args.qdecomp_ex,
-                args.p_rationale,
-                args.p_rationale_ex,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:

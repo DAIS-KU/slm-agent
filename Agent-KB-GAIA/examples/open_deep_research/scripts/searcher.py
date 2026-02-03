@@ -195,25 +195,33 @@ class SerpSearcher(BaseSearcher):
                 f"cdr:1,cd_min:01/01/{filter_year},cd_max:12/31/{filter_year}"
             )
 
-        if self.engine == "google":
-            params["q"] = query
-            params["num"] = self.serp_num
-            search = GoogleSearch(params)
-        elif self.engine == "bing":
-            params["q"] = query
-            params["count"] = self.serp_num
-            search = BingSearch(params)
-        elif self.engine == "baidu":
-            params["q"] = query
-            params["rn"] = self.serp_num
-            search = BaiduSearch(params)
-        elif self.engine == "yahoo":
-            params["p"] = query
-            search = YahooSearch(params)
+        # if self.engine == "google":
+        #     params["q"] = query
+        #     params["num"] = self.serp_num
+        #     search = GoogleSearch(params)
+        # elif self.engine == "bing":
+        #     params["q"] = query
+        #     params["count"] = self.serp_num
+        #     search = BingSearch(params)
+        # elif self.engine == "baidu":
+        #     params["q"] = query
+        #     params["rn"] = self.serp_num
+        #     search = BaiduSearch(params)
+        # elif self.engine == "yahoo":
+        #     params["p"] = query
+        #     search = YahooSearch(params)
+        if self.engine in ["google", "bing", "baidu", "yahoo"]: 
+            pass
         else:
             raise ValueError("Unsupport Serp Engine! Please check your parameters!")
 
-        results = search.get_dict()
+
+        resp = requests.get(
+            "https://www.searchapi.io/api/v1/search", params=params, timeout=100
+        )
+        resp.raise_for_status()
+        results = resp.json()
+        # results = search.get_dict()
         print(f"SerpSearch results:{results}")
 
         self.page_title = f"{query} - Search"
@@ -556,10 +564,10 @@ class SearchTool(Tool):
         self.allowed_search_types = [
             "google",
             "bing",
-            "bocha",
+            # "bocha",
             "baidu",
-            "exa",
-            "wiki",
+            # "exa",
+            # "wiki",
             "yahoo",
             "duckduckgo",
         ]

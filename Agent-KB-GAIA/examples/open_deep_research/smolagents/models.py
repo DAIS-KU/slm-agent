@@ -43,7 +43,6 @@ from .utils import _is_package_available, encode_image_base64, make_image_url
 import ast
 from json_repair import repair_json
 
-
 if TYPE_CHECKING:
     from transformers import StoppingCriteriaList
 

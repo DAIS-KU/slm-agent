@@ -15,10 +15,11 @@ from openai import OpenAI
 import requests
 
 
-
 import logging
 
 logger = logging.getLogger(__name__)
+
+
 def call_model(query, model_name, key, url, model, slm=False):
     if len(query) > 300000:
         query = query[:300000]
