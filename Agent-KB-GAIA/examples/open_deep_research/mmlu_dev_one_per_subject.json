@@ -1,0 +1,743 @@
+[
+  {
+    "task_id": "abstract_algebra",
+    "question": "Find all c in Z_3 such that Z_3[x]/(x^2 + c) is a field.\nA. 0\nB. 1\nC. 2\nD. 3",
+    "task": "Find all c in Z_3 such that Z_3[x]/(x^2 + c) is a field.\nA. 0\nB. 1\nC. 2\nD. 3",
+    "choices": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    "answer_index": 1,
+    "true_answer": "B"
+  },
+  {
+    "task_id": "anatomy",
+    "question": "What is the embryological origin of the hyoid bone?\nA. The first pharyngeal arch\nB. The first and second pharyngeal arches\nC. The second pharyngeal arch\nD. The second and third pharyngeal arches",
+    "task": "What is the embryological origin of the hyoid bone?\nA. The first pharyngeal arch\nB. The first and second pharyngeal arches\nC. The second pharyngeal arch\nD. The second and third pharyngeal arches",
+    "choices": [
+      "The first pharyngeal arch",
+      "The first and second pharyngeal arches",
+      "The second pharyngeal arch",
+      "The second and third pharyngeal arches"
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "astronomy",
+    "question": "You are pushing a truck along a road. Would it be easier to accelerate this truck on Mars? Why? (Assume there is no friction)\nA. It would be harder since the truck is heavier on Mars.\nB. It would be easier since the truck is lighter on Mars.\nC. It would be harder since the truck is lighter on Mars.\nD. It would be the same no matter where you are.",
+    "task": "You are pushing a truck along a road. Would it be easier to accelerate this truck on Mars? Why? (Assume there is no friction)\nA. It would be harder since the truck is heavier on Mars.\nB. It would be easier since the truck is lighter on Mars.\nC. It would be harder since the truck is lighter on Mars.\nD. It would be the same no matter where you are.",
+    "choices": [
+      "It would be harder since the truck is heavier on Mars.",
+      "It would be easier since the truck is lighter on Mars.",
+      "It would be harder since the truck is lighter on Mars.",
+      "It would be the same no matter where you are."
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "business_ethics",
+    "question": "Beyond the business case for engaging in CSR there are a number of moral arguments relating to: negative _______, the _______that corporations possess and the ________ of business and society.\nA. Externalities, Power, Independence\nB. Publicity, Insubstantial resources, Mutual dependence\nC. Publicity, Power, Independence\nD. Externalities, Power, Mutual dependence",
+    "task": "Beyond the business case for engaging in CSR there are a number of moral arguments relating to: negative _______, the _______that corporations possess and the ________ of business and society.\nA. Externalities, Power, Independence\nB. Publicity, Insubstantial resources, Mutual dependence\nC. Publicity, Power, Independence\nD. Externalities, Power, Mutual dependence",
+    "choices": [
+      "Externalities, Power, Independence",
+      "Publicity, Insubstantial resources, Mutual dependence",
+      "Publicity, Power, Independence",
+      "Externalities, Power, Mutual dependence"
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "clinical_knowledge",
+    "question": "The energy for all forms of muscle contraction is provided by:\nA. ATP.\nB. ADP.\nC. phosphocreatine.\nD. oxidative phosphorylation.",
+    "task": "The energy for all forms of muscle contraction is provided by:\nA. ATP.\nB. ADP.\nC. phosphocreatine.\nD. oxidative phosphorylation.",
+    "choices": [
+      "ATP.",
+      "ADP.",
+      "phosphocreatine.",
+      "oxidative phosphorylation."
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "college_biology",
+    "question": "Which of the following represents an accurate statement concerning arthropods?\nA. They possess an exoskeleton composed primarily of peptidoglycan.\nB. They possess an open circulatory system with a dorsal heart.\nC. They are members of a biologically unsuccessful phylum incapable of exploiting diverse habitats and nutrition sources.\nD. They lack paired, jointed appendages.",
+    "task": "Which of the following represents an accurate statement concerning arthropods?\nA. They possess an exoskeleton composed primarily of peptidoglycan.\nB. They possess an open circulatory system with a dorsal heart.\nC. They are members of a biologically unsuccessful phylum incapable of exploiting diverse habitats and nutrition sources.\nD. They lack paired, jointed appendages.",
+    "choices": [
+      "They possess an exoskeleton composed primarily of peptidoglycan.",
+      "They possess an open circulatory system with a dorsal heart.",
+      "They are members of a biologically unsuccessful phylum incapable of exploiting diverse habitats and nutrition sources.",
+      "They lack paired, jointed appendages."
+    ],
+    "answer_index": 1,
+    "true_answer": "B"
+  },
+  {
+    "task_id": "college_chemistry",
+    "question": "Which of the following statements about the lanthanide elements is NOT true?\nA. The most common oxidation state for the lanthanide elements is +3.\nB. Lanthanide complexes often have high coordination numbers (> 6).\nC. All of the lanthanide elements react with aqueous acid to liberate hydrogen.\nD. The atomic radii of the lanthanide elements increase across the period from La to Lu.",
+    "task": "Which of the following statements about the lanthanide elements is NOT true?\nA. The most common oxidation state for the lanthanide elements is +3.\nB. Lanthanide complexes often have high coordination numbers (> 6).\nC. All of the lanthanide elements react with aqueous acid to liberate hydrogen.\nD. The atomic radii of the lanthanide elements increase across the period from La to Lu.",
+    "choices": [
+      "The most common oxidation state for the lanthanide elements is +3.",
+      "Lanthanide complexes often have high coordination numbers (> 6).",
+      "All of the lanthanide elements react with aqueous acid to liberate hydrogen.",
+      "The atomic radii of the lanthanide elements increase across the period from La to Lu."
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "college_computer_science",
+    "question": "Which of the following regular expressions is equivalent to (describes the same set of strings as) (a* + b)*(c + d)?\nA. a*(c + d)+ b(c + d)\nB. a*(c + d)* + b(c + d)*\nC. a*(c + d)+ b*(c + d)\nD. (a + b)*c +(a + b)*d",
+    "task": "Which of the following regular expressions is equivalent to (describes the same set of strings as) (a* + b)*(c + d)?\nA. a*(c + d)+ b(c + d)\nB. a*(c + d)* + b(c + d)*\nC. a*(c + d)+ b*(c + d)\nD. (a + b)*c +(a + b)*d",
+    "choices": [
+      "a*(c + d)+ b(c + d)",
+      "a*(c + d)* + b(c + d)*",
+      "a*(c + d)+ b*(c + d)",
+      "(a + b)*c +(a + b)*d"
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "college_mathematics",
+    "question": "Let V be the set of all real polynomials p(x). Let transformations T, S be defined on V by T:p(x) -> xp(x) and S:p(x) -> p'(x) = d/dx p(x), and interpret (ST)(p(x)) as S(T(p(x))). Which of the following is true?\nA. ST = 0\nB. ST = T\nC. ST = TS\nD. ST - TS is the identity map of V onto itself.",
+    "task": "Let V be the set of all real polynomials p(x). Let transformations T, S be defined on V by T:p(x) -> xp(x) and S:p(x) -> p'(x) = d/dx p(x), and interpret (ST)(p(x)) as S(T(p(x))). Which of the following is true?\nA. ST = 0\nB. ST = T\nC. ST = TS\nD. ST - TS is the identity map of V onto itself.",
+    "choices": [
+      "ST = 0",
+      "ST = T",
+      "ST = TS",
+      "ST - TS is the identity map of V onto itself."
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "college_medicine",
+    "question": "Glucose is transported into the muscle cell:\nA. via protein transporters called GLUT4.\nB. only in the presence of insulin.\nC. via hexokinase.\nD. via monocarbylic acid transporters.",
+    "task": "Glucose is transported into the muscle cell:\nA. via protein transporters called GLUT4.\nB. only in the presence of insulin.\nC. via hexokinase.\nD. via monocarbylic acid transporters.",
+    "choices": [
+      "via protein transporters called GLUT4.",
+      "only in the presence of insulin.",
+      "via hexokinase.",
+      "via monocarbylic acid transporters."
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "college_physics",
+    "question": "A refracting telescope consists of two converging lenses separated by 100 cm. The eye-piece lens has a focal length of 20 cm. The angular magnification of the telescope is\nA. 4\nB. 5\nC. 6\nD. 20",
+    "task": "A refracting telescope consists of two converging lenses separated by 100 cm. The eye-piece lens has a focal length of 20 cm. The angular magnification of the telescope is\nA. 4\nB. 5\nC. 6\nD. 20",
+    "choices": [
+      "4",
+      "5",
+      "6",
+      "20"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "computer_security",
+    "question": "SHA-1 has a message digest of\nA. 160 bits\nB. 512 bits\nC. 628 bits\nD. 820 bits",
+    "task": "SHA-1 has a message digest of\nA. 160 bits\nB. 512 bits\nC. 628 bits\nD. 820 bits",
+    "choices": [
+      "160 bits",
+      "512 bits",
+      "628 bits",
+      "820 bits"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "conceptual_physics",
+    "question": "Compared with the mass of a uranium atom undergoing fission, the combined masses of the products after fission are\nA. less\nB. more\nC. the same\nD. zero",
+    "task": "Compared with the mass of a uranium atom undergoing fission, the combined masses of the products after fission are\nA. less\nB. more\nC. the same\nD. zero",
+    "choices": [
+      "less",
+      "more",
+      "the same",
+      "zero"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "econometrics",
+    "question": "For a stationary autoregressive process, shocks will\nA. Eventually die away\nB. Persist indefinitely\nC. Grow exponentially\nD. Never occur",
+    "task": "For a stationary autoregressive process, shocks will\nA. Eventually die away\nB. Persist indefinitely\nC. Grow exponentially\nD. Never occur",
+    "choices": [
+      "Eventually die away",
+      "Persist indefinitely",
+      "Grow exponentially",
+      "Never occur"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "electrical_engineering",
+    "question": "In an SR latch built from NOR gates, which condition is not allowed\nA. S=0, R=0\nB. S=0, R=1\nC. S=1, R=0\nD. S=1, R=1",
+    "task": "In an SR latch built from NOR gates, which condition is not allowed\nA. S=0, R=0\nB. S=0, R=1\nC. S=1, R=0\nD. S=1, R=1",
+    "choices": [
+      "S=0, R=0",
+      "S=0, R=1",
+      "S=1, R=0",
+      "S=1, R=1"
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "elementary_mathematics",
+    "question": "The population of the city where Michelle was born is 145,826. What is the value of the 5 in the number 145,826?\nA. 5 thousands\nB. 5 hundreds\nC. 5 tens\nD. 5 ones",
+    "task": "The population of the city where Michelle was born is 145,826. What is the value of the 5 in the number 145,826?\nA. 5 thousands\nB. 5 hundreds\nC. 5 tens\nD. 5 ones",
+    "choices": [
+      "5 thousands",
+      "5 hundreds",
+      "5 tens",
+      "5 ones"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "formal_logic",
+    "question": " Select the best translation into predicate logic: No people drive on Mars.\nA. ~Pd\nB. (∀x)(Px ∨ ~Dx)\nC. (∀x)(Px ⊃ ~Dx)\nD. ~Dp",
+    "task": " Select the best translation into predicate logic: No people drive on Mars.\nA. ~Pd\nB. (∀x)(Px ∨ ~Dx)\nC. (∀x)(Px ⊃ ~Dx)\nD. ~Dp",
+    "choices": [
+      "~Pd",
+      "(∀x)(Px ∨ ~Dx)",
+      "(∀x)(Px ⊃ ~Dx)",
+      "~Dp"
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "global_facts",
+    "question": "Which of the following pairs of statements are both true (as of 2019)?\nA. People tend to be optimistic about their own future and the future of their nation or the world.\nB. People tend to be optimistic about their own future but pessimistic about the future of their nation or the world.\nC. People tend to be pessimistic about their own future but optimistic about the future of their nation or the world.\nD. People tend to be pessimistic about their own future and the future of their nation or the world.",
+    "task": "Which of the following pairs of statements are both true (as of 2019)?\nA. People tend to be optimistic about their own future and the future of their nation or the world.\nB. People tend to be optimistic about their own future but pessimistic about the future of their nation or the world.\nC. People tend to be pessimistic about their own future but optimistic about the future of their nation or the world.\nD. People tend to be pessimistic about their own future and the future of their nation or the world.",
+    "choices": [
+      "People tend to be optimistic about their own future and the future of their nation or the world.",
+      "People tend to be optimistic about their own future but pessimistic about the future of their nation or the world.",
+      "People tend to be pessimistic about their own future but optimistic about the future of their nation or the world.",
+      "People tend to be pessimistic about their own future and the future of their nation or the world."
+    ],
+    "answer_index": 1,
+    "true_answer": "B"
+  },
+  {
+    "task_id": "high_school_biology",
+    "question": "Which of the following is not a way to form recombinant DNA?\nA. Translation\nB. Conjugation\nC. Specialized transduction\nD. Transformation",
+    "task": "Which of the following is not a way to form recombinant DNA?\nA. Translation\nB. Conjugation\nC. Specialized transduction\nD. Transformation",
+    "choices": [
+      "Translation",
+      "Conjugation",
+      "Specialized transduction",
+      "Transformation"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "high_school_chemistry",
+    "question": "Which of the following is considered an acid anhydride?\nA. HCl\nB. H2SO3\nC. SO2\nD. Al(NO3)3",
+    "task": "Which of the following is considered an acid anhydride?\nA. HCl\nB. H2SO3\nC. SO2\nD. Al(NO3)3",
+    "choices": [
+      "HCl",
+      "H2SO3",
+      "SO2",
+      "Al(NO3)3"
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "high_school_computer_science",
+    "question": "Which of the following is an example of the use of a device on the Internet of Things (IoT) ?\nA. A car alerts a driver that it is about to hit an object.\nB. A hiker uses a G P S watch to keep track of her position.\nC. A refrigerator orders milk from an online delivery service when the milk in the refrigerator is almost gone.\nD. A runner uses a watch with optical sensors to monitor his heart rate.",
+    "task": "Which of the following is an example of the use of a device on the Internet of Things (IoT) ?\nA. A car alerts a driver that it is about to hit an object.\nB. A hiker uses a G P S watch to keep track of her position.\nC. A refrigerator orders milk from an online delivery service when the milk in the refrigerator is almost gone.\nD. A runner uses a watch with optical sensors to monitor his heart rate.",
+    "choices": [
+      "A car alerts a driver that it is about to hit an object.",
+      "A hiker uses a G P S watch to keep track of her position.",
+      "A refrigerator orders milk from an online delivery service when the milk in the refrigerator is almost gone.",
+      "A runner uses a watch with optical sensors to monitor his heart rate."
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "high_school_european_history",
+    "question": "This question refers to the following information.\nThe following excerpt is from a pamphlet.\nYou will do me the justice to remember, that I have always strenuously supported the Right of every man to his own opinion, however different that opinion might be to mine. He who denies to another this right, makes a slave of himself to his present opinion, because he precludes himself the right of changing it.\nThe most formidable weapon against errors of every kind is Reason. I have never used any other, and I trust I never shall.\nThe circumstance that has now taken place in France of the total abolition of the whole national order of priesthood, and of everything appertaining to compulsive systems of religion, and compulsive articles of faith, has not only precipitated my intention, but rendered a work of this kind exceedingly necessary, lest in the general wreck of superstition, of false systems of government, and false theology, we lose sight of morality, of humanity, and of the theology that is true.\nI believe in one God, and no more; and I hope for happiness beyond this life.\nI believe in the equality of man; and I believe that religious duties consist in doing justice, loving mercy, and endeavoring to make our fellow-creatures happy.\nI do not believe in the creed professed by the Jewish church, by the Roman church, by the Greek church, by the Turkish church, by the Protestant church, nor by any church that I know of. My own mind is my own church.\nAll national institutions of churches, whether Jewish, Christian or Turkish, appear to me no other than human inventions, set up to terrify and enslave mankind, and monopolize power and profit.\nI do not mean by this declaration to condemn those who believe otherwise; they have the same right to their belief as I have to mine.\n—Thomas Paine, The Age of Reason, 1794–1795\nWhich of the following Enlightenment philosophes designed a system of checks and balances for government to avoid abuses of power?\nA. Jean Jacques Rousseau\nB. Baron Montesquieu\nC. Mary Wollstonecraft\nD. Adam Smith",
+    "task": "This question refers to the following information.\nThe following excerpt is from a pamphlet.\nYou will do me the justice to remember, that I have always strenuously supported the Right of every man to his own opinion, however different that opinion might be to mine. He who denies to another this right, makes a slave of himself to his present opinion, because he precludes himself the right of changing it.\nThe most formidable weapon against errors of every kind is Reason. I have never used any other, and I trust I never shall.\nThe circumstance that has now taken place in France of the total abolition of the whole national order of priesthood, and of everything appertaining to compulsive systems of religion, and compulsive articles of faith, has not only precipitated my intention, but rendered a work of this kind exceedingly necessary, lest in the general wreck of superstition, of false systems of government, and false theology, we lose sight of morality, of humanity, and of the theology that is true.\nI believe in one God, and no more; and I hope for happiness beyond this life.\nI believe in the equality of man; and I believe that religious duties consist in doing justice, loving mercy, and endeavoring to make our fellow-creatures happy.\nI do not believe in the creed professed by the Jewish church, by the Roman church, by the Greek church, by the Turkish church, by the Protestant church, nor by any church that I know of. My own mind is my own church.\nAll national institutions of churches, whether Jewish, Christian or Turkish, appear to me no other than human inventions, set up to terrify and enslave mankind, and monopolize power and profit.\nI do not mean by this declaration to condemn those who believe otherwise; they have the same right to their belief as I have to mine.\n—Thomas Paine, The Age of Reason, 1794–1795\nWhich of the following Enlightenment philosophes designed a system of checks and balances for government to avoid abuses of power?\nA. Jean Jacques Rousseau\nB. Baron Montesquieu\nC. Mary Wollstonecraft\nD. Adam Smith",
+    "choices": [
+      "Jean Jacques Rousseau",
+      "Baron Montesquieu",
+      "Mary Wollstonecraft",
+      "Adam Smith"
+    ],
+    "answer_index": 1,
+    "true_answer": "B"
+  },
+  {
+    "task_id": "high_school_geography",
+    "question": "The rate of natural increase of a population is found by subtracting the\nA. crude death rate from the crude birth date.\nB. crude birth rate from the crude death rate.\nC. doubling time from the crude birth rate.\nD. fertility rate from the crude death rate.",
+    "task": "The rate of natural increase of a population is found by subtracting the\nA. crude death rate from the crude birth date.\nB. crude birth rate from the crude death rate.\nC. doubling time from the crude birth rate.\nD. fertility rate from the crude death rate.",
+    "choices": [
+      "crude death rate from the crude birth date.",
+      "crude birth rate from the crude death rate.",
+      "doubling time from the crude birth rate.",
+      "fertility rate from the crude death rate."
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "high_school_government_and_politics",
+    "question": "Uncertainty over the limits to presidential power is caused primarily by the fact that\nA. the constitutional definition of those powers is broad and unspecific\nB. most people agree that the Constitution places too many limits on presidential power\nC. the Supreme Court consistently refuses to rule on cases concerning presidential powers\nD. constitutional amendments have greatly increased presidential powers",
+    "task": "Uncertainty over the limits to presidential power is caused primarily by the fact that\nA. the constitutional definition of those powers is broad and unspecific\nB. most people agree that the Constitution places too many limits on presidential power\nC. the Supreme Court consistently refuses to rule on cases concerning presidential powers\nD. constitutional amendments have greatly increased presidential powers",
+    "choices": [
+      "the constitutional definition of those powers is broad and unspecific",
+      "most people agree that the Constitution places too many limits on presidential power",
+      "the Supreme Court consistently refuses to rule on cases concerning presidential powers",
+      "constitutional amendments have greatly increased presidential powers"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "high_school_macroeconomics",
+    "question": "Which of the following is not included in the U.S. GDP?\nA. The U.S. military opens a new base in a foreign country with 1000 U.S. personnel.\nB. Japanese consumers buy thousands of CDs produced in the United States.\nC. An American pop singer performs a sold-out concert in Paris.\nD. A French theatrical production tours dozens of American cities.",
+    "task": "Which of the following is not included in the U.S. GDP?\nA. The U.S. military opens a new base in a foreign country with 1000 U.S. personnel.\nB. Japanese consumers buy thousands of CDs produced in the United States.\nC. An American pop singer performs a sold-out concert in Paris.\nD. A French theatrical production tours dozens of American cities.",
+    "choices": [
+      "The U.S. military opens a new base in a foreign country with 1000 U.S. personnel.",
+      "Japanese consumers buy thousands of CDs produced in the United States.",
+      "An American pop singer performs a sold-out concert in Paris.",
+      "A French theatrical production tours dozens of American cities."
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "high_school_mathematics",
+    "question": "Joe was in charge of lights for a dance. The red light blinks every two seconds, the yellow light every three seconds, and the blue light every five seconds. If we include the very beginning and very end of the dance, how many times during a seven minute dance will all the lights come on at the same time? (Assume that all three lights blink simultaneously at the very beginning of the dance.)\nA. 3\nB. 15\nC. 6\nD. 5",
+    "task": "Joe was in charge of lights for a dance. The red light blinks every two seconds, the yellow light every three seconds, and the blue light every five seconds. If we include the very beginning and very end of the dance, how many times during a seven minute dance will all the lights come on at the same time? (Assume that all three lights blink simultaneously at the very beginning of the dance.)\nA. 3\nB. 15\nC. 6\nD. 5",
+    "choices": [
+      "3",
+      "15",
+      "6",
+      "5"
+    ],
+    "answer_index": 1,
+    "true_answer": "B"
+  },
+  {
+    "task_id": "high_school_microeconomics",
+    "question": "In a competitive labor market for housepainters, which of the following would increase the demand for housepainters?\nA. An effective minimum wage imposed on this labor market.\nB. An increase in the price of gallons of paint.\nC. An increase in the construction of new houses.\nD. An increase in the price of mechanical painters so long as the output effect exceeds the substitution effect.",
+    "task": "In a competitive labor market for housepainters, which of the following would increase the demand for housepainters?\nA. An effective minimum wage imposed on this labor market.\nB. An increase in the price of gallons of paint.\nC. An increase in the construction of new houses.\nD. An increase in the price of mechanical painters so long as the output effect exceeds the substitution effect.",
+    "choices": [
+      "An effective minimum wage imposed on this labor market.",
+      "An increase in the price of gallons of paint.",
+      "An increase in the construction of new houses.",
+      "An increase in the price of mechanical painters so long as the output effect exceeds the substitution effect."
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "high_school_physics",
+    "question": "Which of the following conditions will ensure that angular momentum is conserved? I. Conservation of linear momentum II. Zero net external force III. Zero net external torque\nA. I and II only\nB. I and III only\nC. II and III only\nD. III only",
+    "task": "Which of the following conditions will ensure that angular momentum is conserved? I. Conservation of linear momentum II. Zero net external force III. Zero net external torque\nA. I and II only\nB. I and III only\nC. II and III only\nD. III only",
+    "choices": [
+      "I and II only",
+      "I and III only",
+      "II and III only",
+      "III only"
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "high_school_psychology",
+    "question": "Ani believes that her attitudes and behavior play a central role in what happens to her. Such a belief is likely to be associated with\nA. a strong superego.\nB. low self-esteem.\nC. low self-efficacy.\nD. an internal locus of control.",
+    "task": "Ani believes that her attitudes and behavior play a central role in what happens to her. Such a belief is likely to be associated with\nA. a strong superego.\nB. low self-esteem.\nC. low self-efficacy.\nD. an internal locus of control.",
+    "choices": [
+      "a strong superego.",
+      "low self-esteem.",
+      "low self-efficacy.",
+      "an internal locus of control."
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "high_school_statistics",
+    "question": "Which of the following is a correct statement about correlation?\nA. If the slope of the regression line is exactly 1, then the correlation is exactly 1.\nB. If the correlation is 0, then the slope of the regression line is undefined.\nC. Switching which variable is called x and which is called y changes the sign of the correlation.\nD. The correlation r is equal to the slope of the regression line when z-scores for the y-variable are plotted against z-scores for the x-variable.",
+    "task": "Which of the following is a correct statement about correlation?\nA. If the slope of the regression line is exactly 1, then the correlation is exactly 1.\nB. If the correlation is 0, then the slope of the regression line is undefined.\nC. Switching which variable is called x and which is called y changes the sign of the correlation.\nD. The correlation r is equal to the slope of the regression line when z-scores for the y-variable are plotted against z-scores for the x-variable.",
+    "choices": [
+      "If the slope of the regression line is exactly 1, then the correlation is exactly 1.",
+      "If the correlation is 0, then the slope of the regression line is undefined.",
+      "Switching which variable is called x and which is called y changes the sign of the correlation.",
+      "The correlation r is equal to the slope of the regression line when z-scores for the y-variable are plotted against z-scores for the x-variable."
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "high_school_us_history",
+    "question": "This question refers to the following information.\n\"Society in every state is a blessing, but government even in its best state is but a necessary evil; in its worst state an intolerable one; for when we suffer, or are exposed to the same miseries by a government, which we might expect in a country without government, our calamity is heightened by reflecting that we furnish the means by which we suffer. Government, like dress, is the badge of lost innocence; the palaces of kings are built on the ruins of the bowers of paradise. For were the impulses of conscience clear, uniform, and irresistibly obeyed, man would need no other lawgiver; but that not being the case, he finds it necessary to surrender up a part of his property to furnish means for the protection of the rest; and this he is induced to do by the same prudence which in every other case advises him out of two evils to choose the least. Wherefore, security being the true design and end of government, it unanswerably follows that whatever form thereof appears most likely to ensure it to us, with the least expense and greatest benefit, is preferable to all others.\"\nThomas Paine, Common Sense, 1776\nWhich of the following \"miseries\" alluded to above were most condemned by Anti-Federalists of the post-Revolutionary era?\nA. Organized response to Bacon's Rebellion\nB. Federal response to Shays's Rebellion\nC. Federal response to the Whiskey Rebellion\nD. Federal response to Pontiac's Rebellion",
+    "task": "This question refers to the following information.\n\"Society in every state is a blessing, but government even in its best state is but a necessary evil; in its worst state an intolerable one; for when we suffer, or are exposed to the same miseries by a government, which we might expect in a country without government, our calamity is heightened by reflecting that we furnish the means by which we suffer. Government, like dress, is the badge of lost innocence; the palaces of kings are built on the ruins of the bowers of paradise. For were the impulses of conscience clear, uniform, and irresistibly obeyed, man would need no other lawgiver; but that not being the case, he finds it necessary to surrender up a part of his property to furnish means for the protection of the rest; and this he is induced to do by the same prudence which in every other case advises him out of two evils to choose the least. Wherefore, security being the true design and end of government, it unanswerably follows that whatever form thereof appears most likely to ensure it to us, with the least expense and greatest benefit, is preferable to all others.\"\nThomas Paine, Common Sense, 1776\nWhich of the following \"miseries\" alluded to above were most condemned by Anti-Federalists of the post-Revolutionary era?\nA. Organized response to Bacon's Rebellion\nB. Federal response to Shays's Rebellion\nC. Federal response to the Whiskey Rebellion\nD. Federal response to Pontiac's Rebellion",
+    "choices": [
+      "Organized response to Bacon's Rebellion",
+      "Federal response to Shays's Rebellion",
+      "Federal response to the Whiskey Rebellion",
+      "Federal response to Pontiac's Rebellion"
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "high_school_world_history",
+    "question": "This question refers to the following information.\nHe contains all works and desires and all perfumes and all tastes. He enfolds the whole universe and in silence is loving to all. This is the Spirit that is in my heart, this is Brahman. To him I shall come when I go beyond this life, and to him will come he who has faith and doubts not.\n—The Upanishads, India, c. 1000 BCE\nTo which religion does the speaker most likely belong?\nA. Hinduism\nB. Buddhism\nC. Shintoism\nD. Zoroastrianism",
+    "task": "This question refers to the following information.\nHe contains all works and desires and all perfumes and all tastes. He enfolds the whole universe and in silence is loving to all. This is the Spirit that is in my heart, this is Brahman. To him I shall come when I go beyond this life, and to him will come he who has faith and doubts not.\n—The Upanishads, India, c. 1000 BCE\nTo which religion does the speaker most likely belong?\nA. Hinduism\nB. Buddhism\nC. Shintoism\nD. Zoroastrianism",
+    "choices": [
+      "Hinduism",
+      "Buddhism",
+      "Shintoism",
+      "Zoroastrianism"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "human_aging",
+    "question": "Which of the following persons is more likely to remain at home alone, as of 2019?\nA. An Asian man or woman\nB. A Hispanic man\nC. An African American woman\nD. A white man or woman",
+    "task": "Which of the following persons is more likely to remain at home alone, as of 2019?\nA. An Asian man or woman\nB. A Hispanic man\nC. An African American woman\nD. A white man or woman",
+    "choices": [
+      "An Asian man or woman",
+      "A Hispanic man",
+      "An African American woman",
+      "A white man or woman"
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "human_sexuality",
+    "question": "Morning sickness is typically a problem:\nA. during the first trimester\nB. during the second trimester\nC. during the third trimester\nD. all through the pregnancy",
+    "task": "Morning sickness is typically a problem:\nA. during the first trimester\nB. during the second trimester\nC. during the third trimester\nD. all through the pregnancy",
+    "choices": [
+      "during the first trimester",
+      "during the second trimester",
+      "during the third trimester",
+      "all through the pregnancy"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "international_law",
+    "question": "What types of force does Article 2(4) of the UN Charter prohibit?\nA. Article 2(4) encompasses only armed force\nB. Article 2(4) encompasses all types of force, including sanctions\nC. Article 2(4) encompasses all interference in the domestic affairs of States\nD. Article 2(4) encompasses force directed only against a State's territorial integrity",
+    "task": "What types of force does Article 2(4) of the UN Charter prohibit?\nA. Article 2(4) encompasses only armed force\nB. Article 2(4) encompasses all types of force, including sanctions\nC. Article 2(4) encompasses all interference in the domestic affairs of States\nD. Article 2(4) encompasses force directed only against a State's territorial integrity",
+    "choices": [
+      "Article 2(4) encompasses only armed force",
+      "Article 2(4) encompasses all types of force, including sanctions",
+      "Article 2(4) encompasses all interference in the domestic affairs of States",
+      "Article 2(4) encompasses force directed only against a State's territorial integrity"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "jurisprudence",
+    "question": "Which position does Rawls claim is the least likely to be adopted by the POP (people in the original position)?\nA. The POP would choose equality above liberty.\nB. The POP would opt for the 'maximin' strategy.\nC. The POP would opt for the 'difference principle'.\nD. The POP would reject the 'system of natural liberty.'",
+    "task": "Which position does Rawls claim is the least likely to be adopted by the POP (people in the original position)?\nA. The POP would choose equality above liberty.\nB. The POP would opt for the 'maximin' strategy.\nC. The POP would opt for the 'difference principle'.\nD. The POP would reject the 'system of natural liberty.'",
+    "choices": [
+      "The POP would choose equality above liberty.",
+      "The POP would opt for the 'maximin' strategy.",
+      "The POP would opt for the 'difference principle'.",
+      "The POP would reject the 'system of natural liberty.'"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "logical_fallacies",
+    "question": "If someone attacks the character of an opposing arguer, instead of responding to that opponent's arguments, the first person has probably committed which of the following fallacies?\nA. tu quoque\nB. horse laugh\nC. argument against the person\nD. ignoratio elenchi",
+    "task": "If someone attacks the character of an opposing arguer, instead of responding to that opponent's arguments, the first person has probably committed which of the following fallacies?\nA. tu quoque\nB. horse laugh\nC. argument against the person\nD. ignoratio elenchi",
+    "choices": [
+      "tu quoque",
+      "horse laugh",
+      "argument against the person",
+      "ignoratio elenchi"
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "machine_learning",
+    "question": "A 6-sided die is rolled 15 times and the results are: side 1 comes up 0 times; side 2: 1 time; side 3: 2 times; side 4: 3 times; side 5: 4 times; side 6: 5 times. Based on these results, what is the probability of side 3 coming up when using Add-1 Smoothing?\nA. 2.0/15\nB. 1.0/7\nC. 3.0/16\nD. 1.0/5",
+    "task": "A 6-sided die is rolled 15 times and the results are: side 1 comes up 0 times; side 2: 1 time; side 3: 2 times; side 4: 3 times; side 5: 4 times; side 6: 5 times. Based on these results, what is the probability of side 3 coming up when using Add-1 Smoothing?\nA. 2.0/15\nB. 1.0/7\nC. 3.0/16\nD. 1.0/5",
+    "choices": [
+      "2.0/15",
+      "1.0/7",
+      "3.0/16",
+      "1.0/5"
+    ],
+    "answer_index": 1,
+    "true_answer": "B"
+  },
+  {
+    "task_id": "management",
+    "question": "What are the two main dimensions of the Ohio Studies into leadership?\nA. Starting position and end position\nB. Initial environment and changed environment\nC. Organisational structure and conditioning\nD. Initiating structure and considerations",
+    "task": "What are the two main dimensions of the Ohio Studies into leadership?\nA. Starting position and end position\nB. Initial environment and changed environment\nC. Organisational structure and conditioning\nD. Initiating structure and considerations",
+    "choices": [
+      "Starting position and end position",
+      "Initial environment and changed environment",
+      "Organisational structure and conditioning",
+      "Initiating structure and considerations"
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "marketing",
+    "question": " _____________ is a natural outcome when combining demographic and geographic variables.\nA. Geodemographics\nB. Product differentiation.\nC. ANSOFF matrix.\nD. Brand management.",
+    "task": " _____________ is a natural outcome when combining demographic and geographic variables.\nA. Geodemographics\nB. Product differentiation.\nC. ANSOFF matrix.\nD. Brand management.",
+    "choices": [
+      "Geodemographics",
+      "Product differentiation.",
+      "ANSOFF matrix.",
+      "Brand management."
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "medical_genetics",
+    "question": "Large triplet repeat expansions can be detected by:\nA. polymerase chain reaction.\nB. single strand conformational polymorphism analysis.\nC. Southern blotting.\nD. Western blotting.",
+    "task": "Large triplet repeat expansions can be detected by:\nA. polymerase chain reaction.\nB. single strand conformational polymorphism analysis.\nC. Southern blotting.\nD. Western blotting.",
+    "choices": [
+      "polymerase chain reaction.",
+      "single strand conformational polymorphism analysis.",
+      "Southern blotting.",
+      "Western blotting."
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "miscellaneous",
+    "question": "How many axles does a standard automobile have?\nA. one\nB. two\nC. four\nD. eight",
+    "task": "How many axles does a standard automobile have?\nA. one\nB. two\nC. four\nD. eight",
+    "choices": [
+      "one",
+      "two",
+      "four",
+      "eight"
+    ],
+    "answer_index": 1,
+    "true_answer": "B"
+  },
+  {
+    "task_id": "moral_disputes",
+    "question": "According to Metz, what is wrong with consequentialist arguments against capital punishment based on African values?\nA. It is unclear as of yet whether or not capital punishment deters harm to the community.\nB. It is unclear as of yet whether or not capital punishment deters harm to any individuals.\nC. Consequentialism is not supported by African values.\nD. Even though consequentialism is supported by African values, no consequentialist arguments framed in terms of African values have been offered.",
+    "task": "According to Metz, what is wrong with consequentialist arguments against capital punishment based on African values?\nA. It is unclear as of yet whether or not capital punishment deters harm to the community.\nB. It is unclear as of yet whether or not capital punishment deters harm to any individuals.\nC. Consequentialism is not supported by African values.\nD. Even though consequentialism is supported by African values, no consequentialist arguments framed in terms of African values have been offered.",
+    "choices": [
+      "It is unclear as of yet whether or not capital punishment deters harm to the community.",
+      "It is unclear as of yet whether or not capital punishment deters harm to any individuals.",
+      "Consequentialism is not supported by African values.",
+      "Even though consequentialism is supported by African values, no consequentialist arguments framed in terms of African values have been offered."
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "moral_scenarios",
+    "question": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I really loved my newborn baby boy. Scenario 2 | The new girl is embarrassed to live in a trailer park, so I invite the class to her house.\nA. Wrong, Wrong\nB. Wrong, Not wrong\nC. Not wrong, Wrong\nD. Not wrong, Not wrong",
+    "task": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I really loved my newborn baby boy. Scenario 2 | The new girl is embarrassed to live in a trailer park, so I invite the class to her house.\nA. Wrong, Wrong\nB. Wrong, Not wrong\nC. Not wrong, Wrong\nD. Not wrong, Not wrong",
+    "choices": [
+      "Wrong, Wrong",
+      "Wrong, Not wrong",
+      "Not wrong, Wrong",
+      "Not wrong, Not wrong"
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "nutrition",
+    "question": "In a cohort study, the risk ratio of developing diabetes was 0.86 when comparing consumers of tea (the exposed) to those who did not drink tea (the unexposed). Which one statement is correct (according to knowledge in 2020)?\nA. The tea drinkers have lower risk of developing diabetes.\nB. The tea drinkers have higher risk of developing diabetes.\nC. Based on the information given we cannot tell if the observed difference in disease risk is the result of chance.\nD. The risk ratio is close to the value one, so there is no difference in disease risk between the two groups.",
+    "task": "In a cohort study, the risk ratio of developing diabetes was 0.86 when comparing consumers of tea (the exposed) to those who did not drink tea (the unexposed). Which one statement is correct (according to knowledge in 2020)?\nA. The tea drinkers have lower risk of developing diabetes.\nB. The tea drinkers have higher risk of developing diabetes.\nC. Based on the information given we cannot tell if the observed difference in disease risk is the result of chance.\nD. The risk ratio is close to the value one, so there is no difference in disease risk between the two groups.",
+    "choices": [
+      "The tea drinkers have lower risk of developing diabetes.",
+      "The tea drinkers have higher risk of developing diabetes.",
+      "Based on the information given we cannot tell if the observed difference in disease risk is the result of chance.",
+      "The risk ratio is close to the value one, so there is no difference in disease risk between the two groups."
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "philosophy",
+    "question": "Psychological egoism is:\nA. an ethical theory about how we ought to behave.\nB. a generalization concerning the way people tend to behave.\nC. a claim about human nature and the ways people are capable of behaving.\nD. none of the above.",
+    "task": "Psychological egoism is:\nA. an ethical theory about how we ought to behave.\nB. a generalization concerning the way people tend to behave.\nC. a claim about human nature and the ways people are capable of behaving.\nD. none of the above.",
+    "choices": [
+      "an ethical theory about how we ought to behave.",
+      "a generalization concerning the way people tend to behave.",
+      "a claim about human nature and the ways people are capable of behaving.",
+      "none of the above."
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "prehistory",
+    "question": "The great Mayan king Pacal built temples in the city of Palenque in order to:\nA. satisfy the powerful Mayan astronomer priests.\nB. display his generosity to the common people, since they were allowed to live in the temples.\nC. frighten away enemies, in particular the Spaniards.\nD. legitimize his kingship, since his father was not royal.",
+    "task": "The great Mayan king Pacal built temples in the city of Palenque in order to:\nA. satisfy the powerful Mayan astronomer priests.\nB. display his generosity to the common people, since they were allowed to live in the temples.\nC. frighten away enemies, in particular the Spaniards.\nD. legitimize his kingship, since his father was not royal.",
+    "choices": [
+      "satisfy the powerful Mayan astronomer priests.",
+      "display his generosity to the common people, since they were allowed to live in the temples.",
+      "frighten away enemies, in particular the Spaniards.",
+      "legitimize his kingship, since his father was not royal."
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "professional_accounting",
+    "question": "Box a nongovernmental not-for-profit organization had the following transactions during the year: Proceeds from sale of investments $80000 Purchase of property plant and equipment $10000 Proceeds from long-term debt $100000 Loss on sale of investment $5000 What amount should be reported as net cash provided by financing activities in Box's statement of cash flows?\nA. $70,000\nB. $75,000\nC. $80,000\nD. 100000",
+    "task": "Box a nongovernmental not-for-profit organization had the following transactions during the year: Proceeds from sale of investments $80000 Purchase of property plant and equipment $10000 Proceeds from long-term debt $100000 Loss on sale of investment $5000 What amount should be reported as net cash provided by financing activities in Box's statement of cash flows?\nA. $70,000\nB. $75,000\nC. $80,000\nD. 100000",
+    "choices": [
+      "$70,000",
+      "$75,000",
+      "$80,000",
+      "100000"
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "professional_law",
+    "question": "A state legislature has recently enacted a statute making it a misdemeanor to curse or revile or use obscene or opprobrious language toward or in reference to a police officer perfonning his duties. A student at a state university organized a demonstration on campus to protest the war. The rally was attended by a group of 50 students who shouted anti-war messages at cars passing by. To show his contempt for the United States, the student sewed the American flag to the rear of his jeans. When a police officer saw the flag sown on the student's jeans, he approached and told him to remove the flag or he would be placed under arrest. The student became angered and shouted at the police officer, \"Listen, you bastard, I'll wear this rag anywhere I please. \" The student was subsequently placed under arrest and charged with violating the state statute. The student subsequently brings suit in state court challenging the constitutionality of the statute. The strongest constitutional argument for the student is that\nA. the statute is void for vagueness under the Fourteenth Amendment's due process clause.\nB. the statute is invalid because it violates the petitioner's freedom of speech under the First Amendment.\nC. the statute is an abridgment of freedom of speech under the First Amendment because less restrictive means are available for achieving the same purpose.\nD. the statute is overbroad and consequently invalid under the First and FourteenthAmendments.",
+    "task": "A state legislature has recently enacted a statute making it a misdemeanor to curse or revile or use obscene or opprobrious language toward or in reference to a police officer perfonning his duties. A student at a state university organized a demonstration on campus to protest the war. The rally was attended by a group of 50 students who shouted anti-war messages at cars passing by. To show his contempt for the United States, the student sewed the American flag to the rear of his jeans. When a police officer saw the flag sown on the student's jeans, he approached and told him to remove the flag or he would be placed under arrest. The student became angered and shouted at the police officer, \"Listen, you bastard, I'll wear this rag anywhere I please. \" The student was subsequently placed under arrest and charged with violating the state statute. The student subsequently brings suit in state court challenging the constitutionality of the statute. The strongest constitutional argument for the student is that\nA. the statute is void for vagueness under the Fourteenth Amendment's due process clause.\nB. the statute is invalid because it violates the petitioner's freedom of speech under the First Amendment.\nC. the statute is an abridgment of freedom of speech under the First Amendment because less restrictive means are available for achieving the same purpose.\nD. the statute is overbroad and consequently invalid under the First and FourteenthAmendments.",
+    "choices": [
+      "the statute is void for vagueness under the Fourteenth Amendment's due process clause.",
+      "the statute is invalid because it violates the petitioner's freedom of speech under the First Amendment.",
+      "the statute is an abridgment of freedom of speech under the First Amendment because less restrictive means are available for achieving the same purpose.",
+      "the statute is overbroad and consequently invalid under the First and FourteenthAmendments."
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "professional_medicine",
+    "question": "A 42-year-old man comes to the office for preoperative evaluation prior to undergoing adrenalectomy scheduled in 2 weeks. One month ago, he received care in the emergency department for pain over his right flank following a motor vehicle collision. At that time, blood pressure was 160/100 mm Hg and CT scan of the abdomen showed an incidental 10-cm left adrenal mass. Results of laboratory studies, including complete blood count, serum electrolyte concentrations, and liver function tests, were within the reference ranges. The patient otherwise had been healthy and had never been told that he had elevated blood pressure. He takes no medications. A follow-up visit in the office 2 weeks ago disclosed elevated urinary normetanephrine and metanephrine and plasma aldosterone concentrations. The patient was referred to a surgeon, who recommended the adrenalectomy. Today, vital signs are temperature 36.6°C (97.9°F), pulse 100/min, respirations 14/min, and blood pressure 170/95 mm Hg. Physical examination discloses no significant findings. Initial preoperative preparation should include treatment with which of the following?\nA. Labetalol\nB. A loading dose of potassium chloride\nC. Nifedipine\nD. Phenoxybenzamine",
+    "task": "A 42-year-old man comes to the office for preoperative evaluation prior to undergoing adrenalectomy scheduled in 2 weeks. One month ago, he received care in the emergency department for pain over his right flank following a motor vehicle collision. At that time, blood pressure was 160/100 mm Hg and CT scan of the abdomen showed an incidental 10-cm left adrenal mass. Results of laboratory studies, including complete blood count, serum electrolyte concentrations, and liver function tests, were within the reference ranges. The patient otherwise had been healthy and had never been told that he had elevated blood pressure. He takes no medications. A follow-up visit in the office 2 weeks ago disclosed elevated urinary normetanephrine and metanephrine and plasma aldosterone concentrations. The patient was referred to a surgeon, who recommended the adrenalectomy. Today, vital signs are temperature 36.6°C (97.9°F), pulse 100/min, respirations 14/min, and blood pressure 170/95 mm Hg. Physical examination discloses no significant findings. Initial preoperative preparation should include treatment with which of the following?\nA. Labetalol\nB. A loading dose of potassium chloride\nC. Nifedipine\nD. Phenoxybenzamine",
+    "choices": [
+      "Labetalol",
+      "A loading dose of potassium chloride",
+      "Nifedipine",
+      "Phenoxybenzamine"
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "professional_psychology",
+    "question": "One of your therapy clients asks your advice about a good weight- reduction program. You have investigated the programs in the community and are enrolled in the one you consider the best. This program offers a $50 bonus to its patrons for each new person they bring into the program. Under these circumstances, your most appropriate response would be to\nA. tell your client the pros and cons of each program you know about except for the one in which you are enrolled\nB. recommend to your client the program in which you are enrolled and explain the $50 bonus you will receive\nC. recommend to your client the program in which you are enrolled and offer to have the $50 bonus credited to your client's account in the program\nD. tell your client the pros and cons of each program you know about, but do not claim the $50 bonus if your client enrolls in your program",
+    "task": "One of your therapy clients asks your advice about a good weight- reduction program. You have investigated the programs in the community and are enrolled in the one you consider the best. This program offers a $50 bonus to its patrons for each new person they bring into the program. Under these circumstances, your most appropriate response would be to\nA. tell your client the pros and cons of each program you know about except for the one in which you are enrolled\nB. recommend to your client the program in which you are enrolled and explain the $50 bonus you will receive\nC. recommend to your client the program in which you are enrolled and offer to have the $50 bonus credited to your client's account in the program\nD. tell your client the pros and cons of each program you know about, but do not claim the $50 bonus if your client enrolls in your program",
+    "choices": [
+      "tell your client the pros and cons of each program you know about except for the one in which you are enrolled",
+      "recommend to your client the program in which you are enrolled and explain the $50 bonus you will receive",
+      "recommend to your client the program in which you are enrolled and offer to have the $50 bonus credited to your client's account in the program",
+      "tell your client the pros and cons of each program you know about, but do not claim the $50 bonus if your client enrolls in your program"
+    ],
+    "answer_index": 3,
+    "true_answer": "D"
+  },
+  {
+    "task_id": "public_relations",
+    "question": "What should a public relations media practitioner do if she does not know the answer to a reporter's question?\nA. Give the reporter other information she is certain is correct.\nB. Say that the information is 'off the record' and will be disseminated later.\nC. Say 'I don't know' and promise to provide the information later.\nD. Say 'no comment,' rather than appear uninformed.",
+    "task": "What should a public relations media practitioner do if she does not know the answer to a reporter's question?\nA. Give the reporter other information she is certain is correct.\nB. Say that the information is 'off the record' and will be disseminated later.\nC. Say 'I don't know' and promise to provide the information later.\nD. Say 'no comment,' rather than appear uninformed.",
+    "choices": [
+      "Give the reporter other information she is certain is correct.",
+      "Say that the information is 'off the record' and will be disseminated later.",
+      "Say 'I don't know' and promise to provide the information later.",
+      "Say 'no comment,' rather than appear uninformed."
+    ],
+    "answer_index": 2,
+    "true_answer": "C"
+  },
+  {
+    "task_id": "security_studies",
+    "question": "What distinguishes coercive diplomacy from military force?\nA. Compellence is another term for coercive diplomacy, but covering a narrower set of criteria; compellence covers those threats aimed at initiating adversary action. A threat to coerce a state to give up part of its territory would count as coercive diplomacy, as long as that threat proactively initiates action before reactive diplomacy is taken.\nB. Coercive diplomacy constitutes the threats of limited force to induce adversary's incentive to comply with the coercer's demands. It is an influence strategy that is intended to obtain compliance: the use of force to defeat an opponent first does not count. It leaves an element of choice with the target to comply, or to continue.\nC. Military force, or the threat of military force, utilises fear to achieve strategic objectives. Coercive diplomacy is differentiated from this approach, because it does not use fear as a tool for coercing an adversary.\nD. Coercive diplomacy is employed to use force but to limit its effects on the international community. Coercive diplomacy is an aggressive strategy that is intended to obtain compliance through defeat. It does not leave an element of choice with the target, the target either being forced to comply or engage in conflict. It seeks to control by imposing compliance by removing any opportunity for negotiation or concession.",
+    "task": "What distinguishes coercive diplomacy from military force?\nA. Compellence is another term for coercive diplomacy, but covering a narrower set of criteria; compellence covers those threats aimed at initiating adversary action. A threat to coerce a state to give up part of its territory would count as coercive diplomacy, as long as that threat proactively initiates action before reactive diplomacy is taken.\nB. Coercive diplomacy constitutes the threats of limited force to induce adversary's incentive to comply with the coercer's demands. It is an influence strategy that is intended to obtain compliance: the use of force to defeat an opponent first does not count. It leaves an element of choice with the target to comply, or to continue.\nC. Military force, or the threat of military force, utilises fear to achieve strategic objectives. Coercive diplomacy is differentiated from this approach, because it does not use fear as a tool for coercing an adversary.\nD. Coercive diplomacy is employed to use force but to limit its effects on the international community. Coercive diplomacy is an aggressive strategy that is intended to obtain compliance through defeat. It does not leave an element of choice with the target, the target either being forced to comply or engage in conflict. It seeks to control by imposing compliance by removing any opportunity for negotiation or concession.",
+    "choices": [
+      "Compellence is another term for coercive diplomacy, but covering a narrower set of criteria; compellence covers those threats aimed at initiating adversary action. A threat to coerce a state to give up part of its territory would count as coercive diplomacy, as long as that threat proactively initiates action before reactive diplomacy is taken.",
+      "Coercive diplomacy constitutes the threats of limited force to induce adversary's incentive to comply with the coercer's demands. It is an influence strategy that is intended to obtain compliance: the use of force to defeat an opponent first does not count. It leaves an element of choice with the target to comply, or to continue.",
+      "Military force, or the threat of military force, utilises fear to achieve strategic objectives. Coercive diplomacy is differentiated from this approach, because it does not use fear as a tool for coercing an adversary.",
+      "Coercive diplomacy is employed to use force but to limit its effects on the international community. Coercive diplomacy is an aggressive strategy that is intended to obtain compliance through defeat. It does not leave an element of choice with the target, the target either being forced to comply or engage in conflict. It seeks to control by imposing compliance by removing any opportunity for negotiation or concession."
+    ],
+    "answer_index": 1,
+    "true_answer": "B"
+  },
+  {
+    "task_id": "sociology",
+    "question": "Which of the following did the post-war welfare state of 1948 not aim to provide:\nA. free health care and education for all\nB. a minimum wage\nC. full employment\nD. universal welfare",
+    "task": "Which of the following did the post-war welfare state of 1948 not aim to provide:\nA. free health care and education for all\nB. a minimum wage\nC. full employment\nD. universal welfare",
+    "choices": [
+      "free health care and education for all",
+      "a minimum wage",
+      "full employment",
+      "universal welfare"
+    ],
+    "answer_index": 1,
+    "true_answer": "B"
+  },
+  {
+    "task_id": "us_foreign_policy",
+    "question": "How did the 2008 financial crisis affect America's international reputation?\nA. It damaged support for the US model of political economy and capitalism\nB. It created anger at the United States for exaggerating the crisis\nC. It increased support for American global leadership under President Obama\nD. It reduced global use of the US dollar",
+    "task": "How did the 2008 financial crisis affect America's international reputation?\nA. It damaged support for the US model of political economy and capitalism\nB. It created anger at the United States for exaggerating the crisis\nC. It increased support for American global leadership under President Obama\nD. It reduced global use of the US dollar",
+    "choices": [
+      "It damaged support for the US model of political economy and capitalism",
+      "It created anger at the United States for exaggerating the crisis",
+      "It increased support for American global leadership under President Obama",
+      "It reduced global use of the US dollar"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "virology",
+    "question": "Why are parvoviruses a highly impactful parasite?\nA. Because they have no nucleic acid\nB. They require a helper virus\nC. Only replicate in dividing cells\nD. Can integrate into host chromosomes",
+    "task": "Why are parvoviruses a highly impactful parasite?\nA. Because they have no nucleic acid\nB. They require a helper virus\nC. Only replicate in dividing cells\nD. Can integrate into host chromosomes",
+    "choices": [
+      "Because they have no nucleic acid",
+      "They require a helper virus",
+      "Only replicate in dividing cells",
+      "Can integrate into host chromosomes"
+    ],
+    "answer_index": 0,
+    "true_answer": "A"
+  },
+  {
+    "task_id": "world_religions",
+    "question": " What is the sign of the covenant for Jewish males?\nA. The rainbow\nB. Circumcision\nC. A son\nD. Bar mitzvah",
+    "task": " What is the sign of the covenant for Jewish males?\nA. The rainbow\nB. Circumcision\nC. A son\nD. Bar mitzvah",
+    "choices": [
+      "The rainbow",
+      "Circumcision",
+      "A son",
+      "Bar mitzvah"
+    ],
+    "answer_index": 1,
+    "true_answer": "B"
+  }
+]

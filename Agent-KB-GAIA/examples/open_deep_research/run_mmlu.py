@@ -211,27 +211,6 @@ logger.warning(
 
 USE_OPEN_MODELS = False
 
-SET = "validation"
-
-custom_role_conversions = {"tool-call": "assistant", "tool-response": "user"}
-
-eval_ds = datasets.load_dataset(
-    "gaia-benchmark/GAIA", "2023_all", trust_remote_code=True, num_proc=1
-)[SET]
-eval_ds = eval_ds.rename_columns(
-    {"Question": "question", "Final answer": "true_answer", "Level": "task"}
-)
-
-
-def preprocess_file_paths(row):
-    if len(row["file_name"]) > 0:
-        row["file_name"] = f"data/gaia/{SET}/" + row["file_name"]
-    return row
-
-
-eval_ds = eval_ds.map(preprocess_file_paths)
-eval_df = pd.DataFrame(eval_ds)
-
 user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
 serp_api_key = os.getenv("SERP_API_KEY")
 BROWSER_CONFIG = {
@@ -244,8 +223,6 @@ BROWSER_CONFIG = {
     "serpapi_key": serp_api_key,
     "num": 10,
 }
-
-os.makedirs(f"./{BROWSER_CONFIG['downloads_folder']}", exist_ok=True)
 
 
 def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False):
@@ -334,30 +311,7 @@ def answer_single_question(
         "semantic": akb_client.semantic_search,
     }[args.retrieval_type]
 
-    augmented_question = "Here is the task:" + example["question"]
-
-    if example["file_name"]:
-        if ".zip" in example["file_name"]:
-            prompt_use_files = "\n\nTo solve the task above, you will have to use these attached files:\n"
-            prompt_use_files += get_zip_description(
-                example["file_name"],
-                example["question"],
-                visual_inspection_tool,
-                document_inspection_tool,
-                audio_inspection_tool,
-            )
-        else:
-            prompt_use_files = (
-                "\n\nTo solve the task above, you will have to use this attached file:"
-            )
-            prompt_use_files += get_single_file_description(
-                example["file_name"],
-                example["question"],
-                visual_inspection_tool,
-                document_inspection_tool,
-                audio_inspection_tool,
-            )
-        augmented_question += prompt_use_files
+    augmented_question = "Here is the task:" + example["task"]
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
@@ -446,47 +400,56 @@ def answer_single_question(
     append_answer(annotated_example, answers_file, jsonl_lock)
 
 
-def get_examples_to_answer(
-    answers_file, eval_df, selected_tasks=None, level="all", debug=False
-) -> List[dict]:
-    logger.info(f"Loading answers from {answers_file}...")
+def _load_json_array_or_jsonl(path: str) -> List[Dict[str, Any]]:
+    """
+    Load either:
+      - JSON array: [ {...}, {...} ]
+      - JSONL: one JSON object per line
+    Return: list of dicts
+    """
+    # Try JSON array first
     try:
-        done_questions = pd.read_json(answers_file, lines=True)["task_id"].tolist()
-        logger.info(f"Found {len(done_questions)} previous results!")
-    except Exception as e:
-        logger.info("Error when loading records: ", e)
-        logger.info("No usable records! ▶️ Starting new.")
-        done_questions = []
+        with open(path, "r", encoding="utf-8") as f:
+            obj = json.load(f)
+        if isinstance(obj, list):
+            return obj
+        raise ValueError("JSON root is not a list.")
+    except Exception:
+        # Fallback to JSONL
+        records = []
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                records.append(json.loads(line))
+        return records
 
-    if level == "all":
-        filtered_df = eval_df
-    else:
-        filtered_df = eval_df[eval_df["task"] == level]
 
-    if selected_tasks:
-        if isinstance(selected_tasks[0], int):
-            filtered_df = eval_df.iloc[selected_tasks]
-        else:
-            filtered_df = eval_df[eval_df["task_id"].isin(selected_tasks)]
+def get_examples_to_answer(answers_file, task_file) -> List[dict]:
+    # 1) done task_ids from answers_file
+    try:
+        answers = _load_json_array_or_jsonl(answers_file)
+        done_ids = {r.get("task_id") for r in answers if r.get("task_id") is not None}
+    except FileNotFoundError:
+        done_ids = set()
 
-    if debug:
-        done_questions = []
-    return [
-        row.to_dict()
-        for idx, row in filtered_df.iterrows()
-        if row["task_id"] not in done_questions
-    ]
+    # 2) tasks from task_file (the problems to run)
+    tasks = _load_json_array_or_jsonl(task_file)
+
+    # 3) return only tasks not in done_ids
+    return [t for t in tasks if t.get("task_id") not in done_ids]
+
 
 
 def main():
     args = parse_args()
     logger.info(f"Starting run with arguments: {args}")
 
-    answers_file = f"output/{SET}/{args.run_name}.jsonl"
-    selected_tasks = process_selected_tasks_param(args.selected_tasks)
-    level = args.level
+    answers_file = f"output/mmlu/{args.run_name}.jsonl"
+    task_file=f"/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/mmlu_dev_one_per_subject.json"
     tasks_to_run = get_examples_to_answer(
-        answers_file, eval_df, selected_tasks, level, args.debug
+        answers_file, task_file
     )
 
     if args.slm:
@@ -509,25 +472,8 @@ def main():
         )
     else:
         model, model_search = None, None
-    non_tool_probs=[
-        "ec09fa32-d03f-4bf8-84b0-1f16922c3ae4", #1
-        # "cffe0e32-c9a6-4c52-9877-78ceb4aaa9fb", #2
-        "2d83110e-a098-4ebb-9987-066c06fa42d0", #3
-        "27d5d136-8563-469e-92bf-fd103c28b57c", #4
-        "dc28cf18-6431-458b-83ef-64b3ce566c10", #5
-        "42576abe-0deb-4869-8c63-225c2d75a95a", #6
-        "6f37996b-2ac7-44b0-8e68-6d28256631b4", #7
-        "4b650a35-8529-4695-89ed-8dc7a500a498", #8
-        "c714ab3a-da30-4603-bacd-d008800188b9", #9
-        "3cef3a44-215e-4aed-8e3b-b1e3f08063b7", #10
-        "e142056d-56ab-4352-b091-b56054bd1359", #11
-        "50ad0280-0819-4bd9-b275-5de32d3b5bcb", #12
-        "50ec8903-b81f-4257-9450-1085afd2c319" #13
-    ]
     if args.debug or args.concurrency == 1:
         for example in tasks_to_run:
-            if example["task_id"] not in non_tool_probs:
-                continue
             answer_single_question(
                 example,
                 args,
