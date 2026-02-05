@@ -21,7 +21,7 @@ app.add_middleware(
 
 # 변환 후 엔티티 DB를 로드한다고 가정
 # unified_database.json 내부 각 레코드는 task_id/task/subtasks를 포함해야 함
-manager = AKB_Manager(json_file_paths=["./agent_kb/unified_database.json"])
+manager = AKB_Manager(json_file_paths=["./unified_database.json"])
 
 performance_stats = {
     "total_requests": 0,
@@ -252,7 +252,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
+        port=8002,
         workers=int(os.getenv("UVICORN_WORKERS", 1)),
         limit_concurrency=MAX_CONCURRENT_SEARCHES,
     )

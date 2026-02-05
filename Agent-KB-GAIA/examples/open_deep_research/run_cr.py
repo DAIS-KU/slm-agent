@@ -209,95 +209,18 @@ logger.warning(
     "Make sure you deactivated Tailscale VPN, else some URLs will be blocked!"
 )
 
-USE_OPEN_MODELS = False
-
-SET = "validation"
-
 custom_role_conversions = {"tool-call": "assistant", "tool-response": "user"}
-
-eval_ds = datasets.load_dataset(
-    "gaia-benchmark/GAIA", "2023_all", trust_remote_code=True, num_proc=1
-)[SET]
-eval_ds = eval_ds.rename_columns(
-    {"Question": "question", "Final answer": "true_answer", "Level": "task"}
-)
-
-
-def preprocess_file_paths(row):
-    if len(row["file_name"]) > 0:
-        row["file_name"] = f"data/gaia/{SET}/" + row["file_name"]
-    return row
-
-
-eval_ds = eval_ds.map(preprocess_file_paths)
-eval_df = pd.DataFrame(eval_ds)
-
-user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
-serp_api_key = os.getenv("SERP_API_KEY")
-BROWSER_CONFIG = {
-    "viewport_size": 1024 * 5,
-    "downloads_folder": "downloads_folder",
-    "request_kwargs": {
-        "headers": {"User-Agent": user_agent},
-        "timeout": 300,
-    },
-    "serpapi_key": serp_api_key,
-    "num": 10,
-}
-
-os.makedirs(f"./{BROWSER_CONFIG['downloads_folder']}", exist_ok=True)
 
 
 def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False):
-    crawler = SimpleCrawler(serpapi_key=os.getenv("SERP_API_KEY"))
-    text_limit = 100000
-
-    search_types = ["google", "baidu", "bing", "duckduckgo"]
-    search_tools = [SearchTool(search_type=st, reflection=False) for st in search_types]
-
-    WEB_TOOLS = [
-        CrawlerReadTool(crawler),
-        CrawlerArchiveSearchTool(crawler),
-        TextInspectorTool(model, text_limit),
-    ]
-    WEB_TOOLS += search_tools
-
-    text_webbrowser_agent = ToolCallingAgent(
-        model=model_search,
-        tools=WEB_TOOLS,
-        max_steps=args.max_steps,
-        verbosity_level=2,
-        planning_interval=args.planning_interval,
-        name="search_agent",
-        description="""A team member that will search the internet to answer your question.
-    Ask him for all your questions that require browsing the web.
-    Provide him as much context as possible, in particular if you need to search on a specific timeframe!
-    And don't hesitate to provide him with a complex search task, like finding a difference between two webpages.
-    Your request must be a real sentence, not a google search! Like "Find me this information (...)" rather than a few keywords.
-    """,
-        provide_run_summary=True,
-        debug=debug,
-        agent_kb=args.agent_kb,
-        top_k=args.top_k,
-        retrieval_type=args.retrieval_type,
-    )
-    text_webbrowser_agent.prompt_templates["managed_agent"][
-        "task"
-    ] += """You can navigate to .txt online files.
-    If a non-html page is in another format, especially .pdf or a Youtube video, use tool 'inspect_file_as_text' to inspect it.
-    Additionally, if after some searching you find out that you need more information to answer the question, you can use `final_answer` with your request for clarification as argument to request for more information."""
     manager_agent = CodeAgent(
         model=model,
-        tools=[
-            VisualInspectorTool(model, text_limit),
-            AudioInspectorTool(model, text_limit),
-            TextInspectorTool(model, text_limit),
-        ],
+        tools=[],
         max_steps=args.max_steps,
         verbosity_level=2,
         additional_authorized_imports=AUTHORIZED_IMPORTS,
         planning_interval=args.planning_interval,
-        managed_agents=[text_webbrowser_agent],
+        managed_agents=[],
         debug=debug,
         agent_kb=args.agent_kb,
         top_k=args.top_k,
@@ -402,17 +325,20 @@ def answer_single_question(
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
-        additional_knowledge = decompose_task(
-            example=example,
-            augmented_question=augmented_question,
-            model_name=model_name,
-            key=key,
-            url=url,
-            model=model,
-            slm=slm,
-            retrieval_method=retrieval_method,
-            top_k=3,
-        )
+        if retrieval:
+            additional_knowledge = decompose_task(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+            )
+        else:
+            additional_knowledge = None
         final_result = agent.run(
             augmented_question, additional_knowledge=additional_knowledge
         )
@@ -484,44 +410,55 @@ def answer_single_question(
     }
     append_answer(annotated_example, answers_file, jsonl_lock)
 
+from typing import List, Dict, Any
+import json
 
-def get_examples_to_answer(
-    answers_file, eval_df, selected_tasks=None, level="all", debug=False
-) -> List[dict]:
-    logger.info(f"Loading answers from {answers_file}...")
+def _load_json_array_or_jsonl(path: str) -> List[Dict[str, Any]]:
+    """
+    Load either:
+      - JSON array: [ {...}, {...} ]
+      - JSONL: one JSON object per line
+    Return: list of dicts
+    """
+    # Try JSON array first
     try:
-        done_questions = pd.read_json(answers_file, lines=True)["task_id"].tolist()
-        logger.info(f"Found {len(done_questions)} previous results!")
-    except Exception as e:
-        logger.info("Error when loading records: ", e)
-        logger.info("No usable records! ▶️ Starting new.")
-        done_questions = []
+        with open(path, "r", encoding="utf-8") as f:
+            obj = json.load(f)
+        if isinstance(obj, list):
+            return obj
+        raise ValueError("JSON root is not a list.")
+    except Exception:
+        # Fallback to JSONL
+        records = []
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                records.append(json.loads(line))
+        return records
 
-    if level == "all":
-        filtered_df = eval_df
-    else:
-        filtered_df = eval_df[eval_df["task"] == level]
 
-    if selected_tasks:
-        if isinstance(selected_tasks[0], int):
-            filtered_df = eval_df.iloc[selected_tasks]
-        else:
-            filtered_df = eval_df[eval_df["task_id"].isin(selected_tasks)]
+def get_examples_to_answer(answers_file, task_file) -> List[dict]:
+    # 1) done task_ids from answers_file
+    try:
+        answers = _load_json_array_or_jsonl(answers_file)
+        done_ids = {r.get("task_id") for r in answers if r.get("task_id") is not None}
+    except FileNotFoundError:
+        done_ids = set()
 
-    if debug:
-        done_questions = []
-    return [
-        row.to_dict()
-        for idx, row in filtered_df.iterrows()
-        if row["task_id"] not in done_questions
-    ]
+    # 2) tasks from task_file (the problems to run)
+    tasks = _load_json_array_or_jsonl(task_file)
+
+    # 3) return only tasks not in done_ids
+    return [t for t in tasks if t.get("task_id") not in done_ids]
 
 
 def main():
     args = parse_args()
     logger.info(f"Starting run with arguments: {args}")
 
-    answers_file = f"output/{SET}/{args.run_name}.jsonl"
+    answers_file = f"output/kb/{args.run_name}.jsonl"
     selected_tasks = process_selected_tasks_param(args.selected_tasks)
     level = args.level
     tasks_to_run = get_examples_to_answer(
