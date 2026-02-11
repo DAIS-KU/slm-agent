@@ -1,0 +1,12 @@
+planning_prompt: |
+    You have one question to answer. Make a plan to reach the goal. Do not actually compute the answer. 
+    Here is the task:
+    {{task}}
+
+planning_with_examples_prompt: |
+    You have one question to answer. Break it down into sub-tasks(sub-queries) to reach the goal. Do not actually compute the answer. 
+    Here is the task:
+    {{task}}
+
+    Here are similar task and their plannings:
+    {{examples}} 

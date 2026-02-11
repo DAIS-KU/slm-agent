@@ -15,10 +15,16 @@ from sentence_transformers import SentenceTransformer
 # Data models (변환 후 엔티티)
 # -----------------------------
 @dataclass
-class Subtask:
-    subgoal: str
-    rationale: str
-    actions: List[str]
+class OriginalContext:
+    agent_planning: str
+    agent_experience: str
+
+@dataclass
+class AugmentedContext:
+    Knowledge: Any
+    Contraints_Instructions: Any
+    Approach: Any
+    Plan: Any
 
 
 @dataclass
@@ -27,7 +33,8 @@ class TaskInstance:
 
     task_id: str = field(default_factory=lambda: str(datetime.now().timestamp()))
     task: str = ""
-    subtasks: List[Subtask] = field(default_factory=list)
+    original: OriginalContext = None
+    augmented: AugmentedContext = None
 
     # Search indices
     task_embedding: Optional[np.ndarray] = None

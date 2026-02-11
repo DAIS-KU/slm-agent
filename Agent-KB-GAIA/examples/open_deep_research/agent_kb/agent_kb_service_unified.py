@@ -42,17 +42,12 @@ class SearchRequest(BaseModel):
         default_factory=lambda: {"text": 0.5, "semantic": 0.5}
     )
 
-
-class Subtask(BaseModel):
-    subgoal: str
-    rationale: str
-    actions: List[str]
-
-
 class TaskResponse(BaseModel):
     task_id: str
     task: str
-    subtasks: List[Subtask]
+    task: str = ""
+    agent_planning: str 
+    plan: Any 
     total_score: Optional[float] = None  # hybrid일 때만 있을 수도 있어서 Optional
 
 
@@ -92,11 +87,12 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
     - 케이스 A: item 자체에 task_id/task/subtasks가 있음
     - 케이스 B: item["content"] 안에 task_id/task/subtasks가 있음 (text/semantic search 스타일)
     """
-    if "task_id" in item and "task" in item and "subtasks" in item:
+    if "task_id" in item and "task" in item and "Plan" in item and "agent_planning"in item:
         return {
             "task_id": item["task_id"],
             "task": item["task"],
-            "subtasks": item["subtasks"],
+            "plan": item["Plan"],
+            "agent_planning": item["agent_planning"],
         }
 
     content = item.get("content", {})
@@ -104,12 +100,14 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
         isinstance(content, dict)
         and "task_id" in content
         and "task" in content
-        and "subtasks" in content
+        and "Plan" in content
+        and "agent_planning" in content
     ):
         return {
             "task_id": content["task_id"],
             "task": content["task"],
-            "subtasks": content["subtasks"],
+            "plan": content["Plan"],
+            "agent_planning": content["agent_planning"],
         }
 
     raise KeyError(
@@ -142,7 +140,8 @@ async def hybrid_search(request: SearchRequest):
                 TaskResponse(
                     task_id=core["task_id"],
                     task=core["task"],
-                    subtasks=core["subtasks"],
+                    agent_planning=core["agent_planning"],
+                    plan=core["plan"],
                     total_score=item.get("total_score"),
                 )
             )
@@ -177,7 +176,8 @@ async def text_search(request: SearchRequest):
                 TaskResponse(
                     task_id=core["task_id"],
                     task=core["task"],
-                    subtasks=core["subtasks"],
+                    agent_planning=core["agent_planning"],
+                    plan=core["plan"],
                     total_score=item.get(
                         "score"
                     ),  # text 검색은 score를 total_score로 매핑
@@ -212,7 +212,8 @@ async def semantic_search(request: SearchRequest):
                 TaskResponse(
                     task_id=core["task_id"],
                     task=core["task"],
-                    subtasks=core["subtasks"],
+                    agent_planning=core["agent_planning"],
+                    plan=core["plan"],
                     total_score=item.get(
                         "score"
                     ),  # semantic 검색도 score를 total_score로 매핑
@@ -252,7 +253,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8002,
+        port=8000,
         workers=int(os.getenv("UVICORN_WORKERS", 1)),
         limit_concurrency=MAX_CONCURRENT_SEARCHES,
     )

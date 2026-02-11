@@ -103,7 +103,6 @@ def build_many_entities_examples_no_actions(
         )
     return separator.join(parts)
 
-
 def build_rationale_examples(
     entities, step_field="actions", rationale_field="rationale"
 ):
@@ -114,7 +113,7 @@ def build_rationale_examples(
         task = entity.get("task") or entity.get("query") or entity.get("question")
         lines.append(f"Similar task:{task}")
 
-        subtasks = entity.get("subtasks", [])
+        subtasks = entity.get("", [])
         for i, sub in enumerate(subtasks, start=1):
             subgoal = sub.get("subgoal", "")
             rationale = sub.get(rationale_field, "")

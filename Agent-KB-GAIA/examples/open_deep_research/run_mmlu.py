@@ -18,6 +18,7 @@ from typing import (
     TypedDict,
     Union,
 )
+import sys
 from collections import Counter
 import logging
 import datasets
@@ -49,7 +50,7 @@ from scripts.automodel import (
 
 from agent_kb.agent_kb_utils import AKBClient, call_model
 
-from planner_kb import decompose_task
+from planner_kb import planning_task
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
 from smolagents.agents import populate_template
@@ -105,6 +106,11 @@ load_dotenv(dotenv_path=env_path, override=True)
 login(os.getenv("HF_TOKEN"))
 
 logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
 
 jsonl_lock = threading.Lock()
 trajectory_lock = threading.Lock()
@@ -202,6 +208,7 @@ def parse_args():
         default="gpt-4.1",
         help="agent kb model choice",
     )
+    parser.add_argument("--is_augmented", action="store_true", help="Enable augmented plan")
     return parser.parse_args()
 
 
@@ -266,6 +273,7 @@ def answer_single_question(
     slm=False,
     model=None,
     model_search=None,
+    is_augmented=True
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -311,12 +319,12 @@ def answer_single_question(
         "semantic": akb_client.semantic_search,
     }[args.retrieval_type]
 
-    augmented_question = "Here is the task:" + example["task"]
+    augmented_question = "Here is the task:" + example["question"]
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
         if retrieval:
-            additional_knowledge = decompose_task(
+            additional_knowledge = planning_task(
                 example=example,
                 augmented_question=augmented_question,
                 model_name=model_name,
@@ -326,9 +334,10 @@ def answer_single_question(
                 slm=slm,
                 retrieval_method=retrieval_method,
                 top_k=3,
+                is_augmented=is_augmented
             )
         else:
-            additional_knowledge = None
+            additional_knowledge=None
         final_result = agent.run(
             augmented_question, additional_knowledge=additional_knowledge
         )
@@ -387,15 +396,14 @@ def answer_single_question(
         "question": example["question"],
         "augmented_question": augmented_question,
         "prediction": output,
-        "true_answer": example["true_answer"],
         "intermediate_steps": intermediate_steps,
         "parsing_error": parsing_error,
         "iteration_limit_exceeded": iteration_limit_exceeded,
         "agent_error": str(exception) if raised_exception else None,
         "start_time": start_time,
         "end_time": end_time,
-        "task": example["task"],
-        "task_id": example["task_id"],
+        "task": example["question"],
+        "true_answer": example["answer"],
     }
     append_answer(annotated_example, answers_file, jsonl_lock)
 
@@ -441,27 +449,30 @@ def get_examples_to_answer(answers_file, task_file) -> List[dict]:
     return [t for t in tasks if t.get("task_id") not in done_ids]
 
 
+
 def main():
     args = parse_args()
     logger.info(f"Starting run with arguments: {args}")
 
     answers_file = f"output/mmlu/{args.run_name}.jsonl"
-    task_file = f"/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/mmlu_dev_one_per_subject.json"
-    tasks_to_run = get_examples_to_answer(answers_file, task_file)
+    task_file=f"/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/mmlu_dev_one_per_subject.json"
+    tasks_to_run = get_examples_to_answer(
+        answers_file, task_file
+    )
 
     if args.slm:
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
-            model_id=args.model_id,
-            device_map="auto",
+            model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
+            device_map="cuda:2",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
             temperature=0.7,
         )
         model_search = TransformersModel(
-            model_id=args.model_id_search,
-            device_map="auto",
+            model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
+            device_map="cuda:2",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -484,12 +495,13 @@ def main():
                 args.slm,
                 model,
                 model_search,
+                args.is_augmented
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
             futures = [
                 exe.submit(
-                    answer_single_question,
+                    answer_singsle_question,
                     example,
                     args,
                     args.model_id,
@@ -502,6 +514,7 @@ def main():
                     args.slm,
                     model,
                     model_search,
+                    args.is_augmented
                 )
                 for example in tasks_to_run
             ]
