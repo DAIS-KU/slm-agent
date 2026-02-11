@@ -374,7 +374,7 @@ def answer_single_question(
                 top_k=3,
             )
         else:
-            additional_knowledge=None
+            additional_knowledge = None
         final_result = agent.run(
             augmented_question, additional_knowledge=additional_knowledge
         )
@@ -441,7 +441,7 @@ def answer_single_question(
         "start_time": start_time,
         "end_time": end_time,
         "task": example["task"],
-        "task_id": example["task_id"]
+        "task_id": example["task_id"],
     }
     append_answer(annotated_example, answers_file, jsonl_lock)
 
@@ -509,20 +509,20 @@ def main():
         )
     else:
         model, model_search = None, None
-    non_tool_probs=[
-        "ec09fa32-d03f-4bf8-84b0-1f16922c3ae4", #1
+    non_tool_probs = [
+        "ec09fa32-d03f-4bf8-84b0-1f16922c3ae4",  # 1
         # "cffe0e32-c9a6-4c52-9877-78ceb4aaa9fb", #2
-        "2d83110e-a098-4ebb-9987-066c06fa42d0", #3
-        "27d5d136-8563-469e-92bf-fd103c28b57c", #4
-        "dc28cf18-6431-458b-83ef-64b3ce566c10", #5
-        "42576abe-0deb-4869-8c63-225c2d75a95a", #6
-        "6f37996b-2ac7-44b0-8e68-6d28256631b4", #7
-        "4b650a35-8529-4695-89ed-8dc7a500a498", #8
-        "c714ab3a-da30-4603-bacd-d008800188b9", #9
-        "3cef3a44-215e-4aed-8e3b-b1e3f08063b7", #10
-        "e142056d-56ab-4352-b091-b56054bd1359", #11
-        "50ad0280-0819-4bd9-b275-5de32d3b5bcb", #12
-        "50ec8903-b81f-4257-9450-1085afd2c319" #13
+        "2d83110e-a098-4ebb-9987-066c06fa42d0",  # 3
+        "27d5d136-8563-469e-92bf-fd103c28b57c",  # 4
+        "dc28cf18-6431-458b-83ef-64b3ce566c10",  # 5
+        "42576abe-0deb-4869-8c63-225c2d75a95a",  # 6
+        "6f37996b-2ac7-44b0-8e68-6d28256631b4",  # 7
+        "4b650a35-8529-4695-89ed-8dc7a500a498",  # 8
+        "c714ab3a-da30-4603-bacd-d008800188b9",  # 9
+        "3cef3a44-215e-4aed-8e3b-b1e3f08063b7",  # 10
+        "e142056d-56ab-4352-b091-b56054bd1359",  # 11
+        "50ad0280-0819-4bd9-b275-5de32d3b5bcb",  # 12
+        "50ec8903-b81f-4257-9450-1085afd2c319",  # 13
     ]
     if args.debug or args.concurrency == 1:
         for example in tasks_to_run:

@@ -210,11 +210,10 @@ class SerpSearcher(BaseSearcher):
         # elif self.engine == "yahoo":
         #     params["p"] = query
         #     search = YahooSearch(params)
-        if self.engine in ["google", "bing", "baidu", "yahoo"]: 
+        if self.engine in ["google", "bing", "baidu", "yahoo"]:
             pass
         else:
             raise ValueError("Unsupport Serp Engine! Please check your parameters!")
-
 
         resp = requests.get(
             "https://www.searchapi.io/api/v1/search", params=params, timeout=100

@@ -410,8 +410,10 @@ def answer_single_question(
     }
     append_answer(annotated_example, answers_file, jsonl_lock)
 
+
 from typing import List, Dict, Any
 import json
+
 
 def _load_json_array_or_jsonl(path: str) -> List[Dict[str, Any]]:
     """

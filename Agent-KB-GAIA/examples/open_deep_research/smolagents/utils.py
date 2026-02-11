@@ -170,7 +170,8 @@ def parse_code_blobs(code_blob: str) -> str:
             pass
 
         if "final" in code_blob and "answer" in code_blob:
-            raise ValueError(f"""
+            raise ValueError(
+                f"""
 Your code snippet is invalid, because the regex pattern {pattern} was not found in it.
 Here is your code snippet:
 {code_blob}
@@ -178,8 +179,10 @@ It seems like you're trying to return the final answer, you can do it as follows
 Code:
 ```py
 final_answer("YOUR FINAL ANSWER HERE")
-```<end_code>""".strip())
-        raise ValueError(f"""
+```<end_code>""".strip()
+            )
+        raise ValueError(
+            f"""
 Your code snippet is invalid, because the regex pattern {pattern} was not found in it.
 Here is your code snippet:
 {code_blob}
@@ -188,7 +191,8 @@ Thoughts: Your thoughts
 Code:
 ```py
 # Your python code here
-```<end_code>""".strip())
+```<end_code>""".strip()
+        )
     return "\n\n".join(match.strip() for match in matches)
 
 

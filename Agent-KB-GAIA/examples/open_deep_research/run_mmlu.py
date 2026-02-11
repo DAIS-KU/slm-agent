@@ -328,7 +328,7 @@ def answer_single_question(
                 top_k=3,
             )
         else:
-            additional_knowledge=None
+            additional_knowledge = None
         final_result = agent.run(
             augmented_question, additional_knowledge=additional_knowledge
         )
@@ -395,7 +395,7 @@ def answer_single_question(
         "start_time": start_time,
         "end_time": end_time,
         "task": example["task"],
-        "task_id": example["task_id"]
+        "task_id": example["task_id"],
     }
     append_answer(annotated_example, answers_file, jsonl_lock)
 
@@ -441,16 +441,13 @@ def get_examples_to_answer(answers_file, task_file) -> List[dict]:
     return [t for t in tasks if t.get("task_id") not in done_ids]
 
 
-
 def main():
     args = parse_args()
     logger.info(f"Starting run with arguments: {args}")
 
     answers_file = f"output/mmlu/{args.run_name}.jsonl"
-    task_file=f"/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/mmlu_dev_one_per_subject.json"
-    tasks_to_run = get_examples_to_answer(
-        answers_file, task_file
-    )
+    task_file = f"/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/mmlu_dev_one_per_subject.json"
+    tasks_to_run = get_examples_to_answer(answers_file, task_file)
 
     if args.slm:
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16

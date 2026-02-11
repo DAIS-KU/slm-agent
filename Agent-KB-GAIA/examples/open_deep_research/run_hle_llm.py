@@ -427,7 +427,8 @@ def answer_single_question(
 
     agent = create_agent_hierarchy(model, model_search, args, debug)
 
-    augmented_question = """
+    augmented_question = (
+        """
         Turn complex goal into an actionable, coherent plan.
         1. Accurately understand the final goal provided by the user, and, if necessary, refine and clarify it by making reasonable assumptions.
         2. Decompose the goal into the required work, from high-level tasks down to lower-level subtasks.
@@ -435,7 +436,9 @@ def answer_single_question(
         4. Integrate all task plans into a single, consistent final plan, ordered by time and task dependencies.
 
         Here is the task:
-        """ + example["question"]
+        """
+        + example["question"]
+    )
 
     if example["file_name"]:
         if ".zip" in example["file_name"]:
