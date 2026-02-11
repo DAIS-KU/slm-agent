@@ -208,7 +208,9 @@ def parse_args():
         default="gpt-4.1",
         help="agent kb model choice",
     )
-    parser.add_argument("--is_augmented", action="store_true", help="Enable augmented plan")
+    parser.add_argument(
+        "--is_augmented", action="store_true", help="Enable augmented plan"
+    )
     return parser.parse_args()
 
 
@@ -273,7 +275,7 @@ def answer_single_question(
     slm=False,
     model=None,
     model_search=None,
-    is_augmented=True
+    is_augmented=True,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -334,10 +336,10 @@ def answer_single_question(
                 slm=slm,
                 retrieval_method=retrieval_method,
                 top_k=3,
-                is_augmented=is_augmented
+                is_augmented=is_augmented,
             )
         else:
-            additional_knowledge=None
+            additional_knowledge = None
         final_result = agent.run(
             augmented_question, additional_knowledge=additional_knowledge
         )
@@ -449,16 +451,13 @@ def get_examples_to_answer(answers_file, task_file) -> List[dict]:
     return [t for t in tasks if t.get("task_id") not in done_ids]
 
 
-
 def main():
     args = parse_args()
     logger.info(f"Starting run with arguments: {args}")
 
     answers_file = f"output/mmlu/{args.run_name}.jsonl"
-    task_file=f"/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/mmlu_dev_one_per_subject.json"
-    tasks_to_run = get_examples_to_answer(
-        answers_file, task_file
-    )
+    task_file = f"/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/mmlu_dev_one_per_subject.json"
+    tasks_to_run = get_examples_to_answer(answers_file, task_file)
 
     if args.slm:
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
@@ -495,7 +494,7 @@ def main():
                 args.slm,
                 model,
                 model_search,
-                args.is_augmented
+                args.is_augmented,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
@@ -514,7 +513,7 @@ def main():
                     args.slm,
                     model,
                     model_search,
-                    args.is_augmented
+                    args.is_augmented,
                 )
                 for example in tasks_to_run
             ]

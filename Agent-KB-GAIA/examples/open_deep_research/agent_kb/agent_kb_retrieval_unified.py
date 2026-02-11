@@ -19,12 +19,13 @@ class OriginalContext:
     agent_planning: str
     agent_experience: str
 
+
 @dataclass
 class AugmentedContext:
-    Knowledge: Any
-    Contraints_Instructions: Any
-    Approach: Any
-    Plan: Any
+    knowledge: Any
+    contraints_instructions: Any
+    approach: Any
+    plan: Any
 
 
 @dataclass
@@ -71,19 +72,6 @@ class AgenticKnowledgeBase:
             self.parse_json_file(json_path)
 
     def parse_json_file(self, json_file_path: str):
-        """
-        입력 JSON 포맷 가정:
-        [
-          {
-            "task_id": "...",
-            "task": "...",
-            "subtasks": [
-              {"subgoal": "...", "rationale": "...", "actions": ["...", "..."]}
-            ]
-          },
-          ...
-        ]
-        """
         try:
             with open(json_file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -98,23 +86,27 @@ class AgenticKnowledgeBase:
                     task_id = item.get("task_id") or str(datetime.now().timestamp())
                     task_text = item.get("task", "")
 
-                    raw_subtasks = item.get("subtasks", [])
-                    subtasks: List[Subtask] = []
-                    for st in raw_subtasks:
-                        if not isinstance(st, dict):
-                            continue
-                        subtasks.append(
-                            Subtask(
-                                subgoal=st.get("subgoal", ""),
-                                rationale=st.get("rationale", ""),
-                                actions=list(st.get("actions", []) or []),
-                            )
-                        )
+                    knowledge = item.get("Knowledge", [])
+                    contraints_instructions = item.get("Contraints_Instructions", [])
+                    approach = item.get("Approach", [])
+                    plan = item.get("Plan", [])
+
+                    agent_planning = item.get("agent_planning", [])
+                    agent_experience = item.get("agent_experience", [])
 
                     instance = TaskInstance(
                         task_id=task_id,
                         task=task_text,
-                        subtasks=subtasks,
+                        original=OriginalContext(
+                            agent_planning=agent_planning,
+                            agent_experience=agent_experience,
+                        ),
+                        augmented=AugmentedContext(
+                            knowledge=knowledge,
+                            contraints_instructions=contraints_instructions,
+                            approach=approach,
+                            plan=plan,
+                        ),
                     )
                     batch.append(instance)
                 except Exception as e:
@@ -246,17 +238,6 @@ class AKB_Manager:
     def hybrid_search(
         self, query: str, top_k: int = 5, weights: Dict[str, float] = None
     ) -> List[dict]:
-        """
-        반환 포맷:
-        [
-          {
-            "task_id": "...",
-            "total_score": ...,
-            "task": "...",
-            "subtasks": [...],
-          }
-        ]
-        """
         weights = weights or {"text": 0.5, "semantic": 0.5}
         field_weights = {"task": 1.0}
 
@@ -288,14 +269,8 @@ class AKB_Manager:
                     "task_id": task_id,
                     "total_score": float(total_score),
                     "task": task_obj.task,
-                    "subtasks": [
-                        {
-                            "subgoal": st.subgoal,
-                            "rationale": st.rationale,
-                            "actions": st.actions,
-                        }
-                        for st in task_obj.subtasks
-                    ],
+                    "agent_planning": task_obj.original.agent_planning,
+                    "plan": task_obj.augmented.plan,
                 }
             )
 
@@ -314,14 +289,8 @@ class AKB_Manager:
                     "content": {
                         "task_id": task_obj.task_id,
                         "task": task_obj.task,
-                        "subtasks": [
-                            {
-                                "subgoal": st.subgoal,
-                                "rationale": st.rationale,
-                                "actions": st.actions,
-                            }
-                            for st in task_obj.subtasks
-                        ],
+                        "agent_planning": task_obj.original.agent_planning,
+                        "plan": task_obj.augmented.plan,
                     },
                 }
             )
@@ -340,14 +309,8 @@ class AKB_Manager:
                     "content": {
                         "task_id": task_obj.task_id,
                         "task": task_obj.task,
-                        "subtasks": [
-                            {
-                                "subgoal": st.subgoal,
-                                "rationale": st.rationale,
-                                "actions": st.actions,
-                            }
-                            for st in task_obj.subtasks
-                        ],
+                        "agent_planning": task_obj.original.agent_planning,
+                        "plan": task_obj.augmented.plan,
                     },
                 }
             )

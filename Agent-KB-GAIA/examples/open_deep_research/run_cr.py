@@ -207,7 +207,9 @@ def parse_args():
         default="gpt-4.1",
         help="agent kb model choice",
     )
-    parser.add_argument("--is_augmented", action="store_true", help="Enable augmented plan")
+    parser.add_argument(
+        "--is_augmented", action="store_true", help="Enable augmented plan"
+    )
     return parser.parse_args()
 
 
@@ -259,7 +261,7 @@ def answer_single_question(
     slm=False,
     model=None,
     model_search=None,
-    is_augmented=True
+    is_augmented=True,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -343,7 +345,7 @@ def answer_single_question(
                 slm=slm,
                 retrieval_method=retrieval_method,
                 top_k=3,
-                is_augmented=is_augmented
+                is_augmented=is_augmented,
             )
         else:
             additional_knowledge = None
@@ -417,8 +419,10 @@ def answer_single_question(
     }
     append_answer(annotated_example, answers_file, jsonl_lock)
 
+
 from typing import List, Dict, Any
 import json
+
 
 def _load_json_array_or_jsonl(path: str) -> List[Dict[str, Any]]:
     """
@@ -466,10 +470,8 @@ def main():
     logger.info(f"Starting run with arguments: {args}")
 
     answers_file = f"output/cr/{args.run_name}.jsonl"
-    task_file=f"/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/kb_tasks.json"
-    tasks_to_run = get_examples_to_answer(
-        answers_file, task_file
-    )
+    task_file = f"/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/kb_tasks.json"
+    tasks_to_run = get_examples_to_answer(answers_file, task_file)
 
     if args.slm:
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
@@ -507,7 +509,7 @@ def main():
                 args.slm,
                 model,
                 model_search,
-                args.is_augmented
+                args.is_augmented,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:

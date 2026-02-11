@@ -18,14 +18,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def build_examples(
-    entities, planning_field="plan"
-):
+def build_examples(entities, planning_field="plan"):
     lines = []
     for entity in entities:
         task = entity.get("task") or entity.get("query") or entity.get("question")
-        plan = sub.get(planning_field, "")
-        lines.append(f"Similar task:{task}\nPlan: {rationale}\n")
+        plan = entity.get(planning_field, "")
+        lines.append(f"Similar task:{task}\nPlan: {plan}\n")
     return "\n".join(lines)
 
 
@@ -39,23 +37,26 @@ def planning_task(
     slm,
     retrieval_method,
     top_k,
-    is_augmented=True
+    is_augmented=True,
 ):
     if retrieval_method is None:
-        logger.info(f"planning_task - retrieval_method is None.(is_augmented={is_augmented})")
+        logger.info(
+            f"planning_task - retrieval_method is None.(is_augmented={is_augmented})"
+        )
         planning_prompt_template = load_prompts(
             path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
         )
-        planning_prompt_template = planning_prompt_template[
-            "planning_prompt"
-        ]
+        planning_prompt_template = planning_prompt_template["planning_prompt"]
         planning_prompt = populate_template(
             planning_prompt_template,
             variables={"task": augmented_question},
         )
     else:
-        logger.info(f"planning_task - retrieval_method is not None.(is_augmented={is_augmented})")
+        logger.info(
+            f"planning_task - retrieval_method is not None.(is_augmented={is_augmented})"
+        )
         retrieval_results = retrieval_method(example["question"], top_k=top_k)
+        # logger.info(f"Retrieved retrieval_results:\n {retrieval_results}")
         planning_prompt_template = load_prompts(
             path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
         )

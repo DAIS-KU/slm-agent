@@ -103,6 +103,7 @@ def build_many_entities_examples_no_actions(
         )
     return separator.join(parts)
 
+
 def build_rationale_examples(
     entities, step_field="actions", rationale_field="rationale"
 ):

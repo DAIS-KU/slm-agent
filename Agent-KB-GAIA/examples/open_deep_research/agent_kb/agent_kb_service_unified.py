@@ -42,12 +42,13 @@ class SearchRequest(BaseModel):
         default_factory=lambda: {"text": 0.5, "semantic": 0.5}
     )
 
+
 class TaskResponse(BaseModel):
     task_id: str
     task: str
     task: str = ""
-    agent_planning: str 
-    plan: Any 
+    agent_planning: str
+    plan: Any
     total_score: Optional[float] = None  # hybrid일 때만 있을 수도 있어서 Optional
 
 
@@ -87,11 +88,16 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
     - 케이스 A: item 자체에 task_id/task/subtasks가 있음
     - 케이스 B: item["content"] 안에 task_id/task/subtasks가 있음 (text/semantic search 스타일)
     """
-    if "task_id" in item and "task" in item and "Plan" in item and "agent_planning"in item:
+    if (
+        "task_id" in item
+        and "task" in item
+        and "plan" in item
+        and "agent_planning" in item
+    ):
         return {
-            "task_id": item["task_id"],
+            "task_id": str(item["task_id"]),
             "task": item["task"],
-            "plan": item["Plan"],
+            "plan": item["plan"],
             "agent_planning": item["agent_planning"],
         }
 
@@ -100,13 +106,13 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
         isinstance(content, dict)
         and "task_id" in content
         and "task" in content
-        and "Plan" in content
+        and "plan" in content
         and "agent_planning" in content
     ):
         return {
-            "task_id": content["task_id"],
+            "task_id": str(content["task_id"]),
             "task": content["task"],
-            "plan": content["Plan"],
+            "plan": content["plan"],
             "agent_planning": content["agent_planning"],
         }
 
@@ -138,7 +144,7 @@ async def hybrid_search(request: SearchRequest):
             core = _extract_task_fields(item)
             response_data.append(
                 TaskResponse(
-                    task_id=core["task_id"],
+                    task_id=str(core["task_id"]),
                     task=core["task"],
                     agent_planning=core["agent_planning"],
                     plan=core["plan"],
@@ -174,7 +180,7 @@ async def text_search(request: SearchRequest):
             core = _extract_task_fields(item)
             response_data.append(
                 TaskResponse(
-                    task_id=core["task_id"],
+                    task_id=str(core["task_id"]),
                     task=core["task"],
                     agent_planning=core["agent_planning"],
                     plan=core["plan"],
@@ -210,7 +216,7 @@ async def semantic_search(request: SearchRequest):
             core = _extract_task_fields(item)
             response_data.append(
                 TaskResponse(
-                    task_id=core["task_id"],
+                    task_id=str(core["task_id"]),
                     task=core["task"],
                     agent_planning=core["agent_planning"],
                     plan=core["plan"],
