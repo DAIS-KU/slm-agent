@@ -18,16 +18,16 @@ progressive_kci_prompt: |
     2) contraints_instructions: constraints, do/don't, safety rules, formatting rules, tool rules, evaluation criteria.
 
     Return STRICT JSON only:
-    {{
-    "knowledge": "...",
-    "contraints_instructions": "..."
-    }}
+    {
+        "knowledge": "...",
+        "contraints_instructions": "..."
+    }
 
     TARGET TASK:
-    {task}
+    {{task}}
 
     SIMILAR TASKS:
-    {similar_blocks}
+    {{similar_blocks}}
 
 progressive_approach_prompt: |
     You are an expert planning agent.
@@ -46,13 +46,13 @@ progressive_approach_prompt: |
         - Do NOT write a detailed plan.
 
     TARGET TASK:
-    {task}
+    {{task}}
 
     KNOWLEDGE,CONSTRAINTS/INSTRUCTIONS:
-    {kci}
+    {{kci}}
 
     SIMILAR TASKS:
-    {similar_blocks}
+    {{similar_blocks}}
 
 progressive_plan_prompt: |
     You are an expert planning agent.
@@ -68,13 +68,13 @@ progressive_plan_prompt: |
     - Do NOT output the final solution to the task.
 
     TARGET TASK:
-    {task}
+    {{task}}
 
     KNOWLEDGE,CONSTRAINTS/INSTRUCTIONS:
-    {kci}
+    {{kci}}
 
     APPROACH:
-    {approach}
+    {{approach}}
 
     SIMILAR TASKS:
-    {similar_blocks}
+    {{similar_blocks}}

@@ -95,19 +95,9 @@ def build_similar_task_blocks(
     max_items: int = 5,
     mode: Mode = "kci",
 ) -> str:
-    """
-    유사태스크(TaskResponse 결과)들을 단계별(prompt별)로 필요한 필드만 포함해 텍스트 블록 구성.
-
-    - mode="kci": Task + Knowledge + Constraints
-    - mode="approach": Task + Approach
-    - mode="plan": Task + Plan
-    - mode="all": Task + Knowledge + Constraints + Approach + Plan
-    """
     lines: List[str] = []
 
-    for i, s in enumerate(similars[:max_items], start=1):
-        d = _as_dict(s)
-
+    for i, d in enumerate(similars[:max_items], start=1):
         task = d.get("task") or d.get("query") or d.get("question") or ""
         knowledge = d.get("knowledge") or ""
         constraints = d.get("contraints_instructions") or ""
@@ -118,31 +108,21 @@ def build_similar_task_blocks(
 
         # 항상 task는 포함
         if task:
-            parts.append(f"Task: {task}".strip())
+            parts.append(f"Task: {task}")
 
         if mode == "kci":
             if knowledge:
-                parts.append(f"Knowledge:\n{knowledge}".strip())
+                parts.append(f"Knowledge:\n{knowledge}")
             if constraints:
-                parts.append(f"Constraints/Instructions:\n{constraints}".strip())
+                parts.append(f"Constraints/Instructions:\n{constraints}")
 
         elif mode == "approach":
             if approach:
-                parts.append(f"Approach:\n{approach}".strip())
+                parts.append(f"Approach:\n{approach}")
 
         elif mode == "plan":
             if plan:
-                parts.append(f"Plan:\n{plan}".strip())
-
-        elif mode == "all":
-            if knowledge:
-                parts.append(f"Knowledge:\n{knowledge}".strip())
-            if constraints:
-                parts.append(f"Constraints/Instructions:\n{constraints}".strip())
-            if approach:
-                parts.append(f"Approach:\n{approach}".strip())
-            if plan:
-                parts.append(f"Plan:\n{plan}".strip())
+                parts.append(f"Plan:\n{plan}")
 
         lines.append("\n".join(parts).strip())
 
@@ -168,7 +148,7 @@ def progressive_planning_task(
 
     # 1) knowledge + contraints_instructions
     progressive_kci_prompt_template = planning_prompt_template["progressive_kci_prompt"]
-    similar_blocks_kci = build_similar_task_blocks(similars, mode="kci")
+    similar_blocks_kci = build_similar_task_blocks(retrieval_results, mode="kci")
     progressive_kci_prompt = populate_template(
         progressive_kci_prompt_template,
         variables={
@@ -193,7 +173,9 @@ def progressive_planning_task(
     progressive_approach_prompt_template = planning_prompt_template[
         "progressive_approach_prompt"
     ]
-    similar_blocks_approach = build_similar_task_blocks(similars, mode="approach")
+    similar_blocks_approach = build_similar_task_blocks(
+        retrieval_results, mode="approach"
+    )
     progressive_approach_prompt = populate_template(
         progressive_approach_prompt_template,
         variables={
@@ -219,7 +201,7 @@ def progressive_planning_task(
     progressive_plan_prompt_template = planning_prompt_template[
         "progressive_plan_prompt"
     ]
-    similar_blocks_plan = build_similar_task_blocks(similars, mode="plan")
+    similar_blocks_plan = build_similar_task_blocks(retrieval_results, mode="plan")
     progressive_plan_prompt = populate_template(
         progressive_plan_prompt_template,
         variables={

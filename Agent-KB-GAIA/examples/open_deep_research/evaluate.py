@@ -188,7 +188,7 @@ def run_all_evaluations(
 
 if __name__ == "__main__":
     run_all_evaluations(
-        validation_dir="/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/output/validation",
-        evaluate_dir="/home/jovyan/slm-agent/Agent-KB-GAIA/examples/open_deep_research/output/evaluate",
+        validation_dir="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/output/validation",
+        evaluate_dir="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/output/evaluate",
         pattern="*.jsonl",
     )
