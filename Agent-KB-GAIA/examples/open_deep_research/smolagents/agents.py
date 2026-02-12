@@ -296,6 +296,7 @@ class MultiStepAgent:
         agent_kb: bool = False,
         top_k: Optional[int] = 3,
         retrieval_type: Optional[str] = "hybrid",
+        use_additional_knowledge_as_plan=False,
     ):
         if tool_parser is None:
             tool_parser = parse_json_tool_call
@@ -361,6 +362,7 @@ class MultiStepAgent:
         self.agent_kb = agent_kb
         self.top_k = top_k
         self.retrieval_type = retrieval_type
+        self.use_additional_knowledge_as_plan = use_additional_knowledge_as_plan
 
     @property
     def logs(self):
@@ -708,6 +710,15 @@ You have been provided with these additional arguments, that you can access usin
             step (`int`): The number of the current step, used as an indication for the LLM.
         """
         if is_first_step:
+            if self.use_additional_knowledge_as_plan:
+                logger.info(f"First Planning step use additional_knowledge !")
+                return PlanningStep(
+                    model_input_messages=[],
+                    plan=additional_knowledge,
+                    facts="",
+                    model_output_message_plan=additional_knowledge,
+                    model_output_message_facts="",
+                )
             input_messages = [
                 {
                     "role": MessageRole.USER,

@@ -10,3 +10,71 @@ planning_with_examples_prompt: |
 
     Here are similar task and their plannings:
     {{examples}} 
+
+progressive_kci_prompt: |
+    You are an expert planning agent.
+    Given a TARGET task and SIMILAR tasks, write:
+    1) knowledge: essential domain knowledge, definitions, prerequisites, assumptions.
+    2) contraints_instructions: constraints, do/don't, safety rules, formatting rules, tool rules, evaluation criteria.
+
+    Return STRICT JSON only:
+    {{
+    "knowledge": "...",
+    "contraints_instructions": "..."
+    }}
+
+    TARGET TASK:
+    {task}
+
+    SIMILAR TASKS:
+    {similar_blocks}
+
+progressive_approach_prompt: |
+    You are an expert planning agent.
+    Write the Approach for the TARGET TASK.
+
+    Follow these rules STRICTLY:
+    - Describe HOW to approach and solve this task.
+    - Your reasoning MUST be grounded in the Knowledge and Contraints_Instructions.
+    - Explicitly expose decision-making rationale:
+        - Why this method is appropriate
+        - How Knowledge informs the strategy
+        - How Constraints shape the decisions
+    - Keep it concise but logically coherent.
+        - Do NOT write step-by-step execution.
+        - Do NOT write the final answer.
+        - Do NOT write a detailed plan.
+
+    TARGET TASK:
+    {task}
+
+    KNOWLEDGE,CONSTRAINTS/INSTRUCTIONS:
+    {kci}
+
+    SIMILAR TASKS:
+    {similar_blocks}
+
+progressive_plan_prompt: |
+    You are an expert planning agent.
+    Write a Plan for the TARGET TASK.
+
+    Follow these rules STRICTLY:
+    - Create a structured step-by-step execution plan.
+    - The plan MUST be grounded in Knowledge, Contraints_Instructions and Approach.
+    - Explicitly expose decision-making rationale at key steps.
+    - Show how constraints influence each major decision.
+    - Ensure logical flow and executability.
+    - Include validation/check steps if necessary.
+    - Do NOT output the final solution to the task.
+
+    TARGET TASK:
+    {task}
+
+    KNOWLEDGE,CONSTRAINTS/INSTRUCTIONS:
+    {kci}
+
+    APPROACH:
+    {approach}
+
+    SIMILAR TASKS:
+    {similar_blocks}

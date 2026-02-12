@@ -50,7 +50,7 @@ from scripts.automodel import (
 
 from agent_kb.agent_kb_utils import AKBClient, call_model
 
-from planner_kb import planning_task
+from planner_kb import planning_task, progressive_planning_task
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
 from smolagents.agents import populate_template
@@ -211,6 +211,14 @@ def parse_args():
     parser.add_argument(
         "--is_augmented", action="store_true", help="Enable augmented plan"
     )
+    parser.add_argument(
+        "--is_progressive", action="store_true", help="Enable progressive plan"
+    )
+    parser.add_argument(
+        "--init_plan",
+        action="store_true",
+        help="Not reference, Use as a direct initial plan",
+    )
     return parser.parse_args()
 
 
@@ -247,6 +255,7 @@ def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False)
         agent_kb=args.agent_kb,
         top_k=args.top_k,
         retrieval_type=args.retrieval_type,
+        use_additional_knowledge_as_plan=args.init_plan,
     )
     return manager_agent
 
@@ -276,6 +285,7 @@ def answer_single_question(
     model=None,
     model_search=None,
     is_augmented=True,
+    is_progressive=True,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -326,18 +336,31 @@ def answer_single_question(
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
         if retrieval:
-            additional_knowledge = planning_task(
-                example=example,
-                augmented_question=augmented_question,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method,
-                top_k=3,
-                is_augmented=is_augmented,
-            )
+            if is_progressive:
+                additional_knowledge = progressive_planning_task(
+                    example=example,
+                    augmented_question=augmented_question,
+                    model_name=model_name,
+                    key=key,
+                    url=url,
+                    model=model,
+                    slm=slm,
+                    retrieval_method=retrieval_method,
+                    top_k=3,
+                )
+            else:
+                additional_knowledge = planning_task(
+                    example=example,
+                    augmented_question=augmented_question,
+                    model_name=model_name,
+                    key=key,
+                    url=url,
+                    model=model,
+                    slm=slm,
+                    retrieval_method=retrieval_method,
+                    top_k=3,
+                    is_augmented=is_augmented,
+                )
         else:
             additional_knowledge = None
         final_result = agent.run(
@@ -495,6 +518,7 @@ def main():
                 model,
                 model_search,
                 args.is_augmented,
+                args.is_progressive,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:

@@ -48,6 +48,9 @@ class TaskResponse(BaseModel):
     task: str
     task: str = ""
     agent_planning: str
+    knowledge: Any
+    approach: Any
+    contraints_instructions: Any
     plan: Any
     total_score: Optional[float] = None  # hybrid일 때만 있을 수도 있어서 Optional
 
@@ -99,6 +102,9 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
             "task": item["task"],
             "plan": item["plan"],
             "agent_planning": item["agent_planning"],
+            "knowledge": item["knowledge"],
+            "approach": item["approach"],
+            "contraints_instructions": item["contraints_instructions"],
         }
 
     content = item.get("content", {})
@@ -114,6 +120,9 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
             "task": content["task"],
             "plan": content["plan"],
             "agent_planning": content["agent_planning"],
+            "knowledge": item["knowledge"],
+            "approach": item["approach"],
+            "contraints_instructions": item["contraints_instructions"],
         }
 
     raise KeyError(
@@ -147,6 +156,9 @@ async def hybrid_search(request: SearchRequest):
                     task_id=str(core["task_id"]),
                     task=core["task"],
                     agent_planning=core["agent_planning"],
+                    knowledge=core["knowledge"],
+                    contraints_instructions=core["contraints_instructions"],
+                    approach=core["approach"],
                     plan=core["plan"],
                     total_score=item.get("total_score"),
                 )
@@ -183,6 +195,9 @@ async def text_search(request: SearchRequest):
                     task_id=str(core["task_id"]),
                     task=core["task"],
                     agent_planning=core["agent_planning"],
+                    knowledge=core["knowledge"],
+                    contraints_instructions=core["contraints_instructions"],
+                    approach=core["approach"],
                     plan=core["plan"],
                     total_score=item.get(
                         "score"
@@ -219,6 +234,9 @@ async def semantic_search(request: SearchRequest):
                     task_id=str(core["task_id"]),
                     task=core["task"],
                     agent_planning=core["agent_planning"],
+                    knowledge=core["knowledge"],
+                    contraints_instructions=core["contraints_instructions"],
+                    approach=core["approach"],
                     plan=core["plan"],
                     total_score=item.get(
                         "score"

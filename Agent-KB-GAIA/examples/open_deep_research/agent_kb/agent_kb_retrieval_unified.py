@@ -271,6 +271,9 @@ class AKB_Manager:
                     "task": task_obj.task,
                     "agent_planning": task_obj.original.agent_planning,
                     "plan": task_obj.augmented.plan,
+                    "knowledge": task_obj.augmented.knowledge,
+                    "approach": task_obj.augmented.approach,
+                    "contraints_instructions": task_obj.augmented.contraints_instructions,
                 }
             )
 
@@ -291,6 +294,9 @@ class AKB_Manager:
                         "task": task_obj.task,
                         "agent_planning": task_obj.original.agent_planning,
                         "plan": task_obj.augmented.plan,
+                        "knowledge": task_obj.augmented.knowledge,
+                        "approach": task_obj.augmented.approach,
+                        "contraints_instructions": task_obj.augmented.contraints_instructions,
                     },
                 }
             )
@@ -311,6 +317,9 @@ class AKB_Manager:
                         "task": task_obj.task,
                         "agent_planning": task_obj.original.agent_planning,
                         "plan": task_obj.augmented.plan,
+                        "knowledge": task_obj.augmented.knowledge,
+                        "approach": task_obj.augmented.approach,
+                        "contraints_instructions": task_obj.augmented.contraints_instructions,
                     },
                 }
             )
