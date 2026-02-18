@@ -211,6 +211,11 @@ def parse_args():
         "--is_augmented", action="store_true", help="Enable augmented plan"
     )
     parser.add_argument(
+        "--planning_field",
+        type=str,
+        default="plan",
+    )
+    parser.add_argument(
         "--is_progressive", action="store_true", help="Enable progressive plan"
     )
     parser.add_argument(
@@ -306,6 +311,7 @@ def answer_single_question(
     model_search=None,
     is_augmented=True,
     is_progressive=True,
+    planning_field="plan",
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -403,6 +409,7 @@ def answer_single_question(
                     retrieval_method=retrieval_method,
                     top_k=3,
                     is_augmented=is_augmented,
+                    planning_field=planning_field,
                 )
         else:
             additional_knowledge = None
@@ -524,7 +531,7 @@ def main():
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:1",
+            device_map="cuda:2",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -532,7 +539,7 @@ def main():
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:1",
+            device_map="cuda:2",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -574,6 +581,7 @@ def main():
                 model_search,
                 args.is_augmented,
                 args.is_progressive,
+                args.planning_field,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
@@ -592,6 +600,7 @@ def main():
                     args.slm,
                     model,
                     model_search,
+                    args.planning_field,
                 )
                 for example in tasks_to_run
             ]

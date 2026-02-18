@@ -46,12 +46,12 @@ class SearchRequest(BaseModel):
 class TaskResponse(BaseModel):
     task_id: str
     task: str
-    task: str = ""
-    agent_planning: str
-    knowledge: Any
-    approach: Any
-    contraints_instructions: Any
-    plan: Any
+    agent_planning: Optional[Any] = None
+    knowledge: Optional[Any] = None
+    approach: Optional[Any] = None
+    contraints_instructions: Optional[Any] = None
+    plan: Optional[Any] = None
+    summary: Optional[Any] = None
     total_score: Optional[float] = None  # hybrid일 때만 있을 수도 있어서 Optional
 
 
@@ -105,6 +105,7 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
             "knowledge": item["knowledge"],
             "approach": item["approach"],
             "contraints_instructions": item["contraints_instructions"],
+            "summary": item.get("summary", None),
         }
 
     content = item.get("content", {})
@@ -123,6 +124,7 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
             "knowledge": item["knowledge"],
             "approach": item["approach"],
             "contraints_instructions": item["contraints_instructions"],
+            "summary": item.get("summary", None),
         }
 
     raise KeyError(
@@ -160,6 +162,7 @@ async def hybrid_search(request: SearchRequest):
                     contraints_instructions=core["contraints_instructions"],
                     approach=core["approach"],
                     plan=core["plan"],
+                    summary=core.get("summary", None),
                     total_score=item.get("total_score"),
                 )
             )
@@ -199,6 +202,7 @@ async def text_search(request: SearchRequest):
                     contraints_instructions=core["contraints_instructions"],
                     approach=core["approach"],
                     plan=core["plan"],
+                    summary=core.get("summary", None),
                     total_score=item.get(
                         "score"
                     ),  # text 검색은 score를 total_score로 매핑
@@ -238,6 +242,7 @@ async def semantic_search(request: SearchRequest):
                     contraints_instructions=core["contraints_instructions"],
                     approach=core["approach"],
                     plan=core["plan"],
+                    summary=core.get("summary", None),
                     total_score=item.get(
                         "score"
                     ),  # semantic 검색도 score를 total_score로 매핑

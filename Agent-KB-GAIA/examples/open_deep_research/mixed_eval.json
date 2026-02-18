@@ -1,0 +1,202 @@
+[
+  {
+    "task_id": "bbh/disambiguation_qa/test/152",
+    "question": "In the following sentences, explain the antecedent of the pronoun (which thing the pronoun refers to), or state that it is ambiguous.\nSentence: The pathologist obtained tissue samples from the victim to look at under their microscope.\nOptions:\n(A) It was the pathologist's microscope\n(B) It was the victim's microscope\n(C) Ambiguous",
+    "true_answer": "(A)"
+  },
+  {
+    "task_id": "bbh/web_of_lies/test/63",
+    "question": "Question: Jerry tells the truth. Elanor says Jerry tells the truth. Gwenn says Elanor tells the truth. Kandi says Gwenn tells the truth. Dallas says Kandi tells the truth. Does Dallas tell the truth?",
+    "true_answer": "Yes"
+  },
+  {
+    "task_id": "bbh/tracking_shuffled_objects_seven_objects/test/32",
+    "question": "Alice, Bob, Claire, Dave, Eve, Fred, and Gertrude are on the same team in a soccer match. At the start of the match, they are each assigned to a position: Alice is playing benchwarmer, Bob is playing striker, Claire is playing right winger, Dave is playing center midfielder, Eve is playing cheerleader, Fred is playing left winger, and Gertrude is playing goalkeeper.\nAs the game progresses, pairs of players occasionally swap positions. First, Eve and Alice trade positions. Then, Alice and Fred trade positions. Then, Alice and Gertrude trade positions. Then, Bob and Eve trade positions. Then, Alice and Bob trade positions. Then, Eve and Claire trade positions. Finally, Alice and Dave trade positions. At the end of the match, Gertrude is playing\nOptions:\n(A) benchwarmer\n(B) striker\n(C) right winger\n(D) center midfielder\n(E) cheerleader\n(F) left winger\n(G) goalkeeper",
+    "true_answer": "(F)"
+  },
+  {
+    "task_id": "logiqa/validation/560",
+    "question": "Among the eight planets of the solar system where the earth is located, one-eighth of them live. According to this ratio, consider the existence of a huge number of planets in the universe. Therefore, the number of living celestial bodies in the universe must be extremely huge.\n\nQuestion: The loophole of the above argument is that it is assumed in advance without proof?\n\nOptions:\n(A) If a celestial body is similar to the earth, there must be life.\n(B) A galaxy, if it is similar to the solar system, there must be exactly eight planets.\n(C) The planets of the solar system are similar to many planets in the universe.\n(D) Similar to the life on Earth can survive on other planets with very different conditions.\n\nAnswer with the exact option text.",
+    "true_answer": "The planets of the solar system are similar to many planets in the universe."
+  },
+  {
+    "task_id": "logiqa/validation/98",
+    "question": "The senator has long held a view on all newspapers? no real artwork is obscene, so between the need to encourage free artistic expression and the need to protect the public from pornographic works There is no conflict. When people cite masterpieces that are generally regarded as obscene as possible counterexamples, the senator believes that if these works are indeed obscene, then they cannot be works of art. In this way, the above principle is correct.\n\nQuestion: Which of the following errors does the senator ’s reasoning contain?\n\nOptions:\n(A) He tried to persuade with emotion rather than reason.\n(B) It implies an implicit contradiction.\n(C) It relies on the assertion of the authority of a senator.\n(D) It assumes that it is to be verified.\n\nAnswer with the exact option text.",
+    "true_answer": "It assumes that it is to be verified."
+  },
+  {
+    "task_id": "logiqa/validation/378",
+    "question": "A college has 6 majors such as mathematics, physics, chemistry, management, secretarial and law who need to be employed. There are three companies including Fengyun, Jardine and Hongyu coming to the school for recruitment. It is known that each company only recruits some graduates of the above 2 to 3 majors of the school, and the following conditions need to be met? (1) the company recruiting the chemistry major also recruits the math major; (2) the major recruited by the Jardine, Fengyun Company also recruits; (3) Only one company recruits secretarial majors, and the company does not recruit physical majors; (4) If Jardine recruits management majors, then recruits secretarial majors; (5) If Hongyu does not recruit secretarial secretaries Professional, then Jardine recruits secretarial professional.\n\nQuestion: If all three companies are recruiting graduates from 3 majors, which of the following can be derived?\n\nOptions:\n(A) Fengyun company recruits mathematics major.\n(B) Jardine recruits physics major.\n(C) Hongyu Company recruits chemistry major.\n(D) Fengyun company recruits chemistry major.\n\nAnswer with the exact option text.",
+    "true_answer": "Fengyun company recruits mathematics major."
+  },
+  {
+    "task_id": "logiqa/validation/19",
+    "question": "There are three types of robots in a laboratory. Type A can recognize colors, type B can recognize shapes, and type C can neither recognize colors nor shapes. The laboratory experimented with robots 1 and 2 using red balls, basketballs, red squares, and blue squares, and ordered them to pick up the red balls, but number 1 picked up the red squares, and number 2 picked up the basketball.\n\nQuestion: Based on the above experiment, which of the following must be true?\n\nOptions:\n(A) Both No.1 and No.2 must be type C.\n(B) Both No.1 and No.2 must not be type C.\n(C) No.1 is A and No.2 is Type B.\n(D) No.1 is not B and No.2 is not Type A.\n\nAnswer with the exact option text.",
+    "true_answer": "No.1 is not B and No.2 is not Type A."
+  },
+  {
+    "task_id": "bbh/web_of_lies/test/56",
+    "question": "Question: Millicent tells the truth. Millie says Millicent tells the truth. Michael says Millie tells the truth. Antwan says Michael lies. Alexis says Antwan tells the truth. Does Alexis tell the truth?",
+    "true_answer": "No"
+  },
+  {
+    "task_id": "bbh/logical_deduction_seven_objects/test/66",
+    "question": "The following paragraphs each describe a set of seven objects arranged in a fixed order. The statements are logically consistent within each paragraph. In a golf tournament, there were seven golfers: Eve, Rob, Dan, Mel, Ana, Eli, and Ada. Ada finished above Rob. Eve finished below Rob. Mel finished above Eli. Ada finished below Dan. Ana finished third. Eli finished second.\nOptions:\n(A) Eve finished third\n(B) Rob finished third\n(C) Dan finished third\n(D) Mel finished third\n(E) Ana finished third\n(F) Eli finished third\n(G) Ada finished third",
+    "true_answer": "(E)"
+  },
+  {
+    "task_id": "logiqa/validation/442",
+    "question": "There is a staff dormitory in a factory where 7 people live in A. B, C, D, E, G and G. Each person needs to take turns one day a week, and only one person should be on duty each day. Conditions? (1) B is on Tuesday or Saturday; (2) If A is on Monday, then C is on Wednesday and E is Friday; (3) If A is not on Monday, then it is on Thursday. And Geng is on duty on Friday; (4) If B is on duty on Tuesday, then it is on Saturday.\n\nQuestion: If Geng is on duty on Thursday, which of the following must be false?\n\nOptions:\n(A) Wednesday is the third day.\n(B) A is on Monday.\n(C) I have been on duty on Tuesday.\n(D) E-Sun is on duty.\n\nAnswer with the exact option text.",
+    "true_answer": "E-Sun is on duty."
+  },
+  {
+    "task_id": "logiqa/validation/292",
+    "question": "Company manager? When we recruit talents, the most important thing is comprehensive quality and ability, not score. In talent recruitment, high scores and low talents are not uncommon. We obviously do not want to recruit such \"talents\". As you can see from your transcripts, your academic score is very high, so we are a bit doubtful about your ability and comprehensive Quality.\n\nQuestion: Which of the following is most similar to the way the manager draws conclusions?\n\nOptions:\n(A) Company managers are not all smart people, Chen Ran is not a company manager, so Chen Ran may be smart people.\n(B) Cats love fish, and no cat suffers from myopia, so eating fish can prevent myopia.\n(C) The most important thing in a person ’s life is to be healthy and happy. The fame and fortune are all floating clouds. Zhang Li has both fame and fortune, so Zhang Li may not be happy.\n(D) The glittering objects are not all gold. The archaeological team dug the glittering objects, so the archaeological team may not have dug the gold.\n\nAnswer with the exact option text.",
+    "true_answer": "The glittering objects are not all gold. The archaeological team dug the glittering objects, so the archaeological team may not have dug the gold."
+  },
+  {
+    "task_id": "logiqa/validation/510",
+    "question": "Xiao Li was admitted to Tsinghua University, or Xiao Sun was not admitted to Peking University.\n\nQuestion: Which of the following conditions can be added to introduce Xiao Li into Tsinghua?\n\nOptions:\n(A) At least one of Xiao Zhang and Xiao Sun has not been admitted to Peking University.\n(B) At least one of Xiao Zhang and Xiao Li has not been admitted to Tsinghua University.\n(C) Both Xiao Zhang and Xiao Sun were admitted to Peking University.\n(D) Neither Xiao Zhang nor Xiao Sun was admitted to Peking University.\n\nAnswer with the exact option text.",
+    "true_answer": "Neither Xiao Zhang nor Xiao Sun was admitted to Peking University."
+  },
+  {
+    "task_id": "logiqa/validation/473",
+    "question": "A female teacher in a university silently helped a poor family in a remote mountainous area for 15 years. The reporter inquired in many ways and found that the person doing the right thing is one of the five teachers of the university's School of Media, A. B, C, D and E. During the interview, the five teachers were very humble. They told reporters this way? A? This thing was done by B. B? I didn't do it, it was C who did it. C? I did n’t do it. D? I did n’t do it either. A did it. E? If A did not do it, Ding would not do it. The reporter later learned that the words of only one of the above five teachers corresponded to the real situation.\n\nQuestion: Based on the above information, it can be concluded that the person doing this good thing is.\n\nOptions:\n(A) A.\n(B) B.\n(C) C.\n(D) Ding.\n\nAnswer with the exact option text.",
+    "true_answer": "Ding."
+  },
+  {
+    "task_id": "bbh/disambiguation_qa/test/80",
+    "question": "In the following sentences, explain the antecedent of the pronoun (which thing the pronoun refers to), or state that it is ambiguous.\nSentence: The assistant asked the physician if she needs any help.\nOptions:\n(A) Asked if the assistant needs help\n(B) Asked if the physician needs help\n(C) Ambiguous",
+    "true_answer": "(B)"
+  },
+  {
+    "task_id": "bbh/salient_translation_error_detection/test/134",
+    "question": "The following translations from German to English contain a particular error. That error will be one of the following types: Named Entities: An entity (names, places, locations, etc.) is changed to a different entity. Numerical Values: Numerical values (ordinals or cardinals), dates, and/or units are changed. Modifiers or Adjectives: The modifiers and adjectives pertaining to a noun are changed. Negation or Antonyms: Introduce or remove a negation or change comparatives to their antonyms. Facts: Trivial factual errors not pertaining to the above classes are introduced in the translations. Dropped Content: A significant clause in the translation is removed. Please identify that error.  Source: Die etwa 100 Meter lange Rostocker Krämerstraße liegt im historischen Stadtkern und gehörte einst zur Mittelstadt.\nTranslation: The approximately 100-mile-long Rostocker Krämerstraße is located in the historic city centre and once belonged to the central city.\nThe translation contains an error pertaining to\nOptions:\n(A) Modifiers or Adjectives\n(B) Numerical Values\n(C) Negation or Antonyms\n(D) Named Entities\n(E) Dropped Content\n(F) Facts",
+    "true_answer": "(B)"
+  },
+  {
+    "task_id": "logiqa/validation/381",
+    "question": "Pay attention to the natural education of the child, let the child experience the magic and beauty of nature, and promote the child to release his nature and stimulate his potential; children who lack this education are easy to become lonely, moral, emotional and cognitive skills Development will be affected to a certain extent.\n\nQuestion: Which of the following is most similar to the above statement?\n\nOptions:\n(A) Engaging in economic development without environmental protection is to \"learn and fish\", and to seize environmental protection without economic development is to \"get fish for fish. \".\n(B) For people who speak only one language, the average age of the first diagnosis of Alzheimer's disease is 76 years; for those who speak three languages, the average age of the first diagnosis of Alzheimer's is about 78 years.\n(C) People used to \"look forward to food and clothing\", now \"hope for environmental protection\", in the past \"to survive\", now \"to seek ecology\".\n(D) Paying attention to investigation and research can allow us to grasp first-hand information, and making a car behind closed doors can only make us divorced from reality.\n\nAnswer with the exact option text.",
+    "true_answer": "Paying attention to investigation and research can allow us to grasp first-hand information, and making a car behind closed doors can only make us divorced from reality."
+  },
+  {
+    "task_id": "logiqa/validation/639",
+    "question": "Researchers at Ohio State University surveyed more than 13,000 middle school students in grades 7-12. In the survey, the researchers asked these students to enumerate 5 male friends and female friends, and then count the total number of votes for these nominated friends, and select those who got 5 votes to investigate and count. The study found that among those who received five votes, the proportion of only children who appeared was consistent with their proportion in this age group. Influenced by the age of the parents and the economic status of the race.\n\nQuestion: Which of the following, if true, would best support the above research findings?\n\nOptions:\n(A) Among those who did not receive votes, the proportion of only children appeared was higher than their proportion in this survey.\n(B) The proportion of the number of only children who received the ballots is basically the same as their proportion in this survey.\n(C) Among those who received 1 vote, the proportion of only children appeared is much higher than their proportion in this survey.\n(D) Among the top 500 votes, the proportion of the only child is the same as their proportion in this survey.\n\nAnswer with the exact option text.",
+    "true_answer": "Among the top 500 votes, the proportion of the only child is the same as their proportion in this survey."
+  },
+  {
+    "task_id": "logiqa/validation/464",
+    "question": "According to Carbon 14, the creation time of the Kapimara rock paintings can be traced back as early as 30,000 years ago. In an era when words have not yet appeared, rock paintings are the main way for humans to communicate, communicate information, and record daily life. So today we can see in these rock paintings? a mother lifts her child to play, the family is looking up and trying to touch the starry sky on the head . animals are another protagonist of rock paintings, such as giant armadillos, red deer, Crabs, etc. In many pictures, people are holding spears and chasing their prey. It can be inferred from this that human beings are now at the top of the food chain.\n\nQuestion: Which of the following, if true, best supports the above inference?\n\nOptions:\n(A) The awe of the starry sky is one of the motives for humans to break away from animals and produce religion.\n(B) With rock paintings, humans can retain life experience for future generations to learn, which greatly improves human survival ability.\n(C) 0,000 years ago, humans need to avoid being hunted by large predators such as tigers and leopards.\n(D) Animals appearing in rock paintings are generally the objects of human hunting at that time.\n\nAnswer with the exact option text.",
+    "true_answer": "Animals appearing in rock paintings are generally the objects of human hunting at that time."
+  },
+  {
+    "task_id": "bbh/disambiguation_qa/test/25",
+    "question": "In the following sentences, explain the antecedent of the pronoun (which thing the pronoun refers to), or state that it is ambiguous.\nSentence: The technician told the customer that she had completed the repair.\nOptions:\n(A) The technician completed the repair\n(B) The customer completed the repair\n(C) Ambiguous",
+    "true_answer": "(A)"
+  },
+  {
+    "task_id": "logiqa/validation/147",
+    "question": "Market research shows that in the price war, the price of brand-name computers does not exceed 10%, so the price of Shenzhou computers does not exceed 10%.\n\nQuestion: Which of the following can best overturn the above argument?\n\nOptions:\n(A) No price reduction for Shenzhou Computer last year.\n(B) Many computers have cut prices by more than 10%.\n(C) Shenzhou computer is not a brand-name computer.\n(D) China Computer ’s market share increased by 10%.\n\nAnswer with the exact option text.",
+    "true_answer": "Shenzhou computer is not a brand-name computer."
+  },
+  {
+    "task_id": "logiqa/validation/39",
+    "question": "At the end of the Second World War, women of childbearing age in a country reached the lowest point. Ten years after the end of World War II, in the mid-1950s, the average family had 4.5 children. The number of women of childbearing age in the country reached an all-time high ten years ago, and the average family currently has only 1.82 children.\n\nQuestion: What conclusions can be drawn from the above?\n\nOptions:\n(A) War is related to fertility.\n(B) War has nothing to do with fertility.\n(C) The number of women of childbearing age has nothing to do with fertility rate.\n(D) d. The fertility rate is not directly proportional to the number of women of childbearing age.\n\nAnswer with the exact option text.",
+    "true_answer": "d. The fertility rate is not directly proportional to the number of women of childbearing age."
+  },
+  {
+    "task_id": "logiqa/validation/526",
+    "question": "Science cannot be separated from measurement, and measurement cannot be separated from the unit of length. The establishment of basic length units such as kilometers, meters, decimeters, and centimeters is completely an artificial agreement. Therefore, scientific conclusions are completely a subjective agreement of human beings, and there is no objective standard.\n\nQuestion: Which of the following is most similar to the argument of the subject?\n\nOptions:\n(A) Establishing a good social security system is inseparable from a strong comprehensive national strength, and a strong comprehensive national strength cannot be achieved without first-class national education. Therefore, to establish a good social security system, there must be first-class national education.\n(B) Advertisement is indispensable for doing large-scale business. Advertising requires large amounts of capital. Not everyone can invest a lot of money. Therefore, not everyone can do large-scale business. C. Tourists are allowed to sit on the park bench. If you want to sit on a park bench, you should get close to them. A path close to the bench will step on the grass. Therefore, tourists are allowed to step on the grass. D. Having solid basic dance skills must go through years of hard training. The dancers performing at the Spring Festival party must have solid basic skills. Years of hard training are tedious. Therefore, performing at the Spring Festival Gala is tedious. E. Family cannot be separated from love, and love cannot be separated from trust. Trust is based on sincerity. Therefore, departure from sincerity is the beginning of a family crisis.52. All gray wolves are wolves. This conclusion is clearly true. Therefore, all suspected SARS cases are SARS cases, and this conclusion is true. Which of the following most appropriately points out the loophole of the stem argument? A. The argument of the topic is neglected? a proposition is true, does not mean that any proposition with the form of the proposition is true. B. The argumentation of the subject ignores? the relationship between gray wolf and wolf is different from the relationship between suspected SARS cases and SARS cases.\n(C) The argument of the subject is ignored? Most of the suspected SARS cases are not SARS cases.\n(D) The argument of the subject is ignored? many wolves are not gray.\n\nAnswer with the exact option text.",
+    "true_answer": "The argument of the subject is ignored? many wolves are not gray."
+  },
+  {
+    "task_id": "logiqa/validation/444",
+    "question": "A city has opened and operated the No.1, No.2, No.3 and No.4 subway lines, and the time required for each subway line to run and stop at each station is the same as each other. Xiao Zhang, Xiao Wang, and Xiao Li are employees of the same unit, and Beikou Metro Station is nearby. One morning, three people took the No.1 line service at Changqing Station at the same time, but the three people had different ideas about the route. Known? (1) If Line 1 is crowded, Xiao Zhang will take 2 stops and then transfer to Line 3, and then 3 stops to Beikou Station; if Line 1 is not crowded, Xiao Zhang will take 3 stops and then transfer to Line 2, then Take 4 stops to Beikou Station. (2) Only when Line 1 is crowded, Xiao Wang takes 2 stops, then transfers to Line 3, and then takes 3 stops to Beikou Station. (3) If Line 1 is not crowded, Xiao Li takes 4 stops and then transfers to Line 4, after 3 stops, then transfers to Line 3, and takes 1 stop to reach Beikou Station. (4) Metro Line 1 was not crowded that morning.\n\nQuestion: Assuming that the total time for three people to transfer and walk is the same, which of the following is most likely to be inconsistent with the above information?\n\nOptions:\n(A) Xiao Wang and Xiao Li arrive at the unit at the same time.\n(B) Xiao Zhang and Xiao Wang arrive at the unit at the same time.\n(C) Xiao Wang arrived at the unit before Xiao Li.\n(D) Xiao Li arrived at the unit before Xiao Zhang.\n\nAnswer with the exact option text.",
+    "true_answer": "Xiao Li arrived at the unit before Xiao Zhang."
+  },
+  {
+    "task_id": "logiqa/validation/623",
+    "question": "In a certain city, the investment environment was optimized. In 2010, a total of 1 billion yuan was attracted for investment. Among them, foreign capital was 570 million yuan, investment in tertiary industry was 460 million yuan, and investment in non-tertiary industry was 540 million yuan.\n\nQuestion: Based on the above statement, which of the following conclusions can be drawn?\n\nOptions:\n(A) Foreign investment in tertiary industry is greater than domestic investment in non-tertiary industry.\n(B) The foreign investment in the tertiary industry is smaller than the domestic investment in the non-tertiary industry.\n(C) Foreign investment in tertiary industry equals domestic investment in non-tertiary industry.\n(D) Foreign investment in the tertiary industry and domestic investment in the non-tertiary industry cannot be compared.\n\nAnswer with the exact option text.",
+    "true_answer": "Foreign investment in tertiary industry is greater than domestic investment in non-tertiary industry."
+  },
+  {
+    "task_id": "bbh/hyperbaton/test/104",
+    "question": "Which sentence has the correct adjective order:\nOptions:\n(A) repulsive normal-size green old-fashioned cardboard surfboard\n(B) repulsive normal-size old-fashioned green cardboard surfboard",
+    "true_answer": "(B)"
+  },
+  {
+    "task_id": "bbh/causal_judgement/test/10",
+    "question": "How would a typical person answer each of the following questions about causation?\nSara has an electric guitar that she plays through an amplifier. The guitar will play through the amplifier if either the amplifier is set to channel A or the power mixer is turned on. Today, the amplifier is set to channel A. Sara checks to see if the power mixer is on. She sees that the power mixer is turned on, and she does not turn off the power mixer or adjust it at all. Because the guitar will play through the amplifier if either the amplifier is set to channel A or the power mixer is turned on, Sara's guitar plays through the amplifier. Did the guitar play through the amplifier because Sara did not turn off the power mixer?\nOptions:\n- Yes\n- No",
+    "true_answer": "Yes"
+  },
+  {
+    "task_id": "logiqa/validation/180",
+    "question": "If Professor Wang is a historian and has studied the history of the Xia, Shang, and Zhou Dynasties in depth, he must be a Chinese historian.\n\nQuestion: Based on which of the following is this determination made?\n\nOptions:\n(A) Professor Wang has studied not only Chinese history but also foreign history.\n(B) It is impossible for historians to delve into the entire history of China.\n(C) Among the historians, only Chinese historians will deeply study the history of Xia Dynasty.\n(D) Most historians have studied the history of China since the Qin Dynasty.\n\nAnswer with the exact option text.",
+    "true_answer": "Among the historians, only Chinese historians will deeply study the history of Xia Dynasty."
+  },
+  {
+    "task_id": "logiqa/validation/590",
+    "question": "A sociologist believes that every enterprise strives to reduce production costs. In order to increase the profits of the enterprise, not all efforts to reduce production costs are beneficial to the enterprise. If some enterprises reduce the purchase of social insurance for employees, they can temporarily reduce production costs, but in the long run it is not worth the loss, which will benefit the employees. Cause damage, reduce the sense of belonging of employees, and affect the production efficiency of enterprises.\n\nQuestion: Which of the following most accurately represents the conclusion stated by the above sociologist?\n\nOptions:\n(A) If a measure can increase the profit of the enterprise, but not the welfare of the employees, this measure is not worth advocating.\n(B) Some measures taken by enterprises to reduce costs are not always beneficial to the development of enterprises.\n(C) Only when the interests of employees and entrepreneurs are the same, the measures taken by the enterprise are beneficial to the development of the enterprise.\n(D) The enterprise's efforts to reduce production costs need to be comprehensively considered from the perspective of the enterprise's overall interests.\n\nAnswer with the exact option text.",
+    "true_answer": "Some measures taken by enterprises to reduce costs are not always beneficial to the development of enterprises."
+  },
+  {
+    "task_id": "bbh/boolean_expressions/test/204",
+    "question": "not False or not not not not True is",
+    "true_answer": "True"
+  },
+  {
+    "task_id": "bbh/temporal_sequences/test/227",
+    "question": "Today, Ashley went to the football field. Between what times could they have gone?\nWe know that:\nAshley woke up at 1pm.\nLisa saw Ashley taking photos near the Leaning Tower of Pisa from 2pm to 5pm.\nNancy saw Ashley working out at the gym from 5pm to 6pm.\nSteven saw Ashley working at the office from 6pm to 9pm.\nKimberly saw Ashley buying a bike at the bike shop from 9pm to 10pm.\nThe football field was closed after 10pm.\nBetween what times could Ashley have gone to the football field?\nOptions:\n(A) 1pm to 2pm\n(B) 5pm to 6pm\n(C) 9pm to 10pm\n(D) 2pm to 5pm",
+    "true_answer": "(A)"
+  },
+  {
+    "task_id": "logiqa/validation/403",
+    "question": "Today, e-learning machines have fully entered the lives of children. The e-learning machine combines text with images and sounds, which is both vivid and interesting, making it possible for children to read independently. However, some children's education experts have warned about this, e-learning machine may not be conducive to children's growth. They believe that parents should take time to read paper books with their children. Accompanying children to read paper books is not simply to let children read and read, but to promote the growth of their hearts in communication.\n\nQuestion: Which of the following, if true, best supports the opinions of the above experts?\n\nOptions:\n(A) Paper books help protect children's eyesight and help parents guide children to form good reading habits.\n(B) When using an e-learning machine, children tend to pay more attention to their use function rather than learning content.\n(C) The earlier you are exposed to electronic products, the more addictive you are, and the long-term use of electronic learning opportunities will form an \"electronic addiction\".\n(D) The biggest problem of the e-learning machine is to let parents walk away from their children's reading behavior and reduce the daily communication between parents and children.\n\nAnswer with the exact option text.",
+    "true_answer": "The biggest problem of the e-learning machine is to let parents walk away from their children's reading behavior and reduce the daily communication between parents and children."
+  },
+  {
+    "task_id": "logiqa/validation/613",
+    "question": "Some low-carbon economies are green economies, so low-carbon economies are all high-tech economies.\n\nQuestion: Which of the following, if true, can best refute the above argument?\n\nOptions:\n(A) Neither the green economy is a high-tech economy.\n(B) Some of the green economy is advanced technical economy.\n(C) Some low-carbon economies are not green economies.\n(D) Some green economies are not low-carbon economies.\n\nAnswer with the exact option text.",
+    "true_answer": "Some of the green economy is advanced technical economy."
+  },
+  {
+    "task_id": "bbh/logical_deduction_five_objects/test/69",
+    "question": "The following paragraphs each describe a set of five objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells five fruits: apples, mangoes, oranges, plums, and pears. The oranges are more expensive than the mangoes. The plums are the cheapest. The apples are less expensive than the mangoes. The pears are more expensive than the oranges.\nOptions:\n(A) The apples are the second-cheapest\n(B) The mangoes are the second-cheapest\n(C) The oranges are the second-cheapest\n(D) The plums are the second-cheapest\n(E) The pears are the second-cheapest",
+    "true_answer": "(A)"
+  },
+  {
+    "task_id": "bbh/hyperbaton/test/141",
+    "question": "Which sentence has the correct adjective order:\nOptions:\n(A) old circular brown Turkish wool car\n(B) brown circular Turkish wool old car",
+    "true_answer": "(A)"
+  },
+  {
+    "task_id": "bbh/web_of_lies/test/22",
+    "question": "Question: Sima lies. Millie says Sima tells the truth. Jerry says Millie tells the truth. Vina says Jerry lies. Maybelle says Vina tells the truth. Does Maybelle tell the truth?",
+    "true_answer": "Yes"
+  },
+  {
+    "task_id": "bbh/sports_understanding/test/76",
+    "question": "Is the following sentence plausible? \"Philip Rivers drove into the restricted area.\"",
+    "true_answer": "no"
+  },
+  {
+    "task_id": "bbh/object_counting/test/19",
+    "question": "I have a piano, a trombone, a clarinet, a goat, an accordion, and a trumpet. How many musical instruments do I have?",
+    "true_answer": "5"
+  },
+  {
+    "task_id": "bbh/boolean_expressions/test/244",
+    "question": "True or not False and ( False ) is",
+    "true_answer": "True"
+  },
+  {
+    "task_id": "bbh/disambiguation_qa/test/225",
+    "question": "In the following sentences, explain the antecedent of the pronoun (which thing the pronoun refers to), or state that it is ambiguous.\nSentence: The laborer handed the secretary a hammer because he asked for a tool.\nOptions:\n(A) The laborer asked for a tool\n(B) The secretary asked for a tool\n(C) Ambiguous",
+    "true_answer": "(B)"
+  },
+  {
+    "task_id": "bbh/dyck_languages/test/206",
+    "question": "Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < ( [ < < [ ] > > ] )",
+    "true_answer": "> )"
+  }
+]

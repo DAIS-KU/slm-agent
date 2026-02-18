@@ -27,7 +27,7 @@ def build_examples(entities, planning_field="plan"):
     for entity in entities:
         task = entity.get("task") or entity.get("query") or entity.get("question")
         plan = entity.get(planning_field, "")
-        lines.append(f"Similar task:{task}\nPlan: {plan}\n")
+        lines.append(f"Similar task:{task}\nKnowledge: {knowledge}\n")
     return "\n".join(lines)
 
 
@@ -42,6 +42,7 @@ def planning_task(
     retrieval_method,
     top_k,
     is_augmented=True,
+    planning_field="plan",
 ):
     if retrieval_method is None:
         logger.info(
@@ -67,9 +68,7 @@ def planning_task(
         planning_prompt_template = planning_prompt_template[
             "planning_with_examples_prompt"
         ]
-        examples = build_examples(
-            retrieval_results, "plan" if is_augmented else "agent_planning"
-        )
+        examples = build_examples(retrieval_results, planning_field)
         logger.info(f"Retrieved examples:\n {examples}")
         planning_prompt = populate_template(
             planning_prompt_template,

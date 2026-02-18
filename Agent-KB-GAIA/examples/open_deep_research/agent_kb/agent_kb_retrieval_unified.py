@@ -22,10 +22,11 @@ class OriginalContext:
 
 @dataclass
 class AugmentedContext:
-    knowledge: Any
-    contraints_instructions: Any
-    approach: Any
-    plan: Any
+    knowledge: Optional[Any] = None
+    contraints_instructions: Optional[Any] = None
+    approach: Optional[Any] = None
+    plan: Optional[Any] = None
+    summary: Optional[Any] = None
 
 
 @dataclass
@@ -90,6 +91,7 @@ class AgenticKnowledgeBase:
                     contraints_instructions = item.get("Contraints_Instructions", [])
                     approach = item.get("Approach", [])
                     plan = item.get("Plan", [])
+                    summary = item.get("Summary", None)
 
                     agent_planning = item.get("agent_planning", [])
                     agent_experience = item.get("agent_experience", [])
@@ -106,6 +108,7 @@ class AgenticKnowledgeBase:
                             contraints_instructions=contraints_instructions,
                             approach=approach,
                             plan=plan,
+                            summary=summary,
                         ),
                     )
                     batch.append(instance)
@@ -274,6 +277,7 @@ class AKB_Manager:
                     "knowledge": task_obj.augmented.knowledge,
                     "approach": task_obj.augmented.approach,
                     "contraints_instructions": task_obj.augmented.contraints_instructions,
+                    "summary": task_obj.augmented.summary,
                 }
             )
 
@@ -297,6 +301,7 @@ class AKB_Manager:
                         "knowledge": task_obj.augmented.knowledge,
                         "approach": task_obj.augmented.approach,
                         "contraints_instructions": task_obj.augmented.contraints_instructions,
+                        "summary": task_obj.augmented.summary,
                     },
                 }
             )
@@ -320,6 +325,7 @@ class AKB_Manager:
                         "knowledge": task_obj.augmented.knowledge,
                         "approach": task_obj.augmented.approach,
                         "contraints_instructions": task_obj.augmented.contraints_instructions,
+                        "summary": task_obj.augmented.summary,
                     },
                 }
             )
