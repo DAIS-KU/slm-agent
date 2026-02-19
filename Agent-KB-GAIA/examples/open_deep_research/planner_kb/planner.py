@@ -27,7 +27,7 @@ def build_examples(entities, planning_field="plan"):
     for entity in entities:
         task = entity.get("task") or entity.get("query") or entity.get("question")
         plan = entity.get(planning_field, "")
-        lines.append(f"Similar task:{task}\nKnowledge: {knowledge}\n")
+        lines.append(f"Similar task:{task}\nPlan: {plan}\n")
     return "\n".join(lines)
 
 

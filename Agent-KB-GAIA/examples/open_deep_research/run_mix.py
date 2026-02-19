@@ -349,88 +349,88 @@ def answer_single_question(
         augmented_question += prompt_use_files
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    try:
-        if retrieval:
-            if is_progressive:
-                additional_knowledge = progressive_planning_task(
-                    example=example,
-                    augmented_question=augmented_question,
-                    model_name=model_name,
-                    key=key,
-                    url=url,
-                    model=model,
-                    slm=slm,
-                    retrieval_method=retrieval_method,
-                    top_k=3,
-                )
-            else:
-                additional_knowledge = planning_task(
-                    example=example,
-                    augmented_question=augmented_question,
-                    model_name=model_name,
-                    key=key,
-                    url=url,
-                    model=model,
-                    slm=slm,
-                    retrieval_method=retrieval_method,
-                    top_k=3,
-                    is_augmented=is_augmented,
-                    planning_field=planning_field,
-                )
+    # try:
+    if retrieval:
+        if is_progressive:
+            additional_knowledge = progressive_planning_task(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+            )
         else:
-            additional_knowledge = None
-        final_result = agent.run(
-            augmented_question, additional_knowledge=additional_knowledge
-        )
-        agent_memory = agent.write_memory_to_messages(summary_mode=True)
-        final_result = prepare_response(
-            augmented_question, agent_memory, reformulation_model=model
-        )
-        output = str(final_result)
-        print("=" * 30 + "Final Output." + "=" * 30)
-        print(f"output:{output}")
-        print("=" * 30 + "Final Output." + "=" * 30)
+            additional_knowledge = planning_task(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+                is_augmented=is_augmented,
+                planning_field=planning_field,
+            )
+    else:
+        additional_knowledge = None
+    final_result = agent.run(
+        augmented_question, additional_knowledge=additional_knowledge
+    )
+    agent_memory = agent.write_memory_to_messages(summary_mode=True)
+    final_result = prepare_response(
+        augmented_question, agent_memory, reformulation_model=model
+    )
+    output = str(final_result)
+    print("=" * 30 + "Final Output." + "=" * 30)
+    print(f"output:{output}")
+    print("=" * 30 + "Final Output." + "=" * 30)
 
-        intermediate_steps = []
-        for memory_step in agent.memory.steps:
-            memory_step.model_input_messages = None
-            step_dict = memory_step.dict()
-            if isinstance(memory_step, ActionStep):
-                step_dict["step_type"] = "action"
-                step_dict.pop("model_output_message", None)
-            elif isinstance(memory_step, TaskStep):
-                step_dict["step_type"] = "task"
-            elif isinstance(memory_step, PlanningStep):
-                step_dict["step_type"] = "planning"
-                step_dict.pop("model_output_message_facts", None)
-                step_dict.pop("model_output_message_plan", None)
-            else:
-                step_dict["step_type"] = "unknown"
-            intermediate_steps.append(step_dict)
+    intermediate_steps = []
+    for memory_step in agent.memory.steps:
+        memory_step.model_input_messages = None
+        step_dict = memory_step.dict()
+        if isinstance(memory_step, ActionStep):
+            step_dict["step_type"] = "action"
+            step_dict.pop("model_output_message", None)
+        elif isinstance(memory_step, TaskStep):
+            step_dict["step_type"] = "task"
+        elif isinstance(memory_step, PlanningStep):
+            step_dict["step_type"] = "planning"
+            step_dict.pop("model_output_message_facts", None)
+            step_dict.pop("model_output_message_plan", None)
+        else:
+            step_dict["step_type"] = "unknown"
+        intermediate_steps.append(step_dict)
 
-        intermediate_steps_check = [str(step) for step in agent.memory.steps]
-        parsing_error = (
-            True
-            if any(["AgentParsingError" in step for step in intermediate_steps_check])
-            else False
-        )
+    intermediate_steps_check = [str(step) for step in agent.memory.steps]
+    parsing_error = (
+        True
+        if any(["AgentParsingError" in step for step in intermediate_steps_check])
+        else False
+    )
 
-        iteration_limit_exceeded = (
-            True
-            if "Agent stopped due to iteration limit or time limit." in output
-            else False
-        )
-        raised_exception = False
+    iteration_limit_exceeded = (
+        True
+        if "Agent stopped due to iteration limit or time limit." in output
+        else False
+    )
+    raised_exception = False
 
-    except Exception as e:
-        logger.error(f"Error on task {example['task_id']}\n{e}")
-        output = None
-        intermediate_steps = []
-        action_trajectory = []
-        parsing_error = False
-        iteration_limit_exceeded = False
-        exception = e
-        raised_exception = True
+    # except Exception as e:
+    #     logger.error(f"Error on task {example['task_id']}\n{e}")
+    #     output = None
+    #     intermediate_steps = []
+    #     action_trajectory = []
+    #     parsing_error = False
+    #     iteration_limit_exceeded = False
+    #     exception = e
+    #     raised_exception = True
     end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     annotated_example = {
         "agent_name": model.model_id,
@@ -507,7 +507,7 @@ def main():
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:2",
+            device_map="cuda:3",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -515,7 +515,7 @@ def main():
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:2",
+            device_map="cuda:3",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,

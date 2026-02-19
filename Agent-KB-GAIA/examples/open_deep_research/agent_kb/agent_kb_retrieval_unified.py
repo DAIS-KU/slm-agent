@@ -90,8 +90,8 @@ class AgenticKnowledgeBase:
                     knowledge = item.get("Knowledge", [])
                     contraints_instructions = item.get("Contraints_Instructions", [])
                     approach = item.get("Approach", [])
-                    plan = item.get("Plan", [])
-                    summary = item.get("Summary", None)
+                    plan = item.get("plan", [])
+                    summary = item.get("summary", None)
 
                     agent_planning = item.get("agent_planning", [])
                     agent_experience = item.get("agent_experience", [])
