@@ -22,11 +22,17 @@ class OriginalContext:
 
 @dataclass
 class AugmentedContext:
+    # ===== TaskSpec ===== #
+    domain: Optional[Any] = None
+    skills: Optional[Any] = None
+    objective: Optional[Any] = None
+    # ===== Context ===== #
     knowledge: Optional[Any] = None
-    contraints_instructions: Optional[Any] = None
     approach: Optional[Any] = None
+    constraints: Optional[Any] = None
+    instructions: Optional[Any] = None
+    # ===== Plan ===== #
     plan: Optional[Any] = None
-    summary: Optional[Any] = None
 
 
 @dataclass
@@ -87,14 +93,17 @@ class AgenticKnowledgeBase:
                     task_id = item.get("task_id") or str(datetime.now().timestamp())
                     task_text = item.get("task", "")
 
-                    knowledge = item.get("Knowledge", [])
-                    contraints_instructions = item.get("Contraints_Instructions", [])
-                    approach = item.get("Approach", [])
-                    plan = item.get("plan", [])
-                    summary = item.get("summary", None)
+                    domain = item.get("domain", None)
+                    skills = item.get("skills", None)
+                    objective = item.get("objective", None)
+                    knowledge = item.get("knowledge", None)
+                    constraints = item.get("constraints", None)
+                    instructions = item.get("instructions", None)
+                    approach = item.get("approach", None)
+                    plan = item.get("plan", None)
 
-                    agent_planning = item.get("agent_planning", [])
-                    agent_experience = item.get("agent_experience", [])
+                    agent_planning = item.get("agent_planning", None)
+                    agent_experience = item.get("agent_experience", None)
 
                     instance = TaskInstance(
                         task_id=task_id,
@@ -104,11 +113,14 @@ class AgenticKnowledgeBase:
                             agent_experience=agent_experience,
                         ),
                         augmented=AugmentedContext(
+                            domain=domain,
+                            skills=skills,
+                            objective=objective,
                             knowledge=knowledge,
-                            contraints_instructions=contraints_instructions,
+                            constraints=constraints,
+                            instructions=instructions,
                             approach=approach,
                             plan=plan,
-                            summary=summary,
                         ),
                     )
                     batch.append(instance)
@@ -273,11 +285,14 @@ class AKB_Manager:
                     "total_score": float(total_score),
                     "task": task_obj.task,
                     "agent_planning": task_obj.original.agent_planning,
-                    "plan": task_obj.augmented.plan,
+                    "domain": task_obj.augmented.domain,
+                    "skills": task_obj.augmented.skills,
+                    "objective": task_obj.augmented.objective,
                     "knowledge": task_obj.augmented.knowledge,
+                    "constraints": task_obj.augmented.constraints,
+                    "instructions": task_obj.augmented.instructions,
                     "approach": task_obj.augmented.approach,
-                    "contraints_instructions": task_obj.augmented.contraints_instructions,
-                    "summary": task_obj.augmented.summary,
+                    "plan": task_obj.augmented.plan,
                 }
             )
 
@@ -297,11 +312,14 @@ class AKB_Manager:
                         "task_id": task_obj.task_id,
                         "task": task_obj.task,
                         "agent_planning": task_obj.original.agent_planning,
-                        "plan": task_obj.augmented.plan,
+                        "domain": task_obj.augmented.domain,
+                        "skills": task_obj.augmented.skills,
+                        "objective": task_obj.augmented.objective,
                         "knowledge": task_obj.augmented.knowledge,
+                        "constraints": task_obj.augmented.constraints,
+                        "instructions": task_obj.augmented.instructions,
                         "approach": task_obj.augmented.approach,
-                        "contraints_instructions": task_obj.augmented.contraints_instructions,
-                        "summary": task_obj.augmented.summary,
+                        "plan": task_obj.augmented.plan,
                     },
                 }
             )
@@ -321,11 +339,14 @@ class AKB_Manager:
                         "task_id": task_obj.task_id,
                         "task": task_obj.task,
                         "agent_planning": task_obj.original.agent_planning,
-                        "plan": task_obj.augmented.plan,
+                        "domain": task_obj.augmented.domain,
+                        "skills": task_obj.augmented.skills,
+                        "objective": task_obj.augmented.objective,
                         "knowledge": task_obj.augmented.knowledge,
+                        "constraints": task_obj.augmented.constraints,
+                        "instructions": task_obj.augmented.instructions,
                         "approach": task_obj.augmented.approach,
-                        "contraints_instructions": task_obj.augmented.contraints_instructions,
-                        "summary": task_obj.augmented.summary,
+                        "plan": task_obj.augmented.plan,
                     },
                 }
             )

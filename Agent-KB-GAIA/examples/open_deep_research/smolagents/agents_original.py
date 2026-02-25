@@ -98,7 +98,6 @@ from .utils import (
     parse_json_tool_call,
     truncate_content,
 )
-from .planner import decompose_task, subtask_planning, action_level_planning
 
 logger = getLogger(__name__)
 
@@ -110,18 +109,13 @@ class AKBClient:
         self.session.headers.update({"Content-Type": "application/json"})
 
     def hybrid_search(
-        self,
-        query: str,
-        top_k: int = 5,
-        weights: Dict[str, float] = None,
-        is_action=False,
+        self, query: str, top_k: int = 5, weights: Dict[str, float] = None
     ) -> List[Dict]:
         endpoint = f"{self.base_url}/search/hybrid"
         payload = {
             "query": query,
             "top_k": top_k,
             "weights": weights or {"text": 0.5, "semantic": 0.5},
-            "is_action": is_action,
         }
 
         try:
@@ -255,7 +249,7 @@ EMPTY_PROMPT_TEMPLATES = PromptTemplates(
 )
 
 
-class AdvancedMultiStepAgent:
+class MultiStepAgent:
     """
     Agent class that solves the given task step by step, using the ReAct framework:
     While the objective is not reached, the agent will perform a cycle of action (given by the LLM) and observation (obtained from the environment).
@@ -302,11 +296,7 @@ class AdvancedMultiStepAgent:
         agent_kb: bool = False,
         top_k: Optional[int] = 3,
         retrieval_type: Optional[str] = "hybrid",
-        q_decomp=False,
-        q_decomp_ex=False,
-        p_rationale=False,
-        p_rationale_ex=False,
-        action_planning=False,
+        use_additional_knowledge_as_plan=False,
     ):
         if tool_parser is None:
             tool_parser = parse_json_tool_call
@@ -372,12 +362,7 @@ class AdvancedMultiStepAgent:
         self.agent_kb = agent_kb
         self.top_k = top_k
         self.retrieval_type = retrieval_type
-        # advanced planning args
-        self.q_decomp = q_decomp
-        self.q_decomp_ex = q_decomp_ex
-        self.p_rationale = p_rationale
-        self.p_rationale_ex = p_rationale_ex
-        self.action_planning = action_planning
+        self.use_additional_knowledge_as_plan = use_additional_knowledge_as_plan
 
     @property
     def logs(self):
@@ -552,7 +537,6 @@ class AdvancedMultiStepAgent:
         images: Optional[List[str]] = None,
         additional_args: Optional[Dict] = None,
         additional_knowledge: Optional[str] = None,
-        pass_1=False,
     ):
         """
         Run the agent for the given task.
@@ -595,23 +579,13 @@ You have been provided with these additional arguments, that you can access usin
         self.memory.steps.append(TaskStep(task=self.task, task_images=images))
 
         if stream:
-            return self._run(task=self.task, images=image, pass_1=pass_1)
-            # return self._run(task=self.task, images=image)
+            return self._run(task=self.task, images=images)
         return deque(
             self._run(
-                task=self.task,
-                images=images,
-                additional_knowledge=additional_knowledge,
-                pass_1=pass_1,
+                task=self.task, images=images, additional_knowledge=additional_knowledge
             ),
             maxlen=1,
         )[0]
-        # return deque(
-        #     self._run(
-        #         task=self.task, images=images, additional_knowledge=additional_knowledge
-        #     ),
-        #     maxlen=1,
-        # )[0]
 
     def _run(
         self,
@@ -720,159 +694,6 @@ You have been provided with these additional arguments, that you can access usin
         )
         return reflection_step
 
-    def advanced_planning_step(
-        self,
-        task,
-        facts,
-        is_first_step,
-    ):
-        retrieval_method = self.akb_client.hybrid_search
-        # {
-        #     "hybrid": akb_client.hybrid_search,
-        #     "text": akb_client.text_search,
-        #     "semantic": akb_client.semantic_search,
-        # }
-
-        if self.q_decomp:
-            if self.q_decomp_ex:
-                subtasks = decompose_task(
-                    task=task,
-                    facts=facts,
-                    model=self.model,
-                    retrieval_method=retrieval_method,
-                    top_k=self.top_k,
-                    return_as_str=not self.p_rationale,
-                )
-            else:
-                subtasks = decompose_task(
-                    task=task,
-                    facts=facts,
-                    model=self.model,
-                    retrieval_method=None,
-                    top_k=None,
-                    return_as_str=not self.p_rationale,
-                )
-            print(
-                f"## ============================== AdancedAgent - QUERY DECOMPOSITION ============================== ##"
-            )
-            print(subtasks)
-            print(
-                f"## ================================================================================================ ##"
-            )
-            if self.p_rationale:
-                if self.p_rationale_ex:
-                    subtask_plannings = subtask_planning(
-                        task=task,
-                        facts=facts,
-                        extracted_step_list=subtasks,
-                        model=self.model,
-                        retrieval_method=retrieval_method,
-                        top_k=self.top_k,
-                        return_as_str=True,
-                    )
-                else:
-                    subtask_plannings = subtask_planning(
-                        task=task,
-                        facts=facts,
-                        extracted_step_list=subtasks,
-                        model=self.model,
-                        retrieval_method=None,
-                        top_k=None,
-                        return_as_str=True,
-                    )
-                print(
-                    f"## ============================== AdancedAgent - RATIONALE-BASED PLANNING ============================== ##"
-                )
-                print(subtask_plannings)
-                print(
-                    f"## ===================================================================================================== ##"
-                )
-                additional_knowledge = subtask_plannings
-                if self.action_planning:
-                    print(f"action_planning is called {self.action_planning}")
-                    action_plannings = action_level_planning(
-                        task=task,
-                        curruent_plan=subtask_plannings,
-                        model=self.model,
-                        retrieval_method=retrieval_method,
-                        top_k=self.top_k,
-                    )
-                    additional_knowledge = action_plannings
-            else:
-                additional_knowledge = subtasks
-
-        if is_first_step:
-            initial_plan_template = populate_template(
-                self.prompt_templates["planning"]["initial_plan_with_knowledge"],
-                variables={
-                    "task": task,
-                    "tools": self.tools,
-                    "managed_agents": self.managed_agents,
-                    "answer_facts": facts,
-                    "knowledge_data": additional_knowledge,
-                },
-            )
-            message_prompt_plan = {
-                "role": MessageRole.USER,
-                "content": [
-                    {
-                        "type": "text",
-                        "text": initial_plan_template,
-                    }
-                ],
-            }
-            chat_message_plan: ChatMessage = self.model(
-                [message_prompt_plan],
-                stop_sequences=["<end_plan>"],
-            )
-            return chat_message_plan
-        else:
-            pdate_plan_pre_messages = {
-                "role": MessageRole.SYSTEM,
-                "content": [
-                    {
-                        "type": "text",
-                        "text": populate_template(
-                            self.prompt_templates["planning"][
-                                "update_plan_pre_messages"
-                            ],
-                            variables={
-                                "task": task,
-                                "knowledge_data": additional_knowledge,
-                            },
-                        ),
-                    }
-                ],
-            }
-            update_plan_post_messages = {
-                "role": MessageRole.USER,
-                "content": [
-                    {
-                        "type": "text",
-                        "text": populate_template(
-                            self.prompt_templates["planning"][
-                                "update_plan_post_messages"
-                            ],
-                            variables={
-                                "task": task,
-                                "tools": self.tools,
-                                "managed_agents": self.managed_agents,
-                                "facts_update": facts,
-                                "remaining_steps": (self.max_steps - step),
-                                "knowledge_data": additional_knowledge,
-                            },
-                        ),
-                    }
-                ],
-            }
-            chat_message_plan: ChatMessage = self.model(
-                [update_plan_pre_messages]
-                + memory_messages
-                + [update_plan_post_messages],
-                stop_sequences=["<end_plan>"],
-            )
-            return chat_message_plan
-
     def planning_step(
         self,
         task,
@@ -889,6 +710,15 @@ You have been provided with these additional arguments, that you can access usin
             step (`int`): The number of the current step, used as an indication for the LLM.
         """
         if is_first_step:
+            if self.use_additional_knowledge_as_plan:
+                logger.info(f"First Planning step use additional_knowledge !")
+                return PlanningStep(
+                    model_input_messages=[],
+                    plan=additional_knowledge,
+                    facts="",
+                    model_output_message_plan=additional_knowledge,
+                    model_output_message_facts="",
+                )
             input_messages = [
                 {
                     "role": MessageRole.USER,
@@ -906,8 +736,50 @@ You have been provided with these additional arguments, that you can access usin
 
             chat_message_facts: ChatMessage = self.model(input_messages)
             answer_facts = chat_message_facts.content
-            chat_message_plan = self.advanced_planning_step(
-                task=task, facts=answer_facts, is_first_step=True
+
+            if self.agent_kb and additional_knowledge != None:
+                knowledge_data_all = "Please strictly follow the suggestions below:\n"
+                knowledge_data_all += additional_knowledge
+                final_facts_knowledge = textwrap.dedent(
+                    f"""Here are the similar tasks, plans and relevant experience that I should follow:
+                    ```
+                    {knowledge_data_all}
+                    ```""".strip()
+                )
+                initial_plan_template = populate_template(
+                    self.prompt_templates["planning"]["initial_plan_with_knowledge"],
+                    variables={
+                        "task": task,
+                        "tools": self.tools,
+                        "managed_agents": self.managed_agents,
+                        "answer_facts": answer_facts,
+                        "knowledge_data": knowledge_data_all,
+                    },
+                )
+            else:
+                initial_plan_template = populate_template(
+                    self.prompt_templates["planning"]["initial_plan"],
+                    variables={
+                        "task": task,
+                        "tools": self.tools,
+                        "managed_agents": self.managed_agents,
+                        "answer_facts": answer_facts,
+                    },
+                )
+                final_facts_knowledge = textwrap.dedent(f"""No retrieval process""")
+
+            message_prompt_plan = {
+                "role": MessageRole.USER,
+                "content": [
+                    {
+                        "type": "text",
+                        "text": initial_plan_template,
+                    }
+                ],
+            }
+            chat_message_plan: ChatMessage = self.model(
+                [message_prompt_plan],
+                stop_sequences=["<end_plan>"],
             )
             answer_plan = chat_message_plan.content
 
@@ -974,8 +846,46 @@ You have been provided with these additional arguments, that you can access usin
             )
             chat_message_facts: ChatMessage = self.model(input_messages)
             facts_update = chat_message_facts.content
-            chat_message_plan = self.advanced_planning_step(
-                task=task, facts=facts_update, is_first_step=False
+
+            update_plan_pre_messages = {
+                "role": MessageRole.SYSTEM,
+                "content": [
+                    {
+                        "type": "text",
+                        "text": populate_template(
+                            self.prompt_templates["planning"][
+                                "update_plan_pre_messages"
+                            ],
+                            variables={"task": task},
+                        ),
+                    }
+                ],
+            }
+            update_plan_post_messages = {
+                "role": MessageRole.USER,
+                "content": [
+                    {
+                        "type": "text",
+                        "text": populate_template(
+                            self.prompt_templates["planning"][
+                                "update_plan_post_messages"
+                            ],
+                            variables={
+                                "task": task,
+                                "tools": self.tools,
+                                "managed_agents": self.managed_agents,
+                                "facts_update": facts_update,
+                                "remaining_steps": (self.max_steps - step),
+                            },
+                        ),
+                    }
+                ],
+            }
+            chat_message_plan: ChatMessage = self.model(
+                [update_plan_pre_messages]
+                + memory_messages
+                + [update_plan_post_messages],
+                stop_sequences=["<end_plan>"],
             )
 
             final_plan_redaction = textwrap.dedent(
@@ -1386,7 +1296,7 @@ You have been provided with these additional arguments, that you can access usin
             )
 
 
-class AdvancedToolCallingAgent(AdvancedMultiStepAgent):
+class ToolCallingAgent(MultiStepAgent):
     """
     This agent uses JSON-like tool calls, using method `model.get_tool_call` to leverage the LLM engine's tool calling capabilities.
 
@@ -1450,6 +1360,7 @@ class AdvancedToolCallingAgent(AdvancedMultiStepAgent):
             task (`str`): Task to perform.
             images (`list[str]`): Paths to image(s).
         """
+
         final_answer = None
         self.step_number = 1
         while final_answer is None and self.step_number <= self.max_steps:
@@ -1632,7 +1543,7 @@ class AdvancedToolCallingAgent(AdvancedMultiStepAgent):
             return None
 
 
-class AdvancedCodeAgent(AdvancedMultiStepAgent):
+class CodeAgent(MultiStepAgent):
     """
     In this agent, the tool calls will be formulated by the LLM in code format, then parsed and executed.
 
@@ -1929,117 +1840,70 @@ class AdvancedCodeAgent(AdvancedMultiStepAgent):
         task: str,
         images: List[str] | None = None,
         additional_knowledge: Optional[str] = None,
-        pass_1=False,
     ) -> Generator[ActionStep | AgentType, None, None]:
+        Task_steps = self.memory.steps
+        memory_steps = Task_steps.copy()
+        final_answer = None
+        self.step_number = 1
+        planning_step = self.planning_step(
+            task,
+            is_first_step=(self.step_number == 1),
+            step=self.step_number,
+            additional_knowledge=additional_knowledge,
+        )
+        self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
+        memory_steps.append(planning_step)
 
-        if pass_1:
-            Task_steps = self.memory.steps
-            memory_steps = Task_steps.copy()
-            final_answer = None
-            self.step_number = 1
-            planning_step = self.planning_step(
-                task,
-                is_first_step=(self.step_number == 1),
-                step=self.step_number,
-                additional_knowledge=additional_knowledge,
-            )
-            self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
-            memory_steps.append(planning_step)
+        task_success = False
+        memory_messages = self.write_memory_to_messages(memory_steps=memory_steps)
+        while not task_success and self.step_number <= self.max_steps:
 
-            task_success = False
-            memory_messages = self.write_memory_to_messages(memory_steps=memory_steps)
+            if (
+                self.planning_interval is not None
+                and self.planning_interval != 1
+                and self.step_number % self.planning_interval == 0
+            ):
+                planning_step = self.planning_step(
+                    task,
+                    is_first_step=(self.step_number == 1),
+                    step=self.step_number,
+                )
+                self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
+                memory_steps.append(planning_step)
+
             final_answer = self.process_step(
                 self.step_number, images, memory_messages, memory_steps
             )
-            assert memory_steps is not None, "memory_steps cannot be None"
-            assert (
-                len(memory_steps) > 0
-            ), f"memory_steps cannot be empty, current length: {len(memory_steps)}"
-            self.memory.steps = memory_steps
 
-            if final_answer is None:
-                error_message = "Reached max steps."
-                final_answer = self.provide_final_answer(task, images)
-                final_memory_step = ActionStep(
-                    step_number=self.step_number,
-                    error=AgentMaxStepsError(error_message, self.logger),
-                )
-                final_memory_step.action_output = final_answer
-                final_memory_step.end_time = time.time()
-                self.memory.steps.append(final_memory_step)
-                for callback in self.step_callbacks:
-                    if len(inspect.signature(callback).parameters) == 1:
-                        callback(final_memory_step)
-                    else:
-                        callback(final_memory_step, agent=self)
-                yield final_memory_step
+            if final_answer is not None:
+                task_success = True
+                break
+            self.step_number += 1
 
-            yield handle_agent_output_types(final_answer)
-        else:
-            Task_steps = self.memory.steps
-            memory_steps = Task_steps.copy()
-            final_answer = None
-            self.step_number = 1
-            planning_step = self.planning_step(
-                task,
-                is_first_step=(self.step_number == 1),
-                step=self.step_number,
-                additional_knowledge=additional_knowledge,
+        assert memory_steps is not None, "memory_steps cannot be None"
+        assert (
+            len(memory_steps) > 0
+        ), f"memory_steps cannot be empty, current length: {len(memory_steps)}"
+        self.memory.steps = memory_steps
+
+        if final_answer is None and self.step_number == self.max_steps + 1:
+            error_message = "Reached max steps."
+            final_answer = self.provide_final_answer(task, images)
+            final_memory_step = ActionStep(
+                step_number=self.step_number,
+                error=AgentMaxStepsError(error_message, self.logger),
             )
-            self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
-            memory_steps.append(planning_step)
+            final_memory_step.action_output = final_answer
+            final_memory_step.end_time = time.time()
+            self.memory.steps.append(final_memory_step)
+            for callback in self.step_callbacks:
+                if len(inspect.signature(callback).parameters) == 1:
+                    callback(final_memory_step)
+                else:
+                    callback(final_memory_step, agent=self)
+            yield final_memory_step
 
-            task_success = False
-            memory_messages = self.write_memory_to_messages(memory_steps=memory_steps)
-            while not task_success and self.step_number <= self.max_steps:
-                if (
-                    self.planning_interval is not None
-                    and self.planning_interval != 1
-                    and self.step_number % self.planning_interval == 0
-                ):
-                    planning_step = self.planning_step(
-                        task,
-                        is_first_step=(self.step_number == 1),
-                        step=self.step_number,
-                    )
-                    self.logger.log_rule(
-                        f"Step {self.step_number}", level=LogLevel.INFO
-                    )
-                    memory_steps.append(planning_step)
-
-                final_answer = self.process_step(
-                    self.step_number, images, memory_messages, memory_steps
-                )
-
-                if final_answer is not None:
-                    task_success = True
-                    break
-                self.step_number += 1
-
-            assert memory_steps is not None, "memory_steps cannot be None"
-            assert (
-                len(memory_steps) > 0
-            ), f"memory_steps cannot be empty, current length: {len(memory_steps)}"
-            self.memory.steps = memory_steps
-
-            if final_answer is None and self.step_number == self.max_steps + 1:
-                error_message = "Reached max steps."
-                final_answer = self.provide_final_answer(task, images)
-                final_memory_step = ActionStep(
-                    step_number=self.step_number,
-                    error=AgentMaxStepsError(error_message, self.logger),
-                )
-                final_memory_step.action_output = final_answer
-                final_memory_step.end_time = time.time()
-                self.memory.steps.append(final_memory_step)
-                for callback in self.step_callbacks:
-                    if len(inspect.signature(callback).parameters) == 1:
-                        callback(final_memory_step)
-                    else:
-                        callback(final_memory_step, agent=self)
-                yield final_memory_step
-
-            yield handle_agent_output_types(final_answer)
+        yield handle_agent_output_types(final_answer)
 
     def get_memory_step_message(
         self,

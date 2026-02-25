@@ -50,7 +50,11 @@ from scripts.automodel import (
 
 from agent_kb.agent_kb_utils import AKBClient, call_model
 
-from planner_kb import planning_task, progressive_planning_task
+from planner_kb import (
+    planning_task,
+    progressive_planning_task,
+    recontextulaized_planning_task,
+)
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
 from smolagents.agents import populate_template
@@ -216,12 +220,22 @@ def parse_args():
         default="plan",
     )
     parser.add_argument(
-        "--is_progressive", action="store_true", help="Enable progressive plan"
+        "--planning_type",
+        type=str,
+        default="default",
+        choices=["default", "progressive", "recontextualize"],
     )
     parser.add_argument(
-        "--init_plan",
-        action="store_true",
-        help="Not reference, Use as a direct initial plan",
+        "--reflection_mode",
+        type=str,
+        default="raw_memory",
+        choices=["raw_memory", "llm_summary"],
+    )
+    parser.add_argument(
+        "--directive_injection",
+        type=str,
+        default="directives",
+        choices=["directives", "eval", "none"],
     )
     return parser.parse_args()
 
@@ -310,8 +324,9 @@ def answer_single_question(
     model=None,
     model_search=None,
     is_augmented=True,
-    is_progressive=True,
+    planning_type="default",
     planning_field="plan",
+    reflection_mode="raw_memory",
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -385,8 +400,20 @@ def answer_single_question(
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
         if retrieval:
-            if is_progressive:
-                additional_knowledge = progressive_planning_task(
+            if planning_type == "progressive":
+                additional_knowledge, directives = progressive_planning_task(
+                    example=example,
+                    augmented_question=augmented_question,
+                    model_name=model_name,
+                    key=key,
+                    url=url,
+                    model=model,
+                    slm=slm,
+                    retrieval_method=retrieval_method,
+                    top_k=3,
+                )
+            elif planning_type == "recontextualize":
+                additional_knowledge, directives = recontextulaized_planning_task(
                     example=example,
                     augmented_question=augmented_question,
                     model_name=model_name,
@@ -411,10 +438,14 @@ def answer_single_question(
                     is_augmented=is_augmented,
                     planning_field=planning_field,
                 )
+                directives = None
         else:
             additional_knowledge = None
         final_result = agent.run(
-            augmented_question, additional_knowledge=additional_knowledge
+            augmented_question,
+            additional_knowledge=additional_knowledge,
+            initial_directives=directives,
+            reflection_mode=reflection_mode,
         )
         agent_memory = agent.write_memory_to_messages(summary_mode=True)
         final_result = prepare_response(
@@ -551,11 +582,11 @@ def main():
         "ec09fa32-d03f-4bf8-84b0-1f16922c3ae4",  # 1
         # "cffe0e32-c9a6-4c52-9877-78ceb4aaa9fb", #2
         "2d83110e-a098-4ebb-9987-066c06fa42d0",  # 3
-        "27d5d136-8563-469e-92bf-fd103c28b57c",  # 4
-        "dc28cf18-6431-458b-83ef-64b3ce566c10",  # 5
+        # "27d5d136-8563-469e-92bf-fd103c28b57c",  # 4
+        # "dc28cf18-6431-458b-83ef-64b3ce566c10",  # 5
         "42576abe-0deb-4869-8c63-225c2d75a95a",  # 6
-        "6f37996b-2ac7-44b0-8e68-6d28256631b4",  # 7
-        "4b650a35-8529-4695-89ed-8dc7a500a498",  # 8
+        # "6f37996b-2ac7-44b0-8e68-6d28256631b4",  # 7
+        # "4b650a35-8529-4695-89ed-8dc7a500a498",  # 8
         "c714ab3a-da30-4603-bacd-d008800188b9",  # 9
         "3cef3a44-215e-4aed-8e3b-b1e3f08063b7",  # 10
         "e142056d-56ab-4352-b091-b56054bd1359",  # 11
@@ -580,8 +611,9 @@ def main():
                 model,
                 model_search,
                 args.is_augmented,
-                args.is_progressive,
+                args.planning_type,
                 args.planning_field,
+                args.reflection_mode,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:

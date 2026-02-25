@@ -1574,8 +1574,33 @@ class CodeAgent(MultiStepAgent):
         agent_kb: bool = False,
         top_k: Optional[int] = 1,
         retrieval_type: Optional[str] = "hybrid",
+        reflection_mode: Literal["llm_summary", "raw_memory"] = "llm_summary",
+        directive_injection: Literal["eval", "directives", "none"] = "eval",
+        raw_memory_max_steps: int = 12,
+        summary_prompt: Optional[str] = None,
+        eval_prompt: Optional[str] = None,
         **kwargs,
     ):
+        self.initial_directives: str = ""
+
+        self.reflection_mode = reflection_mode
+        self.directive_injection = directive_injection
+        self.raw_memory_max_steps = raw_memory_max_steps
+
+        self.summary_prompt = summary_prompt or (
+            "Summarize the agent's progress so far in 5-10 bullet points.\n"
+            "Include: goal, what has been tried, current state, errors, and what is needed next.\n"
+            "Be concise."
+        )
+        self.eval_prompt = eval_prompt or (
+            "Compare the progress summary against the initial directives.\n"
+            "Output:\n"
+            "- Compliance: compliant / partially_compliant / non_compliant\n"
+            "- Reasons: bullet points citing what in the summary conflicts or aligns\n"
+            "- Guidance: what the next action should do to comply\n"
+            "Be concise."
+        )
+
         self.additional_authorized_imports = (
             additional_authorized_imports if additional_authorized_imports else []
         )
@@ -1627,6 +1652,16 @@ class CodeAgent(MultiStepAgent):
                 all_tools,
                 max_print_outputs_length=max_print_outputs_length,
             )
+
+    def set_initial_directives(
+        self, initial_directives: Optional[Union[str, List[str]]]
+    ):
+        if isinstance(initial_directives, list):
+            self.initial_directives = "\n".join(
+                f"- {d}" for d in initial_directives
+            ).strip()
+        else:
+            self.initial_directives = (initial_directives or "").strip()
 
     def initialize_system_prompt(self) -> str:
         system_prompt = populate_template(
@@ -1717,6 +1752,9 @@ class CodeAgent(MultiStepAgent):
                     self.execute_code(memory_step, new_code)
             raise AgentExecutionError(error_msg, self.logger)
 
+    # ------------------------------------------------------------
+    # step() 수정: 액션 전에 pre-action reflection을 만들고 additional_prompt로 주입
+    # ------------------------------------------------------------
     def step(
         self,
         memory_step: ActionStep,
@@ -1724,28 +1762,27 @@ class CodeAgent(MultiStepAgent):
         additional_prompt: str = "",
         memory_steps: List[ActionStep | PlanningStep | TaskStep] = None,
     ) -> Union[None, Any]:
-        """
-        Perform one step in the ReAct framework: the agent thinks, acts, and observes the result.
-        This function executes a step by sending messages to a model, processing the response,
-        and interacting with external tools (e.g., code execution). It updates the memory step with
-        relevant information and returns the final answer if the step is complete.
 
-        Args:
-            memory_step (ActionStep): The current memory step which holds the state and information of the step.
-            memory_messages (list[Message], optional): List of previous memory messages. If None, memory is fetched from `write_memory_to_messages()`.
-            additional_prompt (str, optional): An optional prompt to add to the model input to guide the model's behavior.
-
-        Returns:
-            Union[None, Any]: The model's output if the step is final; otherwise, None.
-        """
         memory_messages = (
             self.write_memory_to_messages()
             if memory_messages is None
             else memory_messages
         )
-
         self.input_messages = memory_messages.copy()
 
+        # ✅ pre-action reflection + 주입
+        if memory_steps is not None:
+            artifacts = self.build_pre_action_artifacts(memory_steps)
+            injected = self._make_additional_prompt_from_artifacts(artifacts)
+
+            # “주입”은 additional_prompt에 합쳐서 기존 로직을 그대로 타게 함
+            if injected:
+                # 기존 additional_prompt가 있으면 뒤에 붙임(우선순위는 injected가 더 강하게 하고 싶으면 순서 바꾸면 됨)
+                additional_prompt = injected + (
+                    "\n\n" + additional_prompt if additional_prompt else ""
+                )
+
+        # ✅ 기존 로직: additional_prompt를 system으로 넣는 방식 유지
         if additional_prompt and self.reflection:
             self.input_messages.insert(
                 0,
@@ -1757,6 +1794,7 @@ class CodeAgent(MultiStepAgent):
 
         memory_step.model_input_messages = self.input_messages.copy()
 
+        # --- 이하 기존 step 로직 그대로 ---
         try:
             additional_args = (
                 {"grammar": self.grammar} if self.grammar is not None else {}
@@ -1840,7 +1878,13 @@ class CodeAgent(MultiStepAgent):
         task: str,
         images: List[str] | None = None,
         additional_knowledge: Optional[str] = None,
+        # ✅ NEW: run 호출 시점에 directives 받기
+        initial_directives: Optional[Union[str, List[str]]] = None,
     ) -> Generator[ActionStep | AgentType, None, None]:
+
+        # ✅ 여기서 per-run directives 설정
+        self.set_initial_directives(initial_directives)
+
         Task_steps = self.memory.steps
         memory_steps = Task_steps.copy()
         final_answer = None
@@ -2009,3 +2053,116 @@ class CodeAgent(MultiStepAgent):
                 else:
                     callback(memory_step, agent=self)
         return final_answer
+
+    # ------------------------------------------------------------
+    # (1) pre-action reflection: LLM summary or raw memory
+    # ------------------------------------------------------------
+    def _render_recent_steps_as_text(
+        self,
+        memory_steps: List[ActionStep | PlanningStep | TaskStep],
+        max_steps: int,
+    ) -> str:
+        recent = (
+            memory_steps[-max_steps:] if len(memory_steps) > max_steps else memory_steps
+        )
+
+        def step_to_string(step):
+            if isinstance(step, ActionStep):
+                obs = (step.observations or "")[:800]
+                out = (str(getattr(step, "action_output", "")) or "")[:400]
+                err = f" | error: {step.error}" if step.error else ""
+                return f"[Action#{step.step_number}] obs: {obs} | out: {out}{err}"
+            if isinstance(step, PlanningStep):
+                return f"[Planning] plan: {getattr(step, 'plan', '')} | facts: {getattr(step, 'facts', '')}"
+            if isinstance(step, TaskStep):
+                return f"[Task] task: {getattr(step, 'task', '')}"
+            return f"[{type(step).__name__}]"
+
+        return "\n".join(step_to_string(s) for s in recent)
+
+    def _call_model_text(self, messages: List[Dict[str, Any]]) -> str:
+        """모델을 호출해서 text를 받아오는 최소 wrapper"""
+        chat_message: ChatMessage = self.model(messages)
+        if chat_message is None or chat_message.content is None:
+            raise ValueError("Model returned empty or invalid chat message.")
+        if isinstance(chat_message.content, list):
+            return "".join([str(item) for item in chat_message.content])
+        return str(chat_message.content)
+
+    def build_pre_action_artifacts(
+        self,
+        memory_steps: List[ActionStep | PlanningStep | TaskStep],
+    ) -> PreActionArtifacts:
+        """
+        - reflection_mode에 따라 summary_or_memory 생성
+        - directive_injection="eval"일 때만 evaluation 생성(LLM 호출)
+        """
+        # 1) summary_or_memory
+        raw_text = self._render_recent_steps_as_text(
+            memory_steps, self.raw_memory_max_steps
+        )
+
+        if self.reflection_mode == "raw_memory":
+            summary_or_memory = raw_text
+        else:
+            # LLM 요약 생성
+            summary_messages = [
+                {
+                    "role": "system",
+                    "content": [{"type": "text", "text": self.summary_prompt}],
+                },
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": raw_text}],
+                },
+            ]
+            summary_or_memory = self._call_model_text(summary_messages)
+
+        # 2) evaluation (옵션)
+        evaluation = ""
+        if self.directive_injection == "eval":
+            eval_input = (
+                f"## Initial directives\n{self.initial_directives or '(none)'}\n\n"
+                f"## Progress\n{summary_or_memory}\n"
+            )
+            eval_messages = [
+                {
+                    "role": "system",
+                    "content": [{"type": "text", "text": self.eval_prompt}],
+                },
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": eval_input}],
+                },
+            ]
+            evaluation = self._call_model_text(eval_messages)
+
+        return PreActionArtifacts(
+            summary_or_memory=summary_or_memory, evaluation=evaluation
+        )
+
+    # ------------------------------------------------------------
+    # (2) directives/eval을 additional_prompt로 주입 or 안함
+    # ------------------------------------------------------------
+    def _make_additional_prompt_from_artifacts(
+        self, artifacts: PreActionArtifacts
+    ) -> str:
+        if self.directive_injection == "none":
+            return ""  # additional_prompt 사용 안함
+
+        if self.directive_injection == "directives":
+            return (
+                "Follow these initial directives strictly:\n"
+                f"{self.initial_directives or '(none)'}\n"
+            )
+
+        # directive_injection == "eval"
+        return (
+            "Pre-action reflection context:\n"
+            "## Summary / Memory\n"
+            f"{artifacts.summary_or_memory}\n\n"
+            "## Directive evaluation\n"
+            f"{artifacts.evaluation}\n\n"
+            "Now decide the next code action accordingly.\n"
+            "- Output ONLY a single valid code blob.\n"
+        )

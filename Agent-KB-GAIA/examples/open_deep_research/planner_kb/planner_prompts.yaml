@@ -11,23 +11,29 @@ planning_with_examples_prompt: |
     Here are similar task and their plannings:
     {{examples}} 
 
-progressive_kci_prompt: |
+progressive_knowledge_prompt: |
     You are an expert planning agent.
-    Given a TARGET task and SIMILAR tasks, write:
-    1) knowledge: essential domain knowledge, definitions, prerequisites, assumptions.
-    2) contraints_instructions: constraints, do/don't, safety rules, formatting rules, tool rules, evaluation criteria.
-
-    Return STRICT JSON only:
-    {
-        "knowledge": "...",
-        "contraints_instructions": "..."
-    }
+    Given a TARGET task and SIMILAR tasks, return essential domain knowledge, definitions, prerequisites, assumptions.
 
     TARGET TASK:
     {{task}}
 
     SIMILAR TASKS:
     {{similar_blocks}}
+
+progressive_ci_prompt: |
+    You are an expert planning agent.
+    Given a TARGET task and SIMILAR tasks, return key constraints and instructions: do/don't, safety rules, formatting rules, tool rules, evaluation criteria.
+
+    Return STRICT JSON only:
+    {
+        "constraints": "...",
+        "instructions": "..."
+    }
+
+    TARGET TASK:
+    {{task}}
+
 
 progressive_approach_prompt: |
     You are an expert planning agent.
@@ -48,33 +54,120 @@ progressive_approach_prompt: |
     TARGET TASK:
     {{task}}
 
-    KNOWLEDGE,CONSTRAINTS/INSTRUCTIONS:
-    {{kci}}
+    KNOWLEDGE:
+    {{knowledge}}
+
+    CONSTRAINTS/INSTRUCTIONS:
+    {{constraints_instructions}}
 
     SIMILAR TASKS:
     {{similar_blocks}}
+
 
 progressive_plan_prompt: |
     You are an expert planning agent.
     Write a Plan for the TARGET TASK.
 
     Follow these rules STRICTLY:
-    - Create a structured step-by-step execution plan.
     - The plan MUST be grounded in Knowledge, Contraints_Instructions and Approach.
     - Explicitly expose decision-making rationale at key steps.
     - Show how constraints influence each major decision.
-    - Ensure logical flow and executability.
     - Include validation/check steps if necessary.
     - Do NOT output the final solution to the task.
 
     TARGET TASK:
     {{task}}
 
-    KNOWLEDGE,CONSTRAINTS/INSTRUCTIONS:
-    {{kci}}
+    KNOWLEDGE:
+    {{knowledge}}
+
+    CONSTRAINTS/INSTRUCTIONS:
+    {{constraints_instructions}}
 
     APPROACH:
     {{approach}}
 
     SIMILAR TASKS:
     {{similar_blocks}}
+
+extract_task_spec_prompt: |
+    You are an expert task analyzer.
+    Given a task, extract a structured TaskSpec.
+
+    TASK:
+    {{task}}
+
+    TaskSpec fields:
+    - task: summerized task text
+    - domain: field/area of knowledge
+    - skills: required capabilities (ex. search, reason, code generation, and etc.)
+    - objective: success criteria intended outcome or what needed to be done
+
+    Output strict JSON only:
+    {
+        "task": "",
+        "domain": "",
+        "skills": [],
+        "objective": "",
+    }
+
+transfer_ka_prompt: |
+    You are an expert task analyzer.
+    Return the knowledge and approach transferred from the reference task to the goal task based on their similarities and differences.
+
+    GOAL TASK:
+    {{goal_task_spec}}
+
+    REFERENCE TASK:
+    {{ref_task_spec}}
+
+    Output strict JSON:
+    {
+        "knowledge_transferred": "",
+        "approach_transferred": ""
+    }
+
+final_ka_prompt: |
+    You are an expert task designer.
+    Given a TARGET task and proposed knowledge and approaches derived from similar tasks,
+    determine the final knowledge and approach required to successfully solve the target task.
+
+    Instructions:
+    - Use the proposed items as candidates, not as mandatory.
+    - Remove irrelevant or redundant elements.
+    - Adapt items if necessary to better fit the target task.
+    - Add new elements only if critical gaps exist.
+
+    Return STRICT JSON only:
+    {
+        "final_knowledge": "...",
+        "final_approach": "..."
+    }
+
+    TARGET TASK:
+    {{task}}
+
+    PROPOSED KNOWLEDGE & APPROACH:
+    {{proposed_ka}}
+
+
+recontextualized_plan_prompt: |
+    You are an expert planning agent.
+    Write a Plan for the TARGET TASK.
+
+    Follow these rules STRICTLY:
+    - The plan MUST be grounded in Knowledge, Contraints_Instructions and Approach.
+    - Explicitly expose decision-making rationale at key steps.
+    - Show how constraints influence each major decision.
+    - Include validation/check steps if necessary.
+    - Do NOT output the final solution to the task.
+
+    TASK:
+    {{task}}
+    
+    KNOWLEDGE/APPROACH:
+    {{knowledge_approach}}
+
+    CONSTRAINTS/INSTRUCTIONS:
+    {{constraints_instructions}}
+

@@ -47,11 +47,22 @@ class TaskResponse(BaseModel):
     task_id: str
     task: str
     agent_planning: Optional[Any] = None
+    # ===== TaskSpec ===== #
+    domain: Optional[Any] = None
+    skills: Optional[Any] = None
+    objective: Optional[Any] = None
+    # ===== Context ===== #
     knowledge: Optional[Any] = None
+    constraints: Optional[Any] = None
+    instructions: Optional[Any] = None
     approach: Optional[Any] = None
-    contraints_instructions: Optional[Any] = None
+    knowledge_summary: Optional[Any] = None
+    constraints_summary: Optional[Any] = None
+    instructions_summary: Optional[Any] = None
+    approach_summary: Optional[Any] = None
+    # ===== Plan ===== #
     plan: Optional[Any] = None
-    summary: Optional[Any] = None
+    plan_summary: Optional[Any] = None
     total_score: Optional[float] = None  # hybrid일 때만 있을 수도 있어서 Optional
 
 
@@ -100,12 +111,20 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "task_id": str(item["task_id"]),
             "task": item["task"],
-            "plan": item["plan"],
             "agent_planning": item["agent_planning"],
+            "domain": item["domain"],
+            "skills": item["skills"],
+            "objective": item["objective"],
             "knowledge": item["knowledge"],
+            "constraints": item["constraints"],
+            "instructions": item["instructions"],
             "approach": item["approach"],
-            "contraints_instructions": item["contraints_instructions"],
-            "summary": item.get("summary", None),
+            "plan": item.get("plan", None),
+            "knowledge_summary": item["knowledge_summary"],
+            "constraints_summary": item["constraints_summary"],
+            "instructions_summary": item["instructions_summary"],
+            "approach_summary": item["approach_summary"],
+            "plan_summary": item.get("plan_summary", None),
         }
 
     content = item.get("content", {})
@@ -119,12 +138,20 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "task_id": str(content["task_id"]),
             "task": content["task"],
-            "plan": content["plan"],
-            "agent_planning": content["agent_planning"],
+            "agent_planning": item["agent_planning"],
+            "domain": item["domain"],
+            "skills": item["skills"],
+            "objective": item["objective"],
             "knowledge": item["knowledge"],
+            "constraints": item["constraints"],
+            "instructions": item["instructions"],
             "approach": item["approach"],
-            "contraints_instructions": item["contraints_instructions"],
-            "summary": item.get("summary", None),
+            "plan": item.get("plan", None),
+            "knowledge_summary": item["knowledge_summary"],
+            "constraints_summary": item["constraints_summary"],
+            "instructions_summary": item["instructions_summary"],
+            "approach_summary": item["approach_summary"],
+            "plan_summary": item.get("plan_summary", None),
         }
 
     raise KeyError(
@@ -158,11 +185,14 @@ async def hybrid_search(request: SearchRequest):
                     task_id=str(core["task_id"]),
                     task=core["task"],
                     agent_planning=core["agent_planning"],
+                    domain=core["domain"],
+                    skills=core["skills"],
+                    objective=core["objective"],
                     knowledge=core["knowledge"],
-                    contraints_instructions=core["contraints_instructions"],
+                    constraints=core["constraints"],
+                    instructions=core["instructions"],
                     approach=core["approach"],
                     plan=core["plan"],
-                    summary=core.get("summary", None),
                     total_score=item.get("total_score"),
                 )
             )
@@ -198,11 +228,19 @@ async def text_search(request: SearchRequest):
                     task_id=str(core["task_id"]),
                     task=core["task"],
                     agent_planning=core["agent_planning"],
+                    domain=core["domain"],
+                    skills=core["skills"],
+                    objective=core["objective"],
                     knowledge=core["knowledge"],
-                    contraints_instructions=core["contraints_instructions"],
+                    constraints=core["constraints"],
+                    instructions=core["instructions"],
                     approach=core["approach"],
                     plan=core["plan"],
-                    summary=core.get("summary", None),
+                    knowledge_summary=core["knowledge_summary"],
+                    constraints_summary=core["constraints_summary"],
+                    instructions_summary=core["instructions_summary"],
+                    approach_summary=core["approach_summary"],
+                    plan_summary=core["plan_summary"],
                     total_score=item.get(
                         "score"
                     ),  # text 검색은 score를 total_score로 매핑
@@ -238,11 +276,19 @@ async def semantic_search(request: SearchRequest):
                     task_id=str(core["task_id"]),
                     task=core["task"],
                     agent_planning=core["agent_planning"],
+                    domain=core["domain"],
+                    skills=core["skills"],
+                    objective=core["objective"],
                     knowledge=core["knowledge"],
-                    contraints_instructions=core["contraints_instructions"],
+                    constraints=core["constraints"],
+                    instructions=core["instructions"],
                     approach=core["approach"],
                     plan=core["plan"],
-                    summary=core.get("summary", None),
+                    knowledge_summary=core["knowledge_summary"],
+                    constraints_summary=core["constraints_summary"],
+                    instructions_summary=core["instructions_summary"],
+                    approach_summary=core["approach_summary"],
+                    plan_summary=core["plan_summary"],
                     total_score=item.get(
                         "score"
                     ),  # semantic 검색도 score를 total_score로 매핑
