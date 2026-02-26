@@ -31,8 +31,13 @@ class AugmentedContext:
     approach: Optional[Any] = None
     constraints: Optional[Any] = None
     instructions: Optional[Any] = None
+    knowledge_summary: Optional[Any] = None
+    constraints_summary: Optional[Any] = None
+    instructions_summary: Optional[Any] = None
+    approach_summary: Optional[Any] = None
     # ===== Plan ===== #
     plan: Optional[Any] = None
+    plan_summary: Optional[Any] = None
 
 
 @dataclass
@@ -102,6 +107,12 @@ class AgenticKnowledgeBase:
                     approach = item.get("approach", None)
                     plan = item.get("plan", None)
 
+                    knowledge_summary = item.get("knowledge_summary", None)
+                    constraints_summary = item.get("constraints_summary", None)
+                    instructions_summary = item.get("instructions_summary", None)
+                    approach_summary = item.get("approach_summary", None)
+                    plan_summary = item.get("plan_summary", None)
+
                     agent_planning = item.get("agent_planning", None)
                     agent_experience = item.get("agent_experience", None)
 
@@ -121,6 +132,11 @@ class AgenticKnowledgeBase:
                             instructions=instructions,
                             approach=approach,
                             plan=plan,
+                            knowledge_summary=knowledge_summary,
+                            constraints_summary=constraints_summary,
+                            instructions_summary=instructions_summary,
+                            approach_summary=approach_summary,
+                            plan_summary=plan_summary,
                         ),
                     )
                     batch.append(instance)
@@ -293,6 +309,11 @@ class AKB_Manager:
                     "instructions": task_obj.augmented.instructions,
                     "approach": task_obj.augmented.approach,
                     "plan": task_obj.augmented.plan,
+                    "knowledge_summary": task_obj.augmented.knowledge_summary,
+                    "constraints_summary": task_obj.augmented.constraints_summary,
+                    "instructions_summary": task_obj.augmented.instructions_summary,
+                    "approach_summary": task_obj.augmented.approach_summary,
+                    "plan_summary": task_obj.augmented.plan_summary,
                 }
             )
 
@@ -320,6 +341,11 @@ class AKB_Manager:
                         "instructions": task_obj.augmented.instructions,
                         "approach": task_obj.augmented.approach,
                         "plan": task_obj.augmented.plan,
+                        "knowledge_summary": task_obj.augmented.knowledge_summary,
+                        "constraints_summary": task_obj.augmented.constraints_summary,
+                        "instructions_summary": task_obj.augmented.instructions_summary,
+                        "approach_summary": task_obj.augmented.approach_summary,
+                        "plan_summary": task_obj.augmented.plan_summary,
                     },
                 }
             )
@@ -347,6 +373,11 @@ class AKB_Manager:
                         "instructions": task_obj.augmented.instructions,
                         "approach": task_obj.augmented.approach,
                         "plan": task_obj.augmented.plan,
+                        "knowledge_summary": task_obj.augmented.knowledge_summary,
+                        "constraints_summary": task_obj.augmented.constraints_summary,
+                        "instructions_summary": task_obj.augmented.instructions_summary,
+                        "approach_summary": task_obj.augmented.approach_summary,
+                        "plan_summary": task_obj.augmented.plan_summary,
                     },
                 }
             )

@@ -40,6 +40,7 @@ from typing import (
     Tuple,
     TypedDict,
     Union,
+    Literal,
 )
 import heapq
 from collections import deque
@@ -98,8 +99,16 @@ from .utils import (
     parse_json_tool_call,
     truncate_content,
 )
+from dataclasses import dataclass
+from typing import Any, Optional
 
 logger = getLogger(__name__)
+
+
+@dataclass
+class PreActionArtifacts:
+    summary_or_memory: Any
+    evaluation: Any
 
 
 class AKBClient:
@@ -296,7 +305,6 @@ class MultiStepAgent:
         agent_kb: bool = False,
         top_k: Optional[int] = 3,
         retrieval_type: Optional[str] = "hybrid",
-        use_additional_knowledge_as_plan=False,
     ):
         if tool_parser is None:
             tool_parser = parse_json_tool_call
@@ -362,7 +370,6 @@ class MultiStepAgent:
         self.agent_kb = agent_kb
         self.top_k = top_k
         self.retrieval_type = retrieval_type
-        self.use_additional_knowledge_as_plan = use_additional_knowledge_as_plan
 
     @property
     def logs(self):
@@ -537,6 +544,7 @@ class MultiStepAgent:
         images: Optional[List[str]] = None,
         additional_args: Optional[Dict] = None,
         additional_knowledge: Optional[str] = None,
+        initial_directives: Optional[Union[str, List[str]]] = None,
     ):
         """
         Run the agent for the given task.
@@ -579,10 +587,17 @@ You have been provided with these additional arguments, that you can access usin
         self.memory.steps.append(TaskStep(task=self.task, task_images=images))
 
         if stream:
-            return self._run(task=self.task, images=images)
+            return self._run(
+                task=self.task,
+                images=images,
+                initial_directives=initial_directives,
+            )
         return deque(
             self._run(
-                task=self.task, images=images, additional_knowledge=additional_knowledge
+                task=self.task,
+                images=images,
+                additional_knowledge=additional_knowledge,
+                initial_directives=initial_directives,
             ),
             maxlen=1,
         )[0]
@@ -710,15 +725,6 @@ You have been provided with these additional arguments, that you can access usin
             step (`int`): The number of the current step, used as an indication for the LLM.
         """
         if is_first_step:
-            if self.use_additional_knowledge_as_plan:
-                logger.info(f"First Planning step use additional_knowledge !")
-                return PlanningStep(
-                    model_input_messages=[],
-                    plan=additional_knowledge,
-                    facts="",
-                    model_output_message_plan=additional_knowledge,
-                    model_output_message_facts="",
-                )
             input_messages = [
                 {
                     "role": MessageRole.USER,
@@ -1653,16 +1659,6 @@ class CodeAgent(MultiStepAgent):
                 max_print_outputs_length=max_print_outputs_length,
             )
 
-    def set_initial_directives(
-        self, initial_directives: Optional[Union[str, List[str]]]
-    ):
-        if isinstance(initial_directives, list):
-            self.initial_directives = "\n".join(
-                f"- {d}" for d in initial_directives
-            ).strip()
-        else:
-            self.initial_directives = (initial_directives or "").strip()
-
     def initialize_system_prompt(self) -> str:
         system_prompt = populate_template(
             self.prompt_templates["system_prompt"],
@@ -1761,6 +1757,7 @@ class CodeAgent(MultiStepAgent):
         memory_messages=None,
         additional_prompt: str = "",
         memory_steps: List[ActionStep | PlanningStep | TaskStep] = None,
+        initial_directives=None,
     ) -> Union[None, Any]:
 
         memory_messages = (
@@ -1772,23 +1769,18 @@ class CodeAgent(MultiStepAgent):
 
         # ✅ pre-action reflection + 주입
         if memory_steps is not None:
-            artifacts = self.build_pre_action_artifacts(memory_steps)
-            injected = self._make_additional_prompt_from_artifacts(artifacts)
-
-            # “주입”은 additional_prompt에 합쳐서 기존 로직을 그대로 타게 함
-            if injected:
-                # 기존 additional_prompt가 있으면 뒤에 붙임(우선순위는 injected가 더 강하게 하고 싶으면 순서 바꾸면 됨)
-                additional_prompt = injected + (
-                    "\n\n" + additional_prompt if additional_prompt else ""
-                )
-
-        # ✅ 기존 로직: additional_prompt를 system으로 넣는 방식 유지
-        if additional_prompt and self.reflection:
+            artifacts = self.build_pre_action_artifacts(
+                memory_steps, initial_directives
+            )
+            injected = self._make_additional_prompt_from_artifacts(
+                artifacts, initial_directives
+            )
+            logger.info(f"[Inject pre-action reflection]\n{injected}")
             self.input_messages.insert(
                 0,
                 Message(
                     role=MessageRole.SYSTEM,
-                    content=[{"type": "text", "text": additional_prompt}],
+                    content=[{"type": "text", "text": injected}],
                 ),
             )
 
@@ -1881,10 +1873,6 @@ class CodeAgent(MultiStepAgent):
         # ✅ NEW: run 호출 시점에 directives 받기
         initial_directives: Optional[Union[str, List[str]]] = None,
     ) -> Generator[ActionStep | AgentType, None, None]:
-
-        # ✅ 여기서 per-run directives 설정
-        self.set_initial_directives(initial_directives)
-
         Task_steps = self.memory.steps
         memory_steps = Task_steps.copy()
         final_answer = None
@@ -2092,6 +2080,7 @@ class CodeAgent(MultiStepAgent):
     def build_pre_action_artifacts(
         self,
         memory_steps: List[ActionStep | PlanningStep | TaskStep],
+        initial_directives,
     ) -> PreActionArtifacts:
         """
         - reflection_mode에 따라 summary_or_memory 생성
@@ -2122,7 +2111,7 @@ class CodeAgent(MultiStepAgent):
         evaluation = ""
         if self.directive_injection == "eval":
             eval_input = (
-                f"## Initial directives\n{self.initial_directives or '(none)'}\n\n"
+                f"## Initial directives\n{initial_directives}\n\n"
                 f"## Progress\n{summary_or_memory}\n"
             )
             eval_messages = [
@@ -2145,20 +2134,18 @@ class CodeAgent(MultiStepAgent):
     # (2) directives/eval을 additional_prompt로 주입 or 안함
     # ------------------------------------------------------------
     def _make_additional_prompt_from_artifacts(
-        self, artifacts: PreActionArtifacts
+        self, artifacts: PreActionArtifacts, initial_directives
     ) -> str:
         if self.directive_injection == "none":
-            return ""  # additional_prompt 사용 안함
+            return None
 
         if self.directive_injection == "directives":
             return (
-                "Follow these initial directives strictly:\n"
-                f"{self.initial_directives or '(none)'}\n"
+                "Follow these initial directives strictly:\n" f"{initial_directives}\n"
             )
 
         # directive_injection == "eval"
         return (
-            "Pre-action reflection context:\n"
             "## Summary / Memory\n"
             f"{artifacts.summary_or_memory}\n\n"
             "## Directive evaluation\n"

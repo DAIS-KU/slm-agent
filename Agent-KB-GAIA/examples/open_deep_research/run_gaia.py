@@ -17,6 +17,7 @@ from typing import (
     Tuple,
     TypedDict,
     Union,
+    Literal,
 )
 import sys
 from collections import Counter
@@ -212,9 +213,6 @@ def parse_args():
         help="agent kb model choice",
     )
     parser.add_argument(
-        "--is_augmented", action="store_true", help="Enable augmented plan"
-    )
-    parser.add_argument(
         "--planning_field",
         type=str,
         default="plan",
@@ -225,6 +223,7 @@ def parse_args():
         default="default",
         choices=["default", "progressive", "recontextualize"],
     )
+    parser.add_argument("--use_summary", action="store_true")
     parser.add_argument(
         "--reflection_mode",
         type=str,
@@ -234,7 +233,7 @@ def parse_args():
     parser.add_argument(
         "--directive_injection",
         type=str,
-        default="directives",
+        default="none",
         choices=["directives", "eval", "none"],
     )
     return parser.parse_args()
@@ -282,6 +281,9 @@ os.makedirs(f"./{BROWSER_CONFIG['downloads_folder']}", exist_ok=True)
 
 
 def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False):
+    logger.info(
+        f"[Agent Setting] reflection_mode: {args.reflection_mode}, directive_injection: {args.directive_injection}"
+    )
     manager_agent = CodeAgent(
         model=model,
         tools=[],
@@ -294,7 +296,8 @@ def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False)
         agent_kb=args.agent_kb,
         top_k=args.top_k,
         retrieval_type=args.retrieval_type,
-        use_additional_knowledge_as_plan=args.init_plan,
+        reflection_mode=args.reflection_mode,
+        directive_injection=args.directive_injection,
     )
     return manager_agent
 
@@ -323,10 +326,10 @@ def answer_single_question(
     slm=False,
     model=None,
     model_search=None,
-    is_augmented=True,
     planning_type="default",
     planning_field="plan",
     reflection_mode="raw_memory",
+    use_summary=False,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -411,6 +414,7 @@ def answer_single_question(
                     slm=slm,
                     retrieval_method=retrieval_method,
                     top_k=3,
+                    use_summary=use_summary,
                 )
             elif planning_type == "recontextualize":
                 additional_knowledge, directives = recontextulaized_planning_task(
@@ -435,8 +439,8 @@ def answer_single_question(
                     slm=slm,
                     retrieval_method=retrieval_method,
                     top_k=3,
-                    is_augmented=is_augmented,
                     planning_field=planning_field,
+                    use_summary=use_summary,
                 )
                 directives = None
         else:
@@ -445,7 +449,6 @@ def answer_single_question(
             augmented_question,
             additional_knowledge=additional_knowledge,
             initial_directives=directives,
-            reflection_mode=reflection_mode,
         )
         agent_memory = agent.write_memory_to_messages(summary_mode=True)
         final_result = prepare_response(
@@ -610,10 +613,10 @@ def main():
                 args.slm,
                 model,
                 model_search,
-                args.is_augmented,
                 args.planning_type,
                 args.planning_field,
                 args.reflection_mode,
+                args.use_summary,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:

@@ -20,73 +20,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def build_examples(entities, planning_field="plan"):
-    lines = []
-    for entity in entities:
-        task = entity.get("task") or entity.get("query") or entity.get("question")
-        plan = entity.get(planning_field, "")
-        lines.append(f"Similar task:{task}\nPlan: {plan}\n")
-    return "\n".join(lines)
-
-
-def planning_task(
-    example,
-    augmented_question,
-    model_name,
-    key,
-    url,
-    model,
-    slm,
-    retrieval_method,
-    top_k,
-    is_augmented=True,
-    planning_field="plan",
-):
-    if retrieval_method is None:
-        logger.info(
-            f"planning_task - retrieval_method is None.(is_augmented={is_augmented})"
-        )
-        planning_prompt_template = load_prompts(
-            path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
-        )
-        planning_prompt_template = planning_prompt_template["planning_prompt"]
-        planning_prompt = populate_template(
-            planning_prompt_template,
-            variables={"task": augmented_question},
-        )
-    else:
-        logger.info(
-            f"planning_task - retrieval_method is not None.(is_augmented={is_augmented})"
-        )
-        retrieval_results = retrieval_method(example["question"], top_k=top_k)
-        # logger.info(f"Retrieved retrieval_results:\n {retrieval_results}")
-        planning_prompt_template = load_prompts(
-            path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
-        )
-        planning_prompt_template = planning_prompt_template[
-            "planning_with_examples_prompt"
-        ]
-        examples = build_examples(retrieval_results, planning_field)
-        logger.info(f"Retrieved examples:\n {examples}")
-        planning_prompt = populate_template(
-            planning_prompt_template,
-            variables={
-                "task": augmented_question,
-                "examples": examples,
-            },
-        )
-    planning_str = call_model(
-        query=planning_prompt,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-    )
-    logger.info(f"planning_task - planning_str: {planning_str}")
-    return planning_str
-
-
 def build_similar_task_blocks(
     similars: List[Any], mode, max_items: int = 5, use_summary=False
 ) -> str:
@@ -106,6 +39,7 @@ def build_similar_task_blocks(
         )
         approach = d.get("approach_summary") if use_summary else d.get("approach")
         plan = d.get("plan_summary") if use_summary else d.get("plan")
+        agent_planning = d.get("agent_planning")
 
         parts: List[str] = [f"[Similar Task #{i}] {task}\n"]
         if mode == "knowledge":
@@ -116,10 +50,68 @@ def build_similar_task_blocks(
             parts.append(f"Plan: {plan}")
         elif mode == "spec":
             parts.append(f"Domain:{domain}\nSkills:{skills}\nObjective:{objective}")
+        elif mode == "agent_planning":
+            parts.append(f"Plan: {agent_planning}")
 
         lines.append("\n".join(parts).strip())
 
     return "\n\n".join(lines).strip()
+
+
+def planning_task(
+    example,
+    augmented_question,
+    model_name,
+    key,
+    url,
+    model,
+    slm,
+    retrieval_method,
+    top_k,
+    planning_field="plan",
+    use_summary=False,
+):
+    if retrieval_method is None:
+        logger.info(f"planning_task - retrieval_method is None.")
+        planning_prompt_template = load_prompts(
+            path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
+        )
+        planning_prompt_template = planning_prompt_template["planning_prompt"]
+        planning_prompt = populate_template(
+            planning_prompt_template,
+            variables={"task": augmented_question},
+        )
+    else:
+        logger.info(f"planning_task - retrieval_method is not None.")
+        retrieval_results = retrieval_method(example["question"], top_k=top_k)
+        # logger.info(f"Retrieved retrieval_results:\n {retrieval_results}")
+        planning_prompt_template = load_prompts(
+            path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
+        )
+        planning_prompt_template = planning_prompt_template[
+            "planning_with_examples_prompt"
+        ]
+        examples = build_similar_task_blocks(
+            similars=retrieval_results, mode=planning_field, use_summary=use_summary
+        )
+        logger.info(f"Retrieved examples:\n {examples}")
+        planning_prompt = populate_template(
+            planning_prompt_template,
+            variables={
+                "task": augmented_question,
+                "examples": examples,
+            },
+        )
+    planning_str = call_model(
+        query=planning_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info(f"planning_task - planning_str: {planning_str}")
+    return planning_str
 
 
 def progressive_planning_task(
@@ -155,7 +147,7 @@ def progressive_planning_task(
         },
     )
     raw_knowledge_str = call_model(
-        query=progressive_kci_prompt,
+        query=progressive_knowledge_prompt,
         model_name=model_name,
         key=key,
         url=url,
@@ -286,6 +278,7 @@ def recontextulaized_planning_task(
     slm: Any,
     retrieval_method=None,
     top_k: int = 5,
+    use_summary=False,
 ) -> Dict[str, Any]:
     """
     (1) goal task -> TaskSpec + (constraints,instructions) 추출 + 정리
@@ -318,7 +311,7 @@ def recontextulaized_planning_task(
     logger.info("=" * 100)
 
     # ---- (1) Goal: constraints/instructions 추출 ----
-    ci_prompt_template = planning_prompt_template["progressive_ci_prompt"]
+    ci_prompt_template = prompts["progressive_ci_prompt"]
     ci_prompt = populate_template(
         ci_prompt_template,
         variables={
@@ -361,7 +354,7 @@ def recontextulaized_planning_task(
 
     transfers: List[Dict[str, Any]] = []
     for idx, ref_spec in enumerate(ref_specs):
-        transter_ref_prompt_template = planning_prompt_template["transfer_ka_prompt"]
+        transter_ref_prompt_template = prompts["transfer_ka_prompt"]
         transter_ref_prompt = populate_template(
             transter_ref_prompt_template,
             variables={"goal_task_spec": goal_task_spec, "ref_task_spec": ref_spec},
@@ -381,7 +374,7 @@ def recontextulaized_planning_task(
     proposed_ka = "\n".join(transfers)
 
     # ---- (3) 최종 knowledge and approach 생성 ----
-    final_ka_prompt_template = planning_prompt_template["transfer_ka_prompt"]
+    final_ka_prompt_template = prompts["transfer_ka_prompt"]
     final_ka_prompt = populate_template(
         final_ka_prompt_template,
         variables={"task": augmented_question, "proposed_ka": proposed_ka},
@@ -399,7 +392,7 @@ def recontextulaized_planning_task(
     logger.info("=" * 100)
 
     # ---- (3) 최종 Plan 생성 ----
-    plan_prompt_template = planning_prompt_template["recontextualized_plan_prompt"]
+    plan_prompt_template = prompts["recontextualized_plan_prompt"]
     plan_prompt = populate_template(
         plan_prompt_template,
         variables={
