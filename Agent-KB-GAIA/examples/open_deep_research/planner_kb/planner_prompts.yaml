@@ -12,8 +12,21 @@ planning_with_examples_prompt: |
     {{examples}} 
 
 progressive_knowledge_prompt: |
-    You are an expert planning agent.
-    Given a TARGET task and SIMILAR tasks, return essential domain knowledge, definitions, prerequisites, assumptions.
+    Given a TASK, do NOT solve it and do NOT derive the final answer.
+    Instead, analyze what would be required to determine the correct answer.
+    Your job is to identify the necessary meta-level components needed to solve the task.
+    You must output strictly in the following JSON format:
+
+    {
+        "goal": "Describe the ultimate objective of the task",
+        "what_to_derive": "Specify the key quantity, relationship, or conclusion that must be derived to determine the answer",
+        "domain": "Indicate the relevant academic field or problem domain",
+        "concepts": ["List the essential concepts, principles, theories, formulas, or laws required"]
+    }
+
+    ⚠️ Do NOT include the solution.
+    ⚠️ Do NOT show intermediate reasoning steps.
+    ⚠️ Only provide meta-level analysis of what is required to solve the task.
 
     TARGET TASK:
     {{task}}
@@ -22,34 +35,37 @@ progressive_knowledge_prompt: |
     {{similar_blocks}}
 
 progressive_ci_prompt: |
-    You are an expert planning agent.
-    Given a TARGET task and SIMILAR tasks, return key constraints and instructions: do/don't, safety rules, formatting rules, tool rules, evaluation criteria.
+    Given a TASK, do NOT solve it and do NOT derive the final answer.
+    Instead, analyze what would be required to determine the correct answer.
+    Your job is to identify the necessary meta-level components needed to solve the task.
+    You must output strictly in the following JSON format:
 
-    Return STRICT JSON only:
     {
-        "constraints": "...",
-        "instructions": "..."
+    "constraints": "Describe the conditions, variables, assumptions, and the key quantities, relationships, or conclusions that must be derived to solve the problem.",
+    "instructions": "Specify the required response format, intent, and any additional user requirements for the answer."
     }
 
-    TARGET TASK:
+    ⚠️ Do NOT include the solution.
+    ⚠️ Do NOT show intermediate reasoning steps.
+    ⚠️ Only provide meta-level analysis of what is required to solve the task.
+
+    TASK:
     {{task}}
 
 
 progressive_approach_prompt: |
-    You are an expert planning agent.
-    Write the Approach for the TARGET TASK.
+    Given a TASK, do NOT solve it and do NOT derive the final answer.
+    Instead, analyze what would be required to determine the correct answer.
+    Your job is to identify the necessary meta-level components needed to solve the task.
+    You must output strictly in the following JSON format:
 
-    Follow these rules STRICTLY:
-    - Describe HOW to approach and solve this task.
-    - Your reasoning MUST be grounded in the Knowledge and Contraints_Instructions.
-    - Explicitly expose decision-making rationale:
-        - Why this method is appropriate
-        - How Knowledge informs the strategy
-        - How Constraints shape the decisions
-    - Keep it concise but logically coherent.
-        - Do NOT write step-by-step execution.
-        - Do NOT write the final answer.
-        - Do NOT write a detailed plan.
+    {
+    "approach": "Provide a concise solution that explains the decision-making rationale based on the knowledge, constraints, and instructions below."
+    }
+
+    ⚠️ Do NOT include the solution.
+    ⚠️ Do NOT show intermediate reasoning steps.
+    ⚠️ Only provide meta-level analysis of what is required to solve the task.
 
     TARGET TASK:
     {{task}}
@@ -65,15 +81,18 @@ progressive_approach_prompt: |
 
 
 progressive_plan_prompt: |
-    You are an expert planning agent.
-    Write a Plan for the TARGET TASK.
+    Given a TASK, do NOT solve it and do NOT derive the final answer.
+    Instead, analyze what would be required to determine the correct answer.
+    You must output strictly in the following JSON format:
+    
+    {
+    "plan": {
+        "steps": "Provide an actionable, step-by-step plan to solve the task.",
+        "rationale": "Briefly explain why this plan aligns with the given knowledge, constraints, instructions, and approach."
+        }
+    }
 
-    Follow these rules STRICTLY:
-    - The plan MUST be grounded in Knowledge, Contraints_Instructions and Approach.
-    - Explicitly expose decision-making rationale at key steps.
-    - Show how constraints influence each major decision.
-    - Include validation/check steps if necessary.
-    - Do NOT output the final solution to the task.
+    ⚠️ Do NOT show intermediate reasoning steps.
 
     TARGET TASK:
     {{task}}
@@ -100,14 +119,12 @@ extract_task_spec_prompt: |
     TaskSpec fields:
     - task: summerized task text
     - domain: field/area of knowledge
-    - skills: required capabilities (ex. search, reason, code generation, and etc.)
     - objective: success criteria intended outcome or what needed to be done
 
     Output strict JSON only:
     {
         "task": "",
         "domain": "",
-        "skills": [],
         "objective": "",
     }
 

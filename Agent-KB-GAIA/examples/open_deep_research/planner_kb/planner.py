@@ -24,6 +24,7 @@ def build_similar_task_blocks(
     similars: List[Any], mode, max_items: int = 5, use_summary=False
 ) -> str:
     lines: List[str] = []
+    logger.info(f"build_similar_task_blocks example: {similars[0]}")
 
     for i, d in enumerate(similars[:max_items], start=1):
         task = d.get("task") or d.get("query") or d.get("question") or ""
@@ -32,7 +33,7 @@ def build_similar_task_blocks(
         objective = d.get("objective")
         knowledge = d.get("knowledge_summary") if use_summary else d.get("knowledge")
         constraints = (
-            d.get("constratints_summary") if use_summary else d.get("constraints")
+            d.get("constraints_summary") if use_summary else d.get("constraints")
         )
         instructions = (
             d.get("instructions_summary") if use_summary else d.get("instructions")
@@ -41,21 +42,30 @@ def build_similar_task_blocks(
         plan = d.get("plan_summary") if use_summary else d.get("plan")
         agent_planning = d.get("agent_planning")
 
-        parts: List[str] = [f"[Similar Task #{i}] {task}\n"]
+        parts: List[str] = []
         if mode == "knowledge":
-            parts.append(f"Knowledge: {knowledge}")
+            parts.append(f"[Similar Task #{i}] {task}")
+            parts.append(f"Knowledge: {knowledge}\n")
+        elif mode == "ci":
+            parts.append(f"[Similar Task #{i}] {task}")
+            parts.append(f"Constraints: {constraints}")
+            parts.append(f"Instructions: {constraints}\n")
         elif mode == "approach":
+            parts.append(f"[Similar Task #{i}] {task}")
             parts.append(f"Approach:{approach}")
         elif mode == "plan":
-            parts.append(f"Plan: {plan}")
+            parts.append(f"[Similar Task #{i}] {task}")
+            parts.append(f"Plan: {plan}\n")
         elif mode == "spec":
-            parts.append(f"Domain:{domain}\nSkills:{skills}\nObjective:{objective}")
+            parts.append(
+                f"[Similar Task #{i}] {task}\nDomain:{domain}\nSkills:{skills}\nObjective:{objective}\n"
+            )
         elif mode == "agent_planning":
-            parts.append(f"Plan: {agent_planning}")
-
+            parts.append(f"[Similar Task #{i}] {task}")
+            parts.append(f"Plan: {agent_planning}\n")
         lines.append("\n".join(parts).strip())
 
-    return "\n\n".join(lines).strip()
+    return lines if mode == "spec" else "\n\n".join(lines).strip()
 
 
 def planning_task(
@@ -102,7 +112,7 @@ def planning_task(
                 "examples": examples,
             },
         )
-    planning_str = call_model(
+    plan_str = call_model(
         query=planning_prompt,
         model_name=model_name,
         key=key,
@@ -110,64 +120,10 @@ def planning_task(
         model=model,
         slm=slm,
     )
-    logger.info(f"planning_task - planning_str: {planning_str}")
-    return planning_str
-
-
-def progressive_planning_task(
-    example,
-    augmented_question,
-    model_name,
-    key,
-    url,
-    model,
-    slm,
-    retrieval_method,
-    top_k,
-    use_summary=False,
-):
-
-    retrieval_results = retrieval_method(example["question"], top_k=top_k)
-    planning_prompt_template = load_prompts(
-        path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
-    )
-
-    # 1) knowledge
-    progressive_knowledge_prompt_template = planning_prompt_template[
-        "progressive_knowledge_prompt"
-    ]
-    similar_blocks_knowledge = build_similar_task_blocks(
-        retrieval_results, mode="knowledge", use_summary=use_summary
-    )
-    progressive_knowledge_prompt = populate_template(
-        progressive_knowledge_prompt_template,
-        variables={
-            "task": augmented_question,
-            "similar_blocks": similar_blocks_knowledge,
-        },
-    )
-    raw_knowledge_str = call_model(
-        query=progressive_knowledge_prompt,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-    )
-    knowledge_str = call_model(
-        query=f"Summerize the following text.\n\n{raw_knowledge_str}",
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-    )
     logger.info("=" * 100)
-    logger.info(f"Generated Knowledge Prompt:\n{progressive_knowledge_prompt}")
-    logger.info(f"Generated Knowledge:\n{knowledge_str}")
+    logger.info(f"Generated Plan:\n{plan_str}")
     logger.info("=" * 100)
 
-    # 2) constraints, instructions
     progressive_ci_prompt_template = planning_prompt_template["progressive_ci_prompt"]
     progressive_ci_prompt = populate_template(
         progressive_ci_prompt_template,
@@ -192,13 +148,99 @@ def progressive_planning_task(
         slm=slm,
     )
     logger.info("=" * 100)
-    logger.info(
-        f"Generated Constraitns/Instructions Prompt:\n{progressive_knowledge_prompt}"
+    logger.info(f"Generated Constraitns/Instructions:\n{ci_str}")
+    logger.info("=" * 100)
+    return plan_str, ci_str
+
+
+def progressive_planning_task(
+    example,
+    augmented_question,
+    model_name,
+    key,
+    url,
+    model,
+    slm,
+    retrieval_method,
+    top_k,
+    use_summary=False,
+):
+
+    retrieval_results = retrieval_method(example["question"], top_k=top_k)
+    planning_prompt_template = load_prompts(
+        path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
     )
+
+    # 1) knowledge
+    logger.info("=" * 100)
+    logger.info("Start to generate knowledge")
+    progressive_knowledge_prompt_template = planning_prompt_template[
+        "progressive_knowledge_prompt"
+    ]
+    similar_blocks_knowledge = build_similar_task_blocks(
+        retrieval_results, mode="knowledge", use_summary=use_summary
+    )
+    progressive_knowledge_prompt = populate_template(
+        progressive_knowledge_prompt_template,
+        variables={
+            "task": augmented_question,
+            "similar_blocks": similar_blocks_knowledge,
+        },
+    )
+    raw_knowledge_str = call_model(
+        query=progressive_knowledge_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    knowledge_str = call_model(
+        query=f"Summerize the following text.\nTEXT:\n\n{raw_knowledge_str}",
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info(f"Generated Knowledge Prompt:\n{progressive_knowledge_prompt}")
+    logger.info(f"Generated Raw Knowledge:\n{raw_knowledge_str}")
+    logger.info(f"Generated Summarized Knowledge:\n{knowledge_str}")
+    logger.info("=" * 100)
+
+    # 2) constraints, instructions
+    logger.info("=" * 100)
+    logger.info("Start to generate constraints and instructions")
+    progressive_ci_prompt_template = planning_prompt_template["progressive_ci_prompt"]
+    progressive_ci_prompt = populate_template(
+        progressive_ci_prompt_template,
+        variables={
+            "task": augmented_question,
+        },
+    )
+    raw_ci_str = call_model(
+        query=progressive_ci_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    ci_str = call_model(
+        query=f"Summerize the following text.\nTEXT:\n\n{raw_ci_str}",
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info(f"Generated Constraitns/Instructions Prompt:\n{progressive_ci_prompt}")
     logger.info(f"Generated Constraitns/Instructions:\n{ci_str}")
     logger.info("=" * 100)
 
     # 3) approach
+    logger.info("=" * 100)
+    logger.info("Start to generate approach")
     progressive_approach_prompt_template = planning_prompt_template[
         "progressive_approach_prompt"
     ]
@@ -223,19 +265,21 @@ def progressive_planning_task(
         slm=slm,
     )
     approach_str = call_model(
-        query=f"Summerize the following text.\n\n{raw_approach_str}",
+        query=f"Summerize the following text.\nTEXT:\n\n{raw_approach_str}",
         model_name=model_name,
         key=key,
         url=url,
         model=model,
         slm=slm,
     )
-    logger.info("=" * 100)
     logger.info(f"Generated Approach Prompt:\n{progressive_approach_prompt}")
-    logger.info(f"Generated Approach:\n{approach_str}")
+    logger.info(f"Generated Raw Approach:\n{raw_approach_str}")
+    logger.info(f"Generated Summerized Approach:\n{approach_str}")
     logger.info("=" * 100)
 
     # 3) plan
+    logger.info("=" * 100)
+    logger.info("Start to generate plan")
     progressive_plan_prompt_template = planning_prompt_template[
         "progressive_plan_prompt"
     ]
@@ -249,7 +293,7 @@ def progressive_planning_task(
             "knowledge": knowledge_str,
             "constraints_instructions": ci_str,
             "approach": approach_str,
-            "similar_blocks": similar_blocks_approach,
+            "similar_blocks": similar_blocks_plan,
         },
     )
     plan_str = call_model(
@@ -260,7 +304,6 @@ def progressive_planning_task(
         model=model,
         slm=slm,
     )
-    logger.info("=" * 100)
     logger.info(f"Generated Plan Prompt:\n{progressive_plan_prompt}")
     logger.info(f"Generated Plan:\n{plan_str}")
     logger.info("=" * 100)
@@ -287,7 +330,6 @@ def recontextulaized_planning_task(
 
     Returns a dict with plan + intermediate artifacts for debugging/inspection.
     """
-
     prompts = load_prompts(
         path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
     )
@@ -353,6 +395,8 @@ def recontextulaized_planning_task(
         ref_specs = []
 
     transfers: List[Dict[str, Any]] = []
+    logger.info(f"ref_specs #{len(ref_specs)}")
+    logger.info("=" * 100)
     for idx, ref_spec in enumerate(ref_specs):
         transter_ref_prompt_template = prompts["transfer_ka_prompt"]
         transter_ref_prompt = populate_template(
@@ -367,14 +411,13 @@ def recontextulaized_planning_task(
             model=model,
             slm=slm,
         )
-        logger.info("=" * 100)
         logger.info(f"Generated Tranfer Item:\n{transfer}")
-        logger.info("=" * 100)
         transfers.append(transfer)
+    logger.info("=" * 100)
     proposed_ka = "\n".join(transfers)
 
     # ---- (3) 최종 knowledge and approach 생성 ----
-    final_ka_prompt_template = prompts["transfer_ka_prompt"]
+    final_ka_prompt_template = prompts["final_ka_prompt"]
     final_ka_prompt = populate_template(
         final_ka_prompt_template,
         variables={"task": augmented_question, "proposed_ka": proposed_ka},

@@ -401,104 +401,103 @@ def answer_single_question(
         augmented_question += prompt_use_files
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    try:
-        if retrieval:
-            if planning_type == "progressive":
-                additional_knowledge, directives = progressive_planning_task(
-                    example=example,
-                    augmented_question=augmented_question,
-                    model_name=model_name,
-                    key=key,
-                    url=url,
-                    model=model,
-                    slm=slm,
-                    retrieval_method=retrieval_method,
-                    top_k=3,
-                    use_summary=use_summary,
-                )
-            elif planning_type == "recontextualize":
-                additional_knowledge, directives = recontextulaized_planning_task(
-                    example=example,
-                    augmented_question=augmented_question,
-                    model_name=model_name,
-                    key=key,
-                    url=url,
-                    model=model,
-                    slm=slm,
-                    retrieval_method=retrieval_method,
-                    top_k=3,
-                )
-            else:
-                additional_knowledge = planning_task(
-                    example=example,
-                    augmented_question=augmented_question,
-                    model_name=model_name,
-                    key=key,
-                    url=url,
-                    model=model,
-                    slm=slm,
-                    retrieval_method=retrieval_method,
-                    top_k=3,
-                    planning_field=planning_field,
-                    use_summary=use_summary,
-                )
-                directives = None
+    # try:
+    if retrieval:
+        if planning_type == "progressive":
+            additional_knowledge, directives = progressive_planning_task(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+                use_summary=use_summary,
+            )
+        elif planning_type == "recontextualize":
+            additional_knowledge, directives = recontextulaized_planning_task(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+            )
         else:
-            additional_knowledge = None
-        final_result = agent.run(
-            augmented_question,
-            additional_knowledge=additional_knowledge,
-            initial_directives=directives,
-        )
-        agent_memory = agent.write_memory_to_messages(summary_mode=True)
-        final_result = prepare_response(
-            augmented_question, agent_memory, reformulation_model=model
-        )
-        output = str(final_result)
-        print("=" * 30 + "Final Output." + "=" * 30)
-        print(f"output:{output}")
-        print("=" * 30 + "Final Output." + "=" * 30)
+            additional_knowledge, directives = planning_task(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+                planning_field=planning_field,
+                use_summary=use_summary,
+            )
+    else:
+        additional_knowledge = None
+    final_result = agent.run(
+        augmented_question,
+        additional_knowledge=additional_knowledge,
+        initial_directives=directives,
+    )
+    agent_memory = agent.write_memory_to_messages(summary_mode=True)
+    final_result = prepare_response(
+        augmented_question, agent_memory, reformulation_model=model
+    )
+    output = str(final_result)
+    print("=" * 30 + "Final Output." + "=" * 30)
+    print(f"output:{output}")
+    print("=" * 30 + "Final Output." + "=" * 30)
 
-        intermediate_steps = []
-        for memory_step in agent.memory.steps:
-            memory_step.model_input_messages = None
-            step_dict = memory_step.dict()
-            if isinstance(memory_step, ActionStep):
-                step_dict["step_type"] = "action"
-                step_dict.pop("model_output_message", None)
-            elif isinstance(memory_step, TaskStep):
-                step_dict["step_type"] = "task"
-            elif isinstance(memory_step, PlanningStep):
-                step_dict["step_type"] = "planning"
-                step_dict.pop("model_output_message_facts", None)
-                step_dict.pop("model_output_message_plan", None)
-            else:
-                step_dict["step_type"] = "unknown"
-            intermediate_steps.append(step_dict)
+    intermediate_steps = []
+    for memory_step in agent.memory.steps:
+        memory_step.model_input_messages = None
+        step_dict = memory_step.dict()
+        if isinstance(memory_step, ActionStep):
+            step_dict["step_type"] = "action"
+            step_dict.pop("model_output_message", None)
+        elif isinstance(memory_step, TaskStep):
+            step_dict["step_type"] = "task"
+        elif isinstance(memory_step, PlanningStep):
+            step_dict["step_type"] = "planning"
+            step_dict.pop("model_output_message_facts", None)
+            step_dict.pop("model_output_message_plan", None)
+        else:
+            step_dict["step_type"] = "unknown"
+        intermediate_steps.append(step_dict)
 
-        intermediate_steps_check = [str(step) for step in agent.memory.steps]
-        parsing_error = (
-            True
-            if any(["AgentParsingError" in step for step in intermediate_steps_check])
-            else False
-        )
+    intermediate_steps_check = [str(step) for step in agent.memory.steps]
+    parsing_error = (
+        True
+        if any(["AgentParsingError" in step for step in intermediate_steps_check])
+        else False
+    )
 
-        iteration_limit_exceeded = (
-            True
-            if "Agent stopped due to iteration limit or time limit." in output
-            else False
-        )
-        raised_exception = False
+    iteration_limit_exceeded = (
+        True
+        if "Agent stopped due to iteration limit or time limit." in output
+        else False
+    )
+    raised_exception = False
 
-    except Exception as e:
-        logger.error(f"Error on task {example['task_id']}\n{e}")
-        output = None
-        intermediate_steps = []
-        action_trajectory = []
-        parsing_error = False
-        iteration_limit_exceeded = False
-        exception = e
-        raised_exception = True
+    # except Exception as e:
+    #     logger.error(f"Error on task {example['task_id']}\n{e}")
+    #     output = None
+    #     intermediate_steps = []
+    #     action_trajectory = []
+    #     parsing_error = False
+    #     iteration_limit_exceeded = False
+    #     exception = e
+    #     raised_exception = True
     end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     annotated_example = {
         "agent_name": model.model_id,
@@ -515,7 +514,7 @@ def answer_single_question(
         "task": example["task"],
         "task_id": example["task_id"],
     }
-    append_answer(annotated_example, answers_file, jsonl_lock)
+    # append_answer(annotated_example, answers_file, jsonl_lock)
 
 
 def get_examples_to_answer(
@@ -565,7 +564,7 @@ def main():
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:1",
+            device_map="cuda:0",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -573,7 +572,7 @@ def main():
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:1",
+            device_map="cuda:0",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -590,8 +589,8 @@ def main():
         "42576abe-0deb-4869-8c63-225c2d75a95a",  # 6
         # "6f37996b-2ac7-44b0-8e68-6d28256631b4",  # 7
         # "4b650a35-8529-4695-89ed-8dc7a500a498",  # 8
-        "c714ab3a-da30-4603-bacd-d008800188b9",  # 9
-        "3cef3a44-215e-4aed-8e3b-b1e3f08063b7",  # 10
+        # "c714ab3a-da30-4603-bacd-d008800188b9",  # 9
+        # "3cef3a44-215e-4aed-8e3b-b1e3f08063b7",  # 10
         "e142056d-56ab-4352-b091-b56054bd1359",  # 11
         "50ad0280-0819-4bd9-b275-5de32d3b5bcb",  # 12
         "50ec8903-b81f-4257-9450-1085afd2c319",  # 13

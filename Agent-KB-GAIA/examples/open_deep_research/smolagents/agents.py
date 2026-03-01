@@ -1776,13 +1776,14 @@ class CodeAgent(MultiStepAgent):
                 artifacts, initial_directives
             )
             logger.info(f"[Inject pre-action reflection]\n{injected}")
-            self.input_messages.insert(
-                0,
-                Message(
-                    role=MessageRole.SYSTEM,
-                    content=[{"type": "text", "text": injected}],
-                ),
-            )
+            if injected is not None:
+                self.input_messages.insert(
+                    0,
+                    Message(
+                        role=MessageRole.SYSTEM,
+                        content=[{"type": "text", "text": injected}],
+                    ),
+                )
 
         memory_step.model_input_messages = self.input_messages.copy()
 
@@ -1873,6 +1874,9 @@ class CodeAgent(MultiStepAgent):
         # ✅ NEW: run 호출 시점에 directives 받기
         initial_directives: Optional[Union[str, List[str]]] = None,
     ) -> Generator[ActionStep | AgentType, None, None]:
+        logger.info(
+            f"CodeAgent._run called.(initial_directives: {initial_directives is not None})"
+        )
         Task_steps = self.memory.steps
         memory_steps = Task_steps.copy()
         final_answer = None
@@ -1904,7 +1908,11 @@ class CodeAgent(MultiStepAgent):
                 memory_steps.append(planning_step)
 
             final_answer = self.process_step(
-                self.step_number, images, memory_messages, memory_steps
+                self.step_number,
+                images,
+                memory_messages,
+                memory_steps,
+                initial_directives,
             )
 
             if final_answer is not None:
@@ -1997,8 +2005,11 @@ class CodeAgent(MultiStepAgent):
         memory_messages,
         memory_steps,
         additional_prompt: str = "",
+        initial_directives=None,
     ):
-
+        logger.info(
+            f"CodeAgent.process_step called.(initial_directives: {initial_directives is not None})"
+        )
         self.step_number = step_number
 
         step_start_time = time.time()
@@ -2013,7 +2024,11 @@ class CodeAgent(MultiStepAgent):
 
         try:
             final_answer = self.step(
-                memory_step, memory_messages, additional_prompt, memory_steps
+                memory_step,
+                memory_messages,
+                additional_prompt,
+                memory_steps,
+                initial_directives,
             )
 
             if final_answer is not None and self.final_answer_checks is not None:
@@ -2136,6 +2151,9 @@ class CodeAgent(MultiStepAgent):
     def _make_additional_prompt_from_artifacts(
         self, artifacts: PreActionArtifacts, initial_directives
     ) -> str:
+        logger.info(
+            f"CodeAgent._make_additional_prompt_from_artifacts called.(initial_directives: {initial_directives is not None})"
+        )
         if self.directive_injection == "none":
             return None
 

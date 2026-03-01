@@ -833,7 +833,7 @@ class TransformersModel(Model):
                 tokenize=True,
                 return_dict=True,
                 images=images,
-                add_generation_prompt=True if tools_to_call_from else False,
+                add_generation_prompt=True,  # if tools_to_call_from else False,
             )
         else:
             prompt_tensor = self.tokenizer.apply_chat_template(
@@ -845,7 +845,7 @@ class TransformersModel(Model):
                 ),
                 return_tensors="pt",
                 return_dict=True,
-                add_generation_prompt=True if tools_to_call_from else False,
+                add_generation_prompt=True,  # if tools_to_call_from else False,
             )
 
         prompt_tensor = prompt_tensor.to(self.model.device)

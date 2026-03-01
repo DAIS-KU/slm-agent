@@ -21,20 +21,22 @@ logger = logging.getLogger(__name__)
 
 
 def call_model(query, model_name, key, url, model, slm=False):
-    if len(query) > 300000:
-        query = query[:300000]
     if slm:
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": query},
-                ],
-            }
-        ]
-        message = model(messages)
-        # logger.info(f"call_model raw_response: {message}")
-        return message.content
+        # logger.info(f"call_model query: {query}")
+        message_content = None
+        while message_content is None or message_content.strip() == "":
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": query},
+                    ],
+                }
+            ]
+            message = model(messages)
+            # logger.info(f"call_model raw_response: {message.content}")
+            message_content = message.content
+        return message_content
     else:
         client = OpenAI(
             base_url=url,

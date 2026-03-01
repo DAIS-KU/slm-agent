@@ -97,66 +97,24 @@ def _set_cached(cache_key: str, data: Any):
 
 
 def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    AKB_Manager 결과 레코드에서 task_id/task/subtasks를 최대한 유연하게 추출.
-    - 케이스 A: item 자체에 task_id/task/subtasks가 있음
-    - 케이스 B: item["content"] 안에 task_id/task/subtasks가 있음 (text/semantic search 스타일)
-    """
-    if (
-        "task_id" in item
-        and "task" in item
-        and "plan" in item
-        and "agent_planning" in item
-    ):
-        return {
-            "task_id": str(item["task_id"]),
-            "task": item["task"],
-            "agent_planning": item["agent_planning"],
-            "domain": item["domain"],
-            "skills": item["skills"],
-            "objective": item["objective"],
-            "knowledge": item["knowledge"],
-            "constraints": item["constraints"],
-            "instructions": item["instructions"],
-            "approach": item["approach"],
-            "plan": item.get("plan", None),
-            "knowledge_summary": item["knowledge_summary"],
-            "constraints_summary": item["constraints_summary"],
-            "instructions_summary": item["instructions_summary"],
-            "approach_summary": item["approach_summary"],
-            "plan_summary": item.get("plan_summary", None),
-        }
-
-    content = item.get("content", {})
-    if (
-        isinstance(content, dict)
-        and "task_id" in content
-        and "task" in content
-        and "plan" in content
-        and "agent_planning" in content
-    ):
-        return {
-            "task_id": str(content["task_id"]),
-            "task": content["task"],
-            "agent_planning": item["agent_planning"],
-            "domain": item["domain"],
-            "skills": item["skills"],
-            "objective": item["objective"],
-            "knowledge": item["knowledge"],
-            "constraints": item["constraints"],
-            "instructions": item["instructions"],
-            "approach": item["approach"],
-            "plan": item.get("plan", None),
-            "knowledge_summary": item["knowledge_summary"],
-            "constraints_summary": item["constraints_summary"],
-            "instructions_summary": item["instructions_summary"],
-            "approach_summary": item["approach_summary"],
-            "plan_summary": item.get("plan_summary", None),
-        }
-
-    raise KeyError(
-        "Result item does not contain task_id/task/subtasks (neither at root nor in content)."
-    )
+    return {
+        "task_id": str(item["task_id"]),
+        "task": item["task"],
+        "agent_planning": item["agent_planning"],
+        "domain": item["domain"],
+        "skills": item["skills"],
+        "objective": item["objective"],
+        "knowledge": item["knowledge"],
+        "constraints": item["constraints"],
+        "instructions": item["instructions"],
+        "approach": item["approach"],
+        "plan": item.get("plan", None),
+        "knowledge_summary": item["knowledge_summary"],
+        "constraints_summary": item["constraints_summary"],
+        "instructions_summary": item["instructions_summary"],
+        "approach_summary": item["approach_summary"],
+        "plan_summary": item.get("plan_summary", None),
+    }
 
 
 # -----------------------------
@@ -193,6 +151,11 @@ async def hybrid_search(request: SearchRequest):
                     instructions=core["instructions"],
                     approach=core["approach"],
                     plan=core["plan"],
+                    knowledge_summary=core["knowledge_summary"],
+                    constraints_summary=core["constraints_summary"],
+                    instructions_summary=core["instructions_summary"],
+                    approach_summary=core["approach_summary"],
+                    plan_summary=core["plan_summary"],
                     total_score=item.get("total_score"),
                 )
             )
