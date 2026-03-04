@@ -24,7 +24,7 @@ def build_similar_task_blocks(
     similars: List[Any], mode, max_items: int = 5, use_summary=False
 ) -> str:
     lines: List[str] = []
-    logger.info(f"build_similar_task_blocks example: {similars[0]}")
+    # logger.info(f"build_similar_task_blocks example: {similars[0]}")
 
     for i, d in enumerate(similars[:max_items], start=1):
         task = d.get("task") or d.get("query") or d.get("question") or ""
@@ -81,32 +81,25 @@ def planning_task(
     planning_field="plan",
     use_summary=False,
 ):
+    planning_prompt_template = load_prompts(
+        path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
+    )
     if retrieval_method is None:
         logger.info(f"planning_task - retrieval_method is None.")
-        planning_prompt_template = load_prompts(
-            path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
-        )
-        planning_prompt_template = planning_prompt_template["planning_prompt"]
         planning_prompt = populate_template(
-            planning_prompt_template,
+            planning_prompt_template["planning_prompt"],
             variables={"task": augmented_question},
         )
     else:
         logger.info(f"planning_task - retrieval_method is not None.")
         retrieval_results = retrieval_method(example["question"], top_k=top_k)
         # logger.info(f"Retrieved retrieval_results:\n {retrieval_results}")
-        planning_prompt_template = load_prompts(
-            path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
-        )
-        planning_prompt_template = planning_prompt_template[
-            "planning_with_examples_prompt"
-        ]
         examples = build_similar_task_blocks(
             similars=retrieval_results, mode=planning_field, use_summary=use_summary
         )
         logger.info(f"Retrieved examples:\n {examples}")
         planning_prompt = populate_template(
-            planning_prompt_template,
+            planning_prompt_template["planning_with_examples_prompt"],
             variables={
                 "task": augmented_question,
                 "examples": examples,
@@ -125,13 +118,14 @@ def planning_task(
     logger.info("=" * 100)
 
     progressive_ci_prompt_template = planning_prompt_template["progressive_ci_prompt"]
+    similar_blocks_ci = build_similar_task_blocks(
+        retrieval_results, mode="ci", use_summary=use_summary
+    )
     progressive_ci_prompt = populate_template(
         progressive_ci_prompt_template,
-        variables={
-            "task": augmented_question,
-        },
+        variables={"task": augmented_question, "similar_blocks": similar_blocks_ci},
     )
-    raw_ci_str = call_model(
+    ci_str = call_model(
         query=progressive_ci_prompt,
         model_name=model_name,
         key=key,
@@ -139,14 +133,14 @@ def planning_task(
         model=model,
         slm=slm,
     )
-    ci_str = call_model(
-        query=f"Summerize the following text.\n\n{raw_ci_str}",
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-    )
+    # ci_str = call_model(
+    #     query=f"Summerize the following text.\n\n{raw_ci_str}",
+    #     model_name=model_name,
+    #     key=key,
+    #     url=url,
+    #     model=model,
+    #     slm=slm,
+    # )
     logger.info("=" * 100)
     logger.info(f"Generated Constraitns/Instructions:\n{ci_str}")
     logger.info("=" * 100)
@@ -187,7 +181,7 @@ def progressive_planning_task(
             "similar_blocks": similar_blocks_knowledge,
         },
     )
-    raw_knowledge_str = call_model(
+    knowledge_str = call_model(
         query=progressive_knowledge_prompt,
         model_name=model_name,
         key=key,
@@ -195,16 +189,16 @@ def progressive_planning_task(
         model=model,
         slm=slm,
     )
-    knowledge_str = call_model(
-        query=f"Summerize the following text.\nTEXT:\n\n{raw_knowledge_str}",
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-    )
+    # knowledge_str = call_model(
+    #     query=f"Summerize the following text.\nTEXT:\n\n{raw_knowledge_str}",
+    #     model_name=model_name,
+    #     key=key,
+    #     url=url,
+    #     model=model,
+    #     slm=slm,
+    # )
     logger.info(f"Generated Knowledge Prompt:\n{progressive_knowledge_prompt}")
-    logger.info(f"Generated Raw Knowledge:\n{raw_knowledge_str}")
+    # logger.info(f"Generated Raw Knowledge:\n{raw_knowledge_str}")
     logger.info(f"Generated Summarized Knowledge:\n{knowledge_str}")
     logger.info("=" * 100)
 
@@ -212,13 +206,14 @@ def progressive_planning_task(
     logger.info("=" * 100)
     logger.info("Start to generate constraints and instructions")
     progressive_ci_prompt_template = planning_prompt_template["progressive_ci_prompt"]
+    similar_blocks_ci = build_similar_task_blocks(
+        retrieval_results, mode="ci", use_summary=use_summary
+    )
     progressive_ci_prompt = populate_template(
         progressive_ci_prompt_template,
-        variables={
-            "task": augmented_question,
-        },
+        variables={"task": augmented_question, "similar_blocks": similar_blocks_ci},
     )
-    raw_ci_str = call_model(
+    ci_str = call_model(
         query=progressive_ci_prompt,
         model_name=model_name,
         key=key,
@@ -226,14 +221,14 @@ def progressive_planning_task(
         model=model,
         slm=slm,
     )
-    ci_str = call_model(
-        query=f"Summerize the following text.\nTEXT:\n\n{raw_ci_str}",
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-    )
+    # ci_str = call_model(
+    #     query=f"Summerize the following text.\nTEXT:\n\n{raw_ci_str}",
+    #     model_name=model_name,
+    #     key=key,
+    #     url=url,
+    #     model=model,
+    #     slm=slm,
+    # )
     logger.info(f"Generated Constraitns/Instructions Prompt:\n{progressive_ci_prompt}")
     logger.info(f"Generated Constraitns/Instructions:\n{ci_str}")
     logger.info("=" * 100)
@@ -256,7 +251,7 @@ def progressive_planning_task(
             "similar_blocks": similar_blocks_approach,
         },
     )
-    raw_approach_str = call_model(
+    approach_str = call_model(
         query=progressive_approach_prompt,
         model_name=model_name,
         key=key,
@@ -264,16 +259,16 @@ def progressive_planning_task(
         model=model,
         slm=slm,
     )
-    approach_str = call_model(
-        query=f"Summerize the following text.\nTEXT:\n\n{raw_approach_str}",
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-    )
+    # approach_str = call_model(
+    #     query=f"Summerize the following text.\nTEXT:\n\n{raw_approach_str}",
+    #     model_name=model_name,
+    #     key=key,
+    #     url=url,
+    #     model=model,
+    #     slm=slm,
+    # )
     logger.info(f"Generated Approach Prompt:\n{progressive_approach_prompt}")
-    logger.info(f"Generated Raw Approach:\n{raw_approach_str}")
+    # logger.info(f"Generated Raw Approach:\n{raw_approach_str}")
     logger.info(f"Generated Summerized Approach:\n{approach_str}")
     logger.info("=" * 100)
 
@@ -356,11 +351,9 @@ def recontextulaized_planning_task(
     ci_prompt_template = prompts["progressive_ci_prompt"]
     ci_prompt = populate_template(
         ci_prompt_template,
-        variables={
-            "task": augmented_question,
-        },
+        variables={"task": augmented_question, "similar_blocks": None},
     )
-    raw_ci_str = call_model(
+    ci_str = call_model(
         query=ci_prompt,
         model_name=model_name,
         key=key,
@@ -368,14 +361,14 @@ def recontextulaized_planning_task(
         model=model,
         slm=slm,
     )
-    ci_str = call_model(
-        query=f"Summerize the following text.\n\n{raw_ci_str}",
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-    )
+    # ci_str = call_model(
+    #     query=f"Summerize the following text.\n\n{raw_ci_str}",
+    #     model_name=model_name,
+    #     key=key,
+    #     url=url,
+    #     model=model,
+    #     slm=slm,
+    # )
     logger.info("=" * 100)
     logger.info(f"Generated Constraitns/Instructions:\n{ci_str}")
     logger.info("=" * 100)
@@ -411,6 +404,7 @@ def recontextulaized_planning_task(
             model=model,
             slm=slm,
         )
+        logger.info(f"Referred Spec:\n{ref_spec}")
         logger.info(f"Generated Tranfer Item:\n{transfer}")
         transfers.append(transfer)
     logger.info("=" * 100)
@@ -445,7 +439,7 @@ def recontextulaized_planning_task(
         },
     )
     plan_str = call_model(
-        query=final_ka_prompt,
+        query=plan_prompt,
         model_name=model_name,
         key=key,
         url=url,
@@ -453,7 +447,144 @@ def recontextulaized_planning_task(
         slm=slm,
     )
     logger.info("=" * 100)
-    logger.info(f"Generated Final Paln:\n{plan_str}")
+    logger.info(f"Generated Final Plan:\n{plan_str}")
     logger.info("=" * 100)
 
     return plan_str, ci_str
+
+
+def _safe_json_loads(text: str) -> Dict[str, Any]:
+    """
+    모델이 JSON만 반환하라고 했는데도 앞뒤로 텍스트를 붙이는 경우가 있어
+    JSON 시작/끝을 대충 찾아 파싱 시도하는 방어 로직.
+    """
+    text = text.strip()
+
+    # 1) 바로 파싱
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+
+    # 2) 첫 '{' ~ 마지막 '}' 범위 파싱
+    l = text.find("{")
+    r = text.rfind("}")
+    if l != -1 and r != -1 and r > l:
+        candidate = text[l : r + 1]
+        return json.loads(candidate)
+
+    raise ValueError(f"Failed to parse JSON from model output: {text[:2000]}")
+
+
+def build_do_blocks(
+    similars: List[Any], mode, max_items: int = 5, use_summary=False
+) -> str:
+    lines: List[str] = []
+    logger.info(f"build_do_blocks example: {similars[0]}")
+    for i, d in enumerate(similars[:max_items], start=1):
+        subtask = d.get("subtask")
+        _do = d.get("do_sum") if use_summary else d.get("do_raw")
+        expected_answer = d.get("expected_answer")
+        actual_answer = d.get("actual_answer")
+        lines.append(
+            f"[Similar SubTask #{i}] {subtask}\nSolve: {_do}\nExpected Answer: {expected_answer}, Final Answer: {actual_answer}"
+        )
+    return "\n\n".join(lines).strip()
+
+
+def generate_plan_subtasks(
+    example,
+    augmented_question,
+    model_name,
+    key,
+    url,
+    model,
+    slm,
+    retrieval_method,
+    sub_retrieval_method,
+    top_k,
+    use_summary=False,
+):
+    planning_prompt_template = load_prompts(
+        path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
+    )
+    retrieval_results = retrieval_method(example["question"], top_k=top_k)
+    examples = build_similar_task_blocks(
+        similars=retrieval_results, mode=planning_field, use_summary=use_summary
+    )
+    logger.info(f"Retrieved examples:\n {examples}")
+    planning_prompt = populate_template(
+        planning_prompt_template["planning_with_examples_prompt"],
+        variables={
+            "task": augmented_question,
+            "examples": examples,
+        },
+    )
+    plan_str = call_model(
+        query=planning_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info("=" * 100)
+    logger.info(f"Generated Plan:\n{plan_str}")
+    logger.info("=" * 100)
+
+    # 2) Plan -> subtasks 생성(추출)
+    subtask_prompt = populate_template(
+        planning_prompt_template["plan_to_subtasks_prompt"],
+        variables={
+            "plan": plan_str,
+        },
+    )
+    subtask_str = call_model(
+        query=subtask_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    subtasks = _safe_json_loads(subtask_str)
+    logger.info("=" * 100)
+    logger.info(f"Generated Subtasks:\n{subtasks}")
+    logger.info("=" * 100)
+    results: List[Tuple[str, Any]] = []
+
+    logger.info("=" * 100)
+    for s in subtasks:
+        subtask_text = (s.get("subtask") if isinstance(s, dict) else str(s)) or ""
+        expected_output = s.get("expected_output")
+        subtask_text = subtask_text.strip()
+        if not subtask_text:
+            logger.info(f"subtask_text is blank! {s}")
+            continue
+        retrieved_examples = sub_retrieval_method(subtask_text, top_k)
+        do_examples = build_do_blocks(retrieved_examples)
+
+        solve_prompt = populate_template(
+            planning_prompt_template["solve_subtask_prompt"],
+            variables={
+                "subtask": subtask_text,
+                "expected_output": expected_output,
+                "do_examples": do_examples,
+            },
+        )
+        solve_str = call_model(
+            query=solve_prompt,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+        )
+        solved = _safe_json_loads(solve_str)
+        output = solved.get("output", None)
+        logger.info(f"Generated Subtask:\n{subtask_text}")
+        logger.info(f"Generated Output:\n{output}")
+        results.append((subtask_text, output))
+    logger.info("=" * 100)
+
+    return plan_str, results

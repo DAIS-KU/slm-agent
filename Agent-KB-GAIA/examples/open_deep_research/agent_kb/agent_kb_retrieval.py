@@ -303,7 +303,7 @@ class AKB_Manager:
                     "agent_planning": task_obj.original.agent_planning,
                     "domain": task_obj.augmented.domain,
                     "skills": task_obj.augmented.skills,
-                    "objective": task_obj.augmented.objective,
+                    "oßbjective": task_ßobj.augmented.objective,
                     "knowledge": task_obj.augmented.knowledge,
                     "constraints": task_obj.augmented.constraints,
                     "instructions": task_obj.augmented.instructions,

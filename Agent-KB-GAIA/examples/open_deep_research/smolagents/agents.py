@@ -1908,11 +1908,11 @@ class CodeAgent(MultiStepAgent):
                 memory_steps.append(planning_step)
 
             final_answer = self.process_step(
-                self.step_number,
-                images,
-                memory_messages,
-                memory_steps,
-                initial_directives,
+                step_number=self.step_number,
+                images=images,
+                memory_messages=memory_messages,
+                memory_steps=memory_steps,
+                initial_directives=initial_directives,
             )
 
             if final_answer is not None:

@@ -221,7 +221,7 @@ def parse_args():
         "--planning_type",
         type=str,
         default="default",
-        choices=["default", "progressive", "recontextualize", "subtask-decomposition"],
+        choices=["default", "progressive", "recontextualize"],
     )
     parser.add_argument("--use_summary", action="store_true")
     parser.add_argument(
@@ -237,47 +237,6 @@ def parse_args():
         choices=["directives", "eval", "none"],
     )
     return parser.parse_args()
-
-
-logger.warning(
-    "Make sure you deactivated Tailscale VPN, else some URLs will be blocked!"
-)
-
-USE_OPEN_MODELS = False
-
-SET = "validation"
-
-custom_role_conversions = {"tool-call": "assistant", "tool-response": "user"}
-
-eval_ds = datasets.load_dataset("gaia-benchmark/GAIA", "2023_all", num_proc=1)[SET]
-eval_ds = eval_ds.rename_columns(
-    {"Question": "question", "Final answer": "true_answer", "Level": "task"}
-)
-
-
-def preprocess_file_paths(row):
-    if len(row["file_name"]) > 0:
-        row["file_name"] = f"data/gaia/{SET}/" + row["file_name"]
-    return row
-
-
-eval_ds = eval_ds.map(preprocess_file_paths)
-eval_df = pd.DataFrame(eval_ds)
-
-user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
-serp_api_key = os.getenv("SERP_API_KEY")
-BROWSER_CONFIG = {
-    "viewport_size": 1024 * 5,
-    "downloads_folder": "downloads_folder",
-    "request_kwargs": {
-        "headers": {"User-Agent": user_agent},
-        "timeout": 300,
-    },
-    "serpapi_key": serp_api_key,
-    "num": 10,
-}
-
-os.makedirs(f"./{BROWSER_CONFIG['downloads_folder']}", exist_ok=True)
 
 
 def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False):
@@ -367,7 +326,6 @@ def answer_single_question(
 
     agent = create_agent_hierarchy(model, model_search, args, debug)
     akb_client = AKBClient()
-    sub_akb_client = SubAKBClient()
 
     model_name_retrieval = args.model_name_retrieval
     retrieval_method = {
@@ -376,36 +334,7 @@ def answer_single_question(
         "semantic": akb_client.semantic_search,
     }[args.retrieval_type]
 
-    sub_retrieval_method = {
-        "hybrid": sub_akb_client.hybrid_search,
-        "text": sub_akb_client.text_search,
-        "semantic": sub_akb_client.semantic_search,
-    }[args.retrieval_type]
-
     augmented_question = "Here is the task:" + example["question"]
-
-    if example["file_name"]:
-        if ".zip" in example["file_name"]:
-            prompt_use_files = "\n\nTo solve the task above, you will have to use these attached files:\n"
-            prompt_use_files += get_zip_description(
-                example["file_name"],
-                example["question"],
-                visual_inspection_tool,
-                document_inspection_tool,
-                audio_inspection_tool,
-            )
-        else:
-            prompt_use_files = (
-                "\n\nTo solve the task above, you will have to use this attached file:"
-            )
-            prompt_use_files += get_single_file_description(
-                example["file_name"],
-                example["question"],
-                visual_inspection_tool,
-                document_inspection_tool,
-                audio_inspection_tool,
-            )
-        augmented_question += prompt_use_files
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # try:
@@ -435,20 +364,6 @@ def answer_single_question(
                 retrieval_method=retrieval_method,
                 top_k=3,
             )
-        elif plannong_type == "subtask-decomposition":
-            additional_knowledge = recontextulaized_planning_task(
-                example=example,
-                augmented_question=augmented_question,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method,
-                sub_retrieval_method=sub_retrieval_method,
-                top_k=3,
-            )
-            directives = None
         else:
             additional_knowledge, directives = planning_task(
                 example=example,
@@ -465,7 +380,6 @@ def answer_single_question(
             )
     else:
         additional_knowledge = None
-        directives = None
     final_result = agent.run(
         augmented_question,
         additional_knowledge=additional_knowledge,
@@ -533,10 +447,35 @@ def answer_single_question(
         "agent_error": str(exception) if raised_exception else None,
         "start_time": start_time,
         "end_time": end_time,
-        "task": example["task"],
         "task_id": example["task_id"],
     }
     # append_answer(annotated_example, answers_file, jsonl_lock)
+
+
+def _load_json_array_or_jsonl(path: str) -> List[Dict[str, Any]]:
+    """
+    Load either:
+      - JSON array: [ {...}, {...} ]
+      - JSONL: one JSON object per line
+    Return: list of dicts
+    """
+    # Try JSON array first
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            obj = json.load(f)
+        if isinstance(obj, list):
+            return obj
+        raise ValueError("JSON root is not a list.")
+    except Exception:
+        # Fallback to JSONL
+        records = []
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                records.append(json.loads(line))
+        return records
 
 
 def get_examples_to_answer(
@@ -571,22 +510,34 @@ def get_examples_to_answer(
     ]
 
 
+def get_examples_to_answer(answers_file, task_file) -> List[dict]:
+    # 1) done task_ids from answers_file
+    try:
+        answers = _load_json_array_or_jsonl(answers_file)
+        done_ids = {r.get("task_id") for r in answers if r.get("task_id") is not None}
+    except FileNotFoundError:
+        done_ids = set()
+
+    # 2) tasks from task_file (the problems to run)
+    tasks = _load_json_array_or_jsonl(task_file)
+
+    # 3) return only tasks not in done_ids
+    return [t for t in tasks if t.get("task_id") not in done_ids]
+
+
 def main():
     args = parse_args()
     logger.info(f"Starting run with arguments: {args}")
 
-    answers_file = f"output/{SET}/{args.run_name}.jsonl"
-    selected_tasks = process_selected_tasks_param(args.selected_tasks)
-    level = args.level
-    tasks_to_run = get_examples_to_answer(
-        answers_file, eval_df, selected_tasks, level, args.debug
-    )
+    answers_file = f"output/sampled_logic/{args.run_name}.jsonl"
+    task_file = f"/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/sampled_logic_tasks.json"
+    tasks_to_run = get_examples_to_answer(answers_file, task_file)
 
     if args.slm:
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:0",
+            device_map="cuda:1",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -594,7 +545,7 @@ def main():
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:0",
+            device_map="cuda:1",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -602,25 +553,9 @@ def main():
         )
     else:
         model, model_search = None, None
-    non_tool_probs = [
-        "ec09fa32-d03f-4bf8-84b0-1f16922c3ae4",  # 1
-        # "cffe0e32-c9a6-4c52-9877-78ceb4aaa9fb", #2
-        "2d83110e-a098-4ebb-9987-066c06fa42d0",  # 3
-        # "27d5d136-8563-469e-92bf-fd103c28b57c",  # 4
-        # "dc28cf18-6431-458b-83ef-64b3ce566c10",  # 5
-        "42576abe-0deb-4869-8c63-225c2d75a95a",  # 6
-        # "6f37996b-2ac7-44b0-8e68-6d28256631b4",  # 7
-        # "4b650a35-8529-4695-89ed-8dc7a500a498",  # 8
-        # "c714ab3a-da30-4603-bacd-d008800188b9",  # 9
-        # "3cef3a44-215e-4aed-8e3b-b1e3f08063b7",  # 10
-        "e142056d-56ab-4352-b091-b56054bd1359",  # 11
-        "50ad0280-0819-4bd9-b275-5de32d3b5bcb",  # 12
-        "50ec8903-b81f-4257-9450-1085afd2c319",  # 13
-    ]
+
     if args.debug or args.concurrency == 1:
         for example in tasks_to_run:
-            if example["task_id"] not in non_tool_probs:
-                continue
             answer_single_question(
                 example,
                 args,

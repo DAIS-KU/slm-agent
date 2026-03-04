@@ -36,7 +36,6 @@ progressive_knowledge_prompt: |
 
 progressive_ci_prompt: |
     Given a TASK, do NOT solve it and do NOT derive the final answer.
-    Instead, analyze what would be required to determine the correct answer.
     Your job is to identify the necessary meta-level components needed to solve the task.
     You must output strictly in the following JSON format:
 
@@ -45,12 +44,15 @@ progressive_ci_prompt: |
     "instructions": "Specify the required response format, intent, and any additional user requirements for the answer."
     }
 
-    ⚠️ Do NOT include the solution.
+    ⚠️ Do NOT include the conclusion or answer.
     ⚠️ Do NOT show intermediate reasoning steps.
     ⚠️ Only provide meta-level analysis of what is required to solve the task.
 
     TASK:
     {{task}}
+
+    SIMILAR TASKS:
+    {{similar_blocks}}
 
 
 progressive_approach_prompt: |
@@ -63,7 +65,7 @@ progressive_approach_prompt: |
     "approach": "Provide a concise solution that explains the decision-making rationale based on the knowledge, constraints, and instructions below."
     }
 
-    ⚠️ Do NOT include the solution.
+    ⚠️ Do NOT include the conclusion or answer.
     ⚠️ Do NOT show intermediate reasoning steps.
     ⚠️ Only provide meta-level analysis of what is required to solve the task.
 
@@ -92,6 +94,7 @@ progressive_plan_prompt: |
         }
     }
 
+    ⚠️ Do NOT include the conclusion or answer.
     ⚠️ Do NOT show intermediate reasoning steps.
 
     TARGET TASK:
@@ -188,3 +191,42 @@ recontextualized_plan_prompt: |
     CONSTRAINTS/INSTRUCTIONS:
     {{constraints_instructions}}
 
+plan_to_subtasks_prompt: |
+    Convert the following task plan into executable subtasks.
+
+    Rules:
+    - Do NOT rewrite plan steps.
+    - Do NOT execute any subtask.
+    - Split steps if multiple operations are involved.
+    - Combine steps if they form one coherent operation.
+    - Replace abstract reasoning with explicit computations or constructions.
+    - expected_output must specify the precise(e.g.variable/value/entity) result form subtask.
+
+    Return STRICT JSON only:
+    [
+        {
+            "subtask": "...",
+            "expected_output": "..."
+        }
+    ]
+
+    PLAN:
+    {{plan}}
+
+solve_subtask_prompt: |
+    Solve the given subtask using the retrieved examples as guidance.
+    Compute the target variable/value/entity specified in expected_output.
+
+    Return STRICT JSON:
+    {
+        "output": <COMPUTED_TARGET>
+    }
+
+    Subtask:
+    {{subtask}}
+
+    Expected_output:
+    {{expected_output}}
+
+    Retrieved examples:
+    {{do_examples}}
