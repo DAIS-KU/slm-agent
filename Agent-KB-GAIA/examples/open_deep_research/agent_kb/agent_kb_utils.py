@@ -110,7 +110,7 @@ class AKBClient:
 
 
 class SubAKBClient:
-    def __init__(self, base_url="http://localhost:9000"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
-from agent_kb_retrieval import SubAKB_Manager
+from subtask_kb_retrieval import SubAKB_Manager
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 import time
@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-manager = SubAKB_Manager(json_file_paths=["./subtasks_akb.json"])
+manager = SubAKB_Manager(json_file_paths=["./subtask_ab.json"])
 
 performance_stats = {
     "total_requests": 0,
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=9000,
+        port=8001,
         workers=int(os.getenv("UVICORN_WORKERS", 1)),
         limit_concurrency=MAX_CONCURRENT_SEARCHES,
     )

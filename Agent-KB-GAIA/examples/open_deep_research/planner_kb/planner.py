@@ -477,13 +477,13 @@ def _safe_json_loads(text: str) -> Dict[str, Any]:
 
 
 def build_do_blocks(
-    similars: List[Any], mode, max_items: int = 5, use_summary=False
+    similars: List[Any], mode, max_items: int = 5, do_field="do_raw"
 ) -> str:
     lines: List[str] = []
     logger.info(f"build_do_blocks example: {similars[0]}")
     for i, d in enumerate(similars[:max_items], start=1):
         subtask = d.get("subtask")
-        _do = d.get("do_sum") if use_summary else d.get("do_raw")
+        _do = d.get(do_field)
         expected_answer = d.get("expected_answer")
         actual_answer = d.get("actual_answer")
         lines.append(
@@ -504,6 +504,8 @@ def generate_plan_subtasks(
     sub_retrieval_method,
     top_k,
     use_summary=False,
+    use_sub_ex=False,
+    do_field="do_raw",
 ):
     planning_prompt_template = load_prompts(
         path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
@@ -533,12 +535,22 @@ def generate_plan_subtasks(
     logger.info("=" * 100)
 
     # 2) Plan -> subtasks 생성(추출)
-    subtask_prompt = populate_template(
-        planning_prompt_template["plan_to_subtasks_prompt"],
-        variables={
-            "plan": plan_str,
-        },
-    )
+    if use_sub_ex:
+        subtask_prompt = populate_template(
+            planning_prompt_template["plan_to_subtasks_with_examples_prompt"],
+            variables={
+                "task": augmented_question,
+                "plan": plan_str,
+            },
+        )
+    else:
+        subtask_prompt = populate_template(
+            planning_prompt_template["plan_to_subtasks_prompt"],
+            variables={
+                "task": augmented_question,
+                "plan": plan_str,
+            },
+        )
     subtask_str = call_model(
         query=subtask_prompt,
         model_name=model_name,

@@ -192,26 +192,109 @@ recontextualized_plan_prompt: |
     {{constraints_instructions}}
 
 plan_to_subtasks_prompt: |
-    Convert the following task plan into executable subtasks.
+    Convert the following plan into executable subtasks.
 
-    Rules:
-    - Do NOT rewrite plan steps.
-    - Do NOT execute any subtask.
-    - Split steps if multiple operations are involved.
-    - Combine steps if they form one coherent operation.
-    - Replace abstract reasoning with explicit computations or constructions.
-    - expected_output must specify the precise(e.g.variable/value/entity) result form subtask.
+    Requirements:
+    - Each subtask must explicitly include ALL required variables, values, objects, definitions, data, assumptions, and constraints from the original task to solve each subtask independently.
+    - Do NOT restate the plan.
+    - Do NOT solve the task.
+    - Make each subtask independently solvable.
+    - Replace abstract reasoning with explicit actions.
+    - Specify exact expected_output format.
 
     Return STRICT JSON only:
     [
         {
             "subtask": "...",
+            "procedure": "..."
+            "expected_output": "..."
+        }
+    ]
+    
+    [task]
+    {{task}}
+
+    [plan]
+    {{plan}}
+
+plan_to_subtasks_with_examples_prompt: |
+    Convert the following plan into executable subtasks.
+
+    Requirements:
+    - Each subtask must explicitly include ALL required variables, values, objects, definitions, data, assumptions, and constraints from the original task to solve each subtask independently.
+    - Do NOT restate the plan.
+    - Do NOT solve the task.
+    - Make each subtask independently solvable.
+    - Replace abstract reasoning with explicit actions.
+    - Specify exact expected_output format.
+
+    Return STRICT JSON only:
+    [
+        {
+            "subtask": "...",
+            "procedure": "..."
             "expected_output": "..."
         }
     ]
 
-    PLAN:
+    [task]
+    {{task}}
+
+    [plan]
     {{plan}}
+
+    [subtask example]
+    {
+    "subtask": "Compute the lower central series of the given Lie algebra.",
+    "inputs": [
+        "Basis of Lie algebra g: {e1, e2, e3, e4, e5, e6}",
+        "Bracket relations: [e1,e2]=e3, [e1,e3]=e4, [e1,e5]=e6",
+        "All other brackets between basis elements are zero",
+        "Definition: Lower central series defined by g1=g and g_{k+1}=[g_k,g]"
+    ],
+    "procedure": [
+        "1. Set g1 = span{e1,e2,e3,e4,e5,e6}.",
+        "2. Compute all brackets [ei,ej] using the given relations to obtain g2.",
+        "3. Compute all brackets between elements of g2 and g to obtain g3.",
+        "4. Continue until g_k = {0}.",
+        "5. Express each g_k as a span of basis elements."
+    ],
+    "expected_output": "An ordered list of subspaces g1, g2, ..., gk written explicitly as spans of basis elements."
+    }
+    {
+    "subtask": "Compute the average salary from the provided dataset.",
+    "inputs": [
+        "CSV file with columns: id (integer), name (string), salary (float)",
+        "File path: data/employees.csv",
+        "Assume file contains header row",
+        "Ignore rows where salary is missing or non-numeric"
+    ],
+    "procedure": [
+        "1. Open the file data/employees.csv.",
+        "2. Read the CSV file and skip the header row.",
+        "3. Extract the salary column values.",
+        "4. Remove entries that are missing or not numeric.",
+        "5. Compute the arithmetic mean of remaining salary values."
+    ],
+    "expected_output": "A single floating-point number representing the average salary."
+    }
+    {
+    "subtask": "Compute the average salary from the provided dataset.",
+    "inputs": [
+        "CSV file with columns: id (integer), name (string), salary (float)",
+        "File path: data/employees.csv",
+        "Assume file contains header row",
+        "Ignore rows where salary is missing or non-numeric"
+    ],
+    "procedure": [
+        "1. Address the customer by name.",
+        "2. Mention the order number and delay duration.",
+        "3. State the reason for the delay.",
+        "4. Provide the compensation code and explain its usage.",
+        "5. Close the email politely."
+    ],
+    "expected_output": "A single floating-point number representing the average salary."
+    }
 
 solve_subtask_prompt: |
     Solve the given subtask using the retrieved examples as guidance.

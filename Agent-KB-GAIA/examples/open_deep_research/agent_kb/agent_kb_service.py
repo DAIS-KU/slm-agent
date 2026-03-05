@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
-from agent_kb_retrieval_unified import AKB_Manager
+from agent_kb_retrieval import AKB_Manager
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 import time
@@ -21,7 +21,7 @@ app.add_middleware(
 
 # 변환 후 엔티티 DB를 로드한다고 가정
 # unified_database.json 내부 각 레코드는 task_id/task/subtasks를 포함해야 함
-manager = AKB_Manager(json_file_paths=["./augmented_akb.json"])
+manager = AKB_Manager(json_file_paths=["./augmented_ab.json"])
 
 performance_stats = {
     "total_requests": 0,

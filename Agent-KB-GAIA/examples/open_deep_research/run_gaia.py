@@ -55,6 +55,7 @@ from planner_kb import (
     planning_task,
     progressive_planning_task,
     recontextulaized_planning_task,
+    generate_plan_subtaskss,
 )
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
@@ -221,7 +222,7 @@ def parse_args():
         "--planning_type",
         type=str,
         default="default",
-        choices=["default", "progressive", "recontextualize", "subtask-decomposition"],
+        choices=["default", "progressive", "recontextualize", "subtask"],
     )
     parser.add_argument("--use_summary", action="store_true")
     parser.add_argument(
@@ -236,6 +237,13 @@ def parse_args():
         default="none",
         choices=["directives", "eval", "none"],
     )
+    parser.add_argument(
+        "--do_field",
+        type=str,
+        default="do_raw",
+        choices=["do_raw", "do_sum", "procedure"],
+    )
+    parser.add_argument("--use_sub_ex", action="store_true")
     return parser.parse_args()
 
 
@@ -330,6 +338,8 @@ def answer_single_question(
     planning_field="plan",
     reflection_mode="raw_memory",
     use_summary=False,
+    do_field="do_raw",
+    use_sub_ex=False,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -435,8 +445,8 @@ def answer_single_question(
                 retrieval_method=retrieval_method,
                 top_k=3,
             )
-        elif plannong_type == "subtask-decomposition":
-            additional_knowledge = recontextulaized_planning_task(
+        elif plannong_type == "subtask":
+            additional_knowledge = generate_plan_subtasks(
                 example=example,
                 augmented_question=augmented_question,
                 model_name=model_name,
@@ -447,6 +457,8 @@ def answer_single_question(
                 retrieval_method=retrieval_method,
                 sub_retrieval_method=sub_retrieval_method,
                 top_k=3,
+                do_field=do_field,
+                use_sub_ex=use_sub_ex,
             )
             directives = None
         else:
@@ -638,6 +650,8 @@ def main():
                 args.planning_field,
                 args.reflection_mode,
                 args.use_summary,
+                args.do_field,
+                args.use_sub_ex,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
