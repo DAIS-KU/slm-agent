@@ -23,6 +23,8 @@ class SubTaskInstance:
     subtask: str
     do_raw: Optional[Any] = None
     do_sum: Optional[Any] = None
+    inputs: Optional[Any] = None
+    procedure: Optional[Any] = None
     expected_output: Optional[Any] = None
     actual_output: Optional[Any] = None
     total_score: Optional[float] = None  # 저장용/참고용
@@ -88,6 +90,8 @@ class AgenticSubKnowledgeBase:
                         subtask=subtask_text,
                         do_raw=item.get("do_raw"),
                         do_sum=item.get("do_sum"),
+                        inputs=item.get("inputs"),
+                        procedure=item.get("procedure"),
                         expected_output=item.get("expected_output"),
                         actual_output=item.get("actual_output"),
                         total_score=item.get("total_score"),
@@ -227,6 +231,8 @@ class SubAKB_Manager:
             "subtask": st.subtask,
             "do_raw": st.do_raw,
             "do_sum": st.do_sum,
+            "inputs": st.inputs,
+            "procedure": st.procedure,
             "expected_output": st.expected_output,
             "actual_output": st.actual_output,
         }

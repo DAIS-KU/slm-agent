@@ -49,13 +49,14 @@ from scripts.automodel import (
     prepare_model_kwargs,
 )
 
-from agent_kb.agent_kb_utils import AKBClient, call_model
+from agent_kb.agent_kb_utils import AKBClient, call_model, SubAKBClient
 
 from planner_kb import (
     planning_task,
     progressive_planning_task,
     recontextulaized_planning_task,
-    generate_plan_subtaskss,
+    generate_plan_subtasks,
+    plan_to_subtasks,
 )
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
@@ -445,8 +446,8 @@ def answer_single_question(
                 retrieval_method=retrieval_method,
                 top_k=3,
             )
-        elif plannong_type == "subtask":
-            additional_knowledge = generate_plan_subtasks(
+        elif planning_type == "subtask":
+            plan_str, steps = task_spec_approach_planning(
                 example=example,
                 augmented_question=augmented_question,
                 model_name=model_name,
@@ -455,11 +456,19 @@ def answer_single_question(
                 model=model,
                 slm=slm,
                 retrieval_method=retrieval_method,
+                top_k=3,
+            )
+            subtask_and_plans = plan_to_subtasks(
+                plan=steps,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
                 sub_retrieval_method=sub_retrieval_method,
                 top_k=3,
-                do_field=do_field,
-                use_sub_ex=use_sub_ex,
             )
+            additional_knowledge = plan_str + "\n\n" + subtask_and_plans
             directives = None
         else:
             additional_knowledge, directives = planning_task(
@@ -598,7 +607,7 @@ def main():
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:0",
+            device_map="cuda:2",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -606,7 +615,7 @@ def main():
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:0",
+            device_map="cuda:2",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,

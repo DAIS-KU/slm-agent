@@ -206,6 +206,7 @@ plan_to_subtasks_prompt: |
     [
         {
             "subtask": "...",
+            "inputs": "...",
             "procedure": "..."
             "expected_output": "..."
         }
@@ -232,6 +233,7 @@ plan_to_subtasks_with_examples_prompt: |
     [
         {
             "subtask": "...",
+            "inputs": "...",
             "procedure": "..."
             "expected_output": "..."
         }
@@ -308,8 +310,175 @@ solve_subtask_prompt: |
     Subtask:
     {{subtask}}
 
+    Input:
+    {{inputs}}
+
+    Procedure:
+    {{procedure}}
+
     Expected_output:
     {{expected_output}}
 
     Retrieved examples:
     {{do_examples}}
+
+approach_prompt: |
+    Extract the following information for the given task.
+    - decision_criterion: An intermediate, task-specific decision quantity or structure that is established/produced/derived to select the final answer.
+    - approach: explicit methodology/paradigm/algorithm and HOW it is used to obtain decision_criterion.
+
+    Return STRICT JSON:
+    {
+        "decision_criterion": "...", 
+        "approach": "..."
+    }
+
+    TASK:
+    {{task}}}
+
+    SIMILAR TASKS:
+    {{examples}}
+
+
+approach_to_plan_prompt: |
+    Develop a problem-solving plan by referring to the decision-making criteria below and the approach used to derive them.
+
+    Return STRICT JSON:
+    {
+        "plan": {"type":"array","items":{"type":"string"}}
+    }
+
+    TASK:
+    {{task}}}
+
+    WHAT TO DERIVE:
+    {{decision_criterion}}
+
+    APPROACH:
+    {{approach}}
+
+generate_required_outcomes_prompt: |
+    Enrich a steps-only plan by adding required_outcomes.
+    We want to group tasks that are scattered across multiple Steps into Subtasks based on the same Outcome they produce.
+    Multiple Steps can contribute to the same Outcome (this is the key point).
+    An Outcome must be verifiable (it should be possible to determine whether it is complete).
+    An Outcome must be atomic enough to be defined as a Subtask (if it is too large, it should be decomposed).
+
+    Return STRICT JSON:
+    {
+        "plan": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "step": {"type": "string"},
+                    "required_outcomes": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["step", "required_outcomes"],
+            },
+        }
+    }
+
+    TASK:
+    {{task}}}
+
+    STEPS-ONLY PLAN:
+    {{plan}}}
+
+bundle_outcomes_prompt: |
+    We plan to categorize the outcomes and define the specific subtasks needed to deliver each outcome.
+    Reduce ambiguity by clustering/normalizing artifacts into a small set of canonical bundles.
+    - Create bundles by shared REQUIRED_OUTCOME (same end-state), even if the contributing items come from different steps.
+    - Each bundle must have:
+    - bundle_id: "RO1", "RO2", ...
+    - outcome_name: short noun phrase describing the state
+    - outcome_description: what must be true in that state
+    - included_items: subset of input strings grouped here (verbatim)
+    - normalized_outcomes: canonical outcome state strings (verifiable, testable)
+    - Prefer fewer bundles with clear scope.
+
+    Return STRICT JSON:
+    {
+        "bundles": [
+            {
+            "bundle_id": "RO1",
+            "bundle_name": "Outcome name",
+            "bundle_goal": "Why this outcome matters",
+            "included_steps": ["STEP_1", "STEP_2"],
+            "required_outcomes": ["OUTCOME_A", "OUTCOME_B"],
+            }
+        ]
+    }
+    
+    Input outcomes:
+    {{all_outcomes}}
+    
+bundle_to_subtak_text_prompt: |
+    Generate one fully self-contained subtask_text per bundle.
+    - subtask_text must be solvable in isolation.
+    - Include only minimal necessary context (no full original texts).
+    - Must have sections:
+      1) Objective
+      2) Given (explicit inputs available)
+      3) Steps (actionable)
+      4) Outputs (MUST match produces exactly)
+      5) Constraints
+
+    Return STRICT JSON:
+    {
+        "subtasks": [
+            {
+            "bundle_id": "RO2",
+            "required_outcomes": ["OUTCOME_C"],
+            "subtask_text": "..."
+            }
+        ]
+    }
+    
+    BUNDLES:
+    {{bundles}}
+
+outcome_to_subtasks_prompt: |
+    Extract structured fields from the given self-contained subtask_text.
+    Return:
+    - subtask_title: concise
+    - task_spec: problem_type, domain, decision_criterion, approach (scoped to this subtask)
+        - decision_criterion: An intermediate, task-specific decision quantity or structure that is established/produced/derived to select the final answer.
+        - approach: explicit methodology/paradigm/algorithm and HOW it is used to obtain decision_criterion.
+    - checklist: conditions and items that must be checked to verify whether the task has been properly carried out
+    
+    Return STRICT JSON:
+    {
+        "subtask_title": "...",
+        "task_spec": {
+            "problem_type": "...",
+            "domain": ["..."],
+            "approach": ["..."],
+            "decision_criterion": ["..."]
+        },
+        "checklist": [
+            "...",
+            "..."
+        ]
+    }
+    
+    required_outcomes:
+    {required_outcomes}
+    
+    subtask_text:
+    {subtask_text}
+
+subtask_plan_prmopt: |
+    Develop a problem-solving plan by referring to the decision-making criteria below and the approach used to derive them.
+
+    Return STRICT JSON:
+    {
+        "plan": {"type":"array","items":{"type":"string"}}
+    }
+
+    SUBTASK:
+    {{subtask}}}
+
+    SIMILAR SUBTASKS:
+    {{examples}}

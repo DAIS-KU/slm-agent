@@ -42,6 +42,8 @@ class SubTaskResponse(BaseModel):
     subtask_id: str
     task_id: str
     subtask: str
+    inputs: Optional[Any] = None
+    procedure: Optional[Any] = None
     do_raw: Optional[Any] = None
     do_sum: Optional[Any] = None
     expected_output: Optional[Any] = None
@@ -101,6 +103,8 @@ def _extract_subtask_fields(item: Dict[str, Any]) -> Dict[str, Any]:
         "subtask_id": str(core.get("subtask_id", "")),
         "task_id": str(core.get("task_id", "")),
         "subtask": core.get("subtask", ""),
+        "inputs": core.get("inputs", ""),
+        "procedure": core.get("procedure", ""),
         "do_raw": core.get("do_raw", None),
         "do_sum": core.get("do_sum", None),
         "expected_output": core.get("expected_output", None),
@@ -135,6 +139,8 @@ async def hybrid_search(request: SearchRequest):
                     subtask=core["subtask"],
                     do_raw=core["do_raw"],
                     do_sum=core["do_sum"],
+                    inputs=core["inputs"],
+                    procedure=core["procedure"],
                     expected_output=core["expected_output"],
                     actual_output=core["actual_output"],
                     total_score=item.get(
@@ -175,6 +181,8 @@ async def text_search(request: SearchRequest):
                     subtask=core["subtask"],
                     do_raw=core["do_raw"],
                     do_sum=core["do_sum"],
+                    inputs=core["inputs"],
+                    procedure=core["procedure"],
                     expected_output=core["expected_output"],
                     actual_output=core["actual_output"],
                     total_score=item.get("score"),  # text 검색은 score -> total_score
@@ -214,6 +222,8 @@ async def semantic_search(request: SearchRequest):
                     subtask=core["subtask"],
                     do_raw=core["do_raw"],
                     do_sum=core["do_sum"],
+                    inputs=core["inputs"],
+                    procedure=core["procedure"],
                     expected_output=core["expected_output"],
                     actual_output=core["actual_output"],
                     total_score=item.get(

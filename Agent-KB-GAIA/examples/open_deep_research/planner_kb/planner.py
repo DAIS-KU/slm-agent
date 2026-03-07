@@ -454,16 +454,13 @@ def recontextulaized_planning_task(
 
 
 def _safe_json_loads(text: str) -> Dict[str, Any]:
-    """
-    모델이 JSON만 반환하라고 했는데도 앞뒤로 텍스트를 붙이는 경우가 있어
-    JSON 시작/끝을 대충 찾아 파싱 시도하는 방어 로직.
-    """
     text = text.strip()
 
     # 1) 바로 파싱
     try:
         return json.loads(text)
     except Exception:
+        logger.info(f"Failed to parse JSON from model output:\n{text}")
         pass
 
     # 2) 첫 '{' ~ 마지막 '}' 범위 파싱
@@ -473,12 +470,8 @@ def _safe_json_loads(text: str) -> Dict[str, Any]:
         candidate = text[l : r + 1]
         return json.loads(candidate)
 
-    raise ValueError(f"Failed to parse JSON from model output: {text[:2000]}")
 
-
-def build_do_blocks(
-    similars: List[Any], mode, max_items: int = 5, do_field="do_raw"
-) -> str:
+def build_do_blocks(similars: List[Any], max_items: int = 5, do_field="do_raw") -> str:
     lines: List[str] = []
     logger.info(f"build_do_blocks example: {similars[0]}")
     for i, d in enumerate(similars[:max_items], start=1):
@@ -512,7 +505,7 @@ def generate_plan_subtasks(
     )
     retrieval_results = retrieval_method(example["question"], top_k=top_k)
     examples = build_similar_task_blocks(
-        similars=retrieval_results, mode=planning_field, use_summary=use_summary
+        similars=retrieval_results, mode="plan", use_summary=use_summary
     )
     logger.info(f"Retrieved examples:\n {examples}")
     planning_prompt = populate_template(
@@ -531,6 +524,7 @@ def generate_plan_subtasks(
         slm=slm,
     )
     logger.info("=" * 100)
+    logger.info(f"Generated Plan Prompt:\n{planning_prompt}")
     logger.info(f"Generated Plan:\n{plan_str}")
     logger.info("=" * 100)
 
@@ -561,6 +555,7 @@ def generate_plan_subtasks(
     )
     subtasks = _safe_json_loads(subtask_str)
     logger.info("=" * 100)
+    logger.info(f"Generated Subtasks Prompt:\n{subtask_prompt}")
     logger.info(f"Generated Subtasks:\n{subtasks}")
     logger.info("=" * 100)
     results: List[Tuple[str, Any]] = []
@@ -568,18 +563,22 @@ def generate_plan_subtasks(
     logger.info("=" * 100)
     for s in subtasks:
         subtask_text = (s.get("subtask") if isinstance(s, dict) else str(s)) or ""
+        inputs = s.get("inputs")
+        procedure = s.get("procedure")
         expected_output = s.get("expected_output")
         subtask_text = subtask_text.strip()
         if not subtask_text:
             logger.info(f"subtask_text is blank! {s}")
             continue
         retrieved_examples = sub_retrieval_method(subtask_text, top_k)
-        do_examples = build_do_blocks(retrieved_examples)
+        do_examples = build_do_blocks(similars=retrieved_examples, do_field=do_field)
 
         solve_prompt = populate_template(
             planning_prompt_template["solve_subtask_prompt"],
             variables={
                 "subtask": subtask_text,
+                "inputs": inputs,
+                "procedure": procedure,
                 "expected_output": expected_output,
                 "do_examples": do_examples,
             },
@@ -594,9 +593,235 @@ def generate_plan_subtasks(
         )
         solved = _safe_json_loads(solve_str)
         output = solved.get("output", None)
-        logger.info(f"Generated Subtask:\n{subtask_text}")
+        logger.info(f"Generated Subtask Output Prompt:\n{solve_prompt}")
         logger.info(f"Generated Output:\n{output}")
         results.append((subtask_text, output))
     logger.info("=" * 100)
 
     return plan_str, results
+
+
+def build_similar_task_direction_blocks(similars: List[Any], max_items: int = 3) -> str:
+    lines: List[str] = []
+    # logger.info(f"build_similar_task_blocks example: {similars[0]}")
+
+    for i, d in enumerate(similars[:max_items], start=1):
+        task = d.get("task") or d.get("query") or d.get("question") or ""
+        problem_type = d.get("task_spec").get("problem_type")
+        decision_criterion = d.get("task_spec").get("decision_criterion")
+        approach = d.get("task_spec").get("approach")
+        pparts.append(
+            f"[Similar Task #{i}] {task}\ProblemType:{problem_type}\WhatToDerieve:{decision_criterion}\Approach:{approach}\n"
+        )
+        lines.append("\n".join(parts).strip())
+    return "\n\n".join(lines).strip()
+
+
+def task_spec_approach_planning(
+    example,
+    augmented_question,
+    model_name,
+    key,
+    url,
+    model,
+    slm,
+    retrieval_method,
+    top_k,
+):
+    planning_prompt_template = load_prompts(
+        path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
+    )
+
+    # ====== [1] Generate decision_criterion, approach ====== #
+    retrieval_results = retrieval_method(example["question"], top_k=top_k)
+    examples = build_similar_task_direction_blocks(similars=retrieval_results)
+    logger.info(f"Retrieved examples:\n {examples}")
+    approach_prompt = populate_template(
+        planning_prompt_template["approach_prompt"],
+        variables={
+            "task": augmented_question,
+            "examples": examples,
+        },
+    )
+    approach_str = call_model(
+        query=planning_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    goal_approach = _safe_json_loads(approach_str)
+    logger.info("=" * 100)
+    logger.info(f"Generated Approach Prompt:\n{approach_prompt}")
+    logger.info(f"Generated Approach:\n{goal_approach}")
+    logger.info("=" * 100)
+
+    # ====== [2] Generate plan ====== #
+    approach_to_plan_prompt = populate_template(
+        planning_prompt_template["approach_to_plan_prompt"],
+        variables={
+            "task": augmented_question,
+            "decision_criterion": goal_approach.get("decision_criterion"),
+            "approach": goal_approach.get("approach"),
+        },
+    )
+    plan_str = call_model(
+        query=approach_to_plan_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    steps = _safe_json_loads(plan_str)
+    logger.info("=" * 100)
+    logger.info(f"Generated Plan Prompt:\n{approach_to_plan_prompt}")
+    logger.info(f"Generated Plan:\n{steps}")
+    logger.info("=" * 100)
+
+    return plan_str, steps
+
+
+def plan_to_subtasks(
+    plans,
+    model_name,
+    key,
+    url,
+    model,
+    slm,
+    sub_retrieval_method,
+    top_k,
+):
+    # ====== [1] Augement plan with required_outcomes ====== #
+    generate_required_outcomes_prompt = populate_template(
+        planning_prompt_template["generate_required_outcomes_prompt"],
+        variables={
+            "task": task_text,
+            "plan": steps_only_plan,
+        },
+    )
+    # ====== [2] Bundle outcomes ====== #
+    required_outcomes_str = call_model(
+        query=generate_required_outcomes_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    plan_with_outcomes = _safe_json_loads(required_outcomes_str) or {}
+    enriched_plan = plan_with_outcomes.get("plan", [])
+
+    all_outcomes: List[str] = []
+    for item in enriched_plan:
+        ros = item.get("required_outcomes") or []
+        if isinstance(ros, list):
+            all_outcomes.extend([str(x) for x in ros])
+        else:
+            all_outcomes.append(str(ros))
+
+    bundle_outcomes_prompt = populate_template(
+        planning_prompt_template["bundle_outcomes_prompt"],
+        variables={
+            "all_outcomes": all_outcomes,
+        },
+    )
+
+    bundle_str = call_model(
+        query=bundle_outcomes_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    bundle_obj = _safe_json_loads(bundle_str) or {}
+    bundles = bundle_obj.get("bundles", [])
+
+    # ====== [3] Outcome bundle to subtask ====== #
+    bundle_to_subtask_text_prompt = populate_template(
+        planning_prompt_template["bundle_to_subtak_text_prompt"],
+        variables={"bundles": bundles},
+    )
+    subtask_texts_str = call_model(
+        query=bundle_to_subtask_text_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    subtask_texts_obj = _safe_json_loads(subtask_texts_str) or {}
+    subtask_text_items = subtask_texts_obj.get("subtasks", [])
+
+    new_subtask_records: List[Dict[str, Any]] = []
+    for s_idx, st in enumerate(subtask_text_items, start=1):
+        bundle_id = st.get("bundle_id", f"RO{s_idx}")
+        required_outcomes = st.get("required_outcomes") or []
+        subtask_text = st.get("subtask_text", "")
+
+        # outcome_to_subtasks_prompt 는 {} 포맷이라 populate_template가 아니라 format이 더 안전
+        outcome_to_subtasks_prompt = planning_prompt_template[
+            "outcome_to_subtasks_prompt"
+        ].format(
+            required_outcomes=required_outcomes,
+            subtask_text=subtask_text,
+        )
+
+        s2b_str = call_model(
+            query=outcome_to_subtasks_prompt,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+        )
+        s2b = _safe_json_loads(s2b_str) or {}
+
+        record = {
+            "subtask_id": f"subtask_{s_idx:03d}",
+            "bundle_id": bundle_id,
+            "subtask": s2b.get("subtask_title", ""),
+            "subtask_text": subtask_text,
+            "required_outcomes": required_outcomes,
+            "checklist": s2b.get("checklist", []),
+            "task_spec": s2b.get("task_spec", {}),
+        }
+        new_subtask_records.append(record)
+
+    subtask_and_plans = []
+    # ====== [4] Gather subtask plans ====== #
+    for rec in new_subtask_records:
+        subtask_title = rec.get("subtask", "")
+        subtask_text = rec.get("subtask_text", "")
+
+        # retrieval query는 title 우선, 없으면 text
+        retrieval_query = subtask_title or subtask_text
+
+        retrieval_results = sub_retrieval_method(retrieval_query, top_k=top_k)
+        examples = build_similar_subtask_direction_blocks(similars=retrieval_results)
+
+        subtask_plan_prompt = populate_template(
+            planning_prompt_template["subtask_plan_prmopt"],
+            variables={
+                "subtask": subtask_text or subtask_title,
+                "examples": examples,
+            },
+        )
+
+        subtask_plan_str = call_model(
+            query=subtask_plan_prompt,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+        )
+        subtask_plan_obj = _safe_json_loads(subtask_plan_str) or {}
+        subtask_plan = subtask_plan_obj.get("plan", [])
+        subtask_and_plans.append(
+            f"Subtask {subtask_title}: {subtask_text}\nPlan:{subtask_plan}"
+        )
+    subtask_and_plans = "\n\n".join(subtask_and_plans)
+    return subtask_and_plans

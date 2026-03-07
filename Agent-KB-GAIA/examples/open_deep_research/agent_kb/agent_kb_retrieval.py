@@ -15,39 +15,28 @@ from sentence_transformers import SentenceTransformer
 # Data models (변환 후 엔티티)
 # -----------------------------
 @dataclass
-class OriginalContext:
+class Task:
+    task_id: Optional[Any] = None
+    task: Optional[Any] = None
     agent_planning: str
     agent_experience: str
 
 
 @dataclass
-class AugmentedContext:
-    # ===== TaskSpec ===== #
+class TaskSpec:
+    problem_type: Optional[Any] = None
     domain: Optional[Any] = None
-    skills: Optional[Any] = None
-    objective: Optional[Any] = None
-    # ===== Context ===== #
-    knowledge: Optional[Any] = None
+    what_to_derive: Optional[Any] = None
     approach: Optional[Any] = None
-    constraints: Optional[Any] = None
-    instructions: Optional[Any] = None
-    knowledge_summary: Optional[Any] = None
-    constraints_summary: Optional[Any] = None
-    instructions_summary: Optional[Any] = None
-    approach_summary: Optional[Any] = None
-    # ===== Plan ===== #
-    plan: Optional[Any] = None
-    plan_summary: Optional[Any] = None
 
 
 @dataclass
 class TaskInstance:
     """A converted task entity instance"""
 
-    task_id: str = field(default_factory=lambda: str(datetime.now().timestamp()))
-    task: str = ""
-    original: OriginalContext = None
-    augmented: AugmentedContext = None
+    task: Optional[Task] = None
+    task_spec: Optional[TaskSpec] = None
+    plan: Optional[Any] = None
 
     # Search indices
     task_embedding: Optional[np.ndarray] = None
@@ -303,7 +292,7 @@ class AKB_Manager:
                     "agent_planning": task_obj.original.agent_planning,
                     "domain": task_obj.augmented.domain,
                     "skills": task_obj.augmented.skills,
-                    "oßbjective": task_ßobj.augmented.objective,
+                    "objective": task_obj.augmented.objective,
                     "knowledge": task_obj.augmented.knowledge,
                     "constraints": task_obj.augmented.constraints,
                     "instructions": task_obj.augmented.instructions,
