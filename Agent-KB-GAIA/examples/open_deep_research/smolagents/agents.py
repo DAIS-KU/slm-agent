@@ -1581,10 +1581,12 @@ class CodeAgent(MultiStepAgent):
         top_k: Optional[int] = 1,
         retrieval_type: Optional[str] = "hybrid",
         reflection_mode: Literal["llm_summary", "raw_memory"] = "llm_summary",
-        directive_injection: Literal["eval", "directives", "none"] = "eval",
+        directive_injection: Literal["eval", "eval_plan", "eval_actions", "directives", "none"] = "eval",
         raw_memory_max_steps: int = 12,
         summary_prompt: Optional[str] = None,
         eval_prompt: Optional[str] = None,
+        eval_plan_prompt: Optional[str] = None,
+        sub_retrieval_method: Optional[Callable] = None,
         **kwargs,
     ):
         self.initial_directives: str = ""
@@ -1592,6 +1594,7 @@ class CodeAgent(MultiStepAgent):
         self.reflection_mode = reflection_mode
         self.directive_injection = directive_injection
         self.raw_memory_max_steps = raw_memory_max_steps
+        self.sub_retrieval_method = sub_retrieval_method
 
         self.summary_prompt = summary_prompt or (
             "Summarize the agent's progress so far in 5-10 bullet points.\n"
@@ -1605,6 +1608,18 @@ class CodeAgent(MultiStepAgent):
             "- Reasons: bullet points citing what in the summary conflicts or aligns\n"
             "- Guidance: what the next action should do to comply\n"
             "Be concise."
+        )
+        self.eval_plan_prompt = eval_plan_prompt or (
+            "You are evaluating an agent's progress against a structured plan.\n"
+            "The plan defines explicit conditions and steps that must be satisfied.\n"
+            "For each condition or step in the plan, determine whether it has been satisfied, "
+            "partially satisfied, or not yet addressed based on the current progress.\n"
+            "Output:\n"
+            "- Satisfied conditions: list each plan condition that has been fully met\n"
+            "- Unsatisfied conditions: list each plan condition not yet met\n"
+            "- Next required action: the specific next step the agent must take to satisfy "
+            "the next pending condition\n"
+            "Be concise and specific."
         )
 
         self.additional_authorized_imports = (
@@ -2141,6 +2156,68 @@ class CodeAgent(MultiStepAgent):
             ]
             evaluation = self._call_model_text(eval_messages)
 
+        elif self.directive_injection == "eval_plan":
+            eval_plan_input = (
+                f"## Plan\n{initial_directives}\n\n"
+                f"## Current Progress\n{summary_or_memory}\n"
+            )
+            eval_plan_messages = [
+                {
+                    "role": "system",
+                    "content": [{"type": "text", "text": self.eval_plan_prompt}],
+                },
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": eval_plan_input}],
+                },
+            ]
+            evaluation = self._call_model_text(eval_plan_messages)
+
+        elif self.directive_injection == "eval_actions" and self.sub_retrieval_method is not None:
+            # Step 1: identify the next required step from current progress
+            next_step_prompt = (
+                "Based on the plan and the current progress, identify the single next "
+                "required step that the agent must execute.\n"
+                "Output only a concise one-sentence description of that step.\n\n"
+                f"## Plan\n{initial_directives}\n\n"
+                f"## Current Progress\n{summary_or_memory}\n"
+            )
+            next_step_messages = [
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": next_step_prompt}],
+                },
+            ]
+            next_step_text = self._call_model_text(next_step_messages)
+            logger.info(f"[eval_actions] next_step_text: {next_step_text}")
+
+            # Step 2: retrieve matching subtasks from the subtask KB
+            retrieved = self.sub_retrieval_method(next_step_text, top_k=self.top_k)
+
+            # Step 3: format retrieved actions as evaluation guidance
+            action_blocks = []
+            for item in retrieved:
+                content = item.get("content", {})
+                step_desc = content.get("original_step", "")
+                actions = content.get("actions") or []
+                do_raw = content.get("do_raw") or ""
+                if actions:
+                    actions_str = "\n".join(f"  - {a}" for a in actions)
+                    action_blocks.append(
+                        f"Step: {step_desc}\nActions:\n{actions_str}"
+                    )
+                elif do_raw:
+                    action_blocks.append(f"Step: {step_desc}\nInstructions: {do_raw}")
+
+            if action_blocks:
+                evaluation = (
+                    f"## Next Required Step\n{next_step_text}\n\n"
+                    "## Reference Actions from Similar Subtasks\n"
+                    + "\n\n".join(action_blocks)
+                )
+            else:
+                evaluation = f"## Next Required Step\n{next_step_text}\n"
+
         return PreActionArtifacts(
             summary_or_memory=summary_or_memory, evaluation=evaluation
         )
@@ -2162,12 +2239,32 @@ class CodeAgent(MultiStepAgent):
                 "Follow these initial directives strictly:\n" f"{initial_directives}\n"
             )
 
-        # directive_injection == "eval"
+        if self.directive_injection == "eval":
+            return (
+                "## Summary / Memory\n"
+                f"{artifacts.summary_or_memory}\n\n"
+                "## Directive evaluation\n"
+                f"{artifacts.evaluation}\n\n"
+                "Now decide the next code action accordingly.\n"
+                "- Output ONLY a single valid code blob.\n"
+            )
+
+        if self.directive_injection == "eval_plan":
+            return (
+                "## Current Progress\n"
+                f"{artifacts.summary_or_memory}\n\n"
+                "## Plan Condition Evaluation\n"
+                f"{artifacts.evaluation}\n\n"
+                "Proceed to satisfy the next unsatisfied plan condition.\n"
+                "- Output ONLY a single valid code blob.\n"
+            )
+
+        # directive_injection == "eval_actions"
         return (
-            "## Summary / Memory\n"
+            "## Current Progress\n"
             f"{artifacts.summary_or_memory}\n\n"
-            "## Directive evaluation\n"
+            "## Action Guidance\n"
             f"{artifacts.evaluation}\n\n"
-            "Now decide the next code action accordingly.\n"
+            "Execute the next required step using the reference actions above as guidance.\n"
             "- Output ONLY a single valid code blob.\n"
         )
