@@ -471,6 +471,7 @@ outcome_to_subtasks_prompt: |
 
 subtask_plan_prmopt: |
     Develop a problem-solving plan by referring to the decision-making criteria below and the approach used to derive them.
+    Do not include the final answer or conclusion in the plan under any circumstances.
 
     Return STRICT JSON:
     {
