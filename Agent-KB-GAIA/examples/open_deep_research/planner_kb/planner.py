@@ -641,9 +641,13 @@ def _build_subtask_actions_blocks(
     """Build action reference blocks from SubtaskKB results for Mode 2."""
     blocks: List[str] = []
     for i, d in enumerate(subtask_results[:max_items], start=1):
-        original_step = d.get("original_step", d.get("subtask", ""))
+        original_step = d.get("original_step")
+        task = d.get("task")
+        given = d.get("given")
+        input_data = d.get("input_data")
+        subtask_str= f"Task: {original_step}/n{task}/nGiven: {given}/nInput: {input_data}"
         actions = d.get("actions", [])
-        blocks.append(f"[Subtask #{i}] {original_step}\nActions: {actions}")
+        blocks.append(f"[Subtask #{i}] {subtask_str}\nActions: {actions}")
     return "\n\n".join(blocks)
 
 
