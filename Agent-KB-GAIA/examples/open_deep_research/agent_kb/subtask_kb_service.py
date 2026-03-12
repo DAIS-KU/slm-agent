@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-manager = SubAKB_Manager(json_file_paths=["./subtask_ab.json"])
+manager = SubAKB_Manager(json_file_paths=["./subtask_akb.json"])
 
 performance_stats = {
     "total_requests": 0,
