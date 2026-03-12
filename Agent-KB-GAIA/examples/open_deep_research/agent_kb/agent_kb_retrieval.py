@@ -12,31 +12,43 @@ from sentence_transformers import SentenceTransformer
 
 
 # -----------------------------
-# Data models (변환 후 엔티티)
+# Data models
 # -----------------------------
 @dataclass
-class Task:
-    task_id: Optional[Any] = None
-    task: Optional[Any] = None
-    agent_planning: str
-    agent_experience: str
+class OriginalContext:
+    agent_planning: Optional[Any] = None
+    agent_experience: Optional[Any] = None
 
 
 @dataclass
-class TaskSpec:
-    problem_type: Optional[Any] = None
+class AugmentedContext:
     domain: Optional[Any] = None
-    what_to_derive: Optional[Any] = None
+    skills: Optional[Any] = None
+    objective: Optional[Any] = None
+    knowledge: Optional[Any] = None
+    constraints: Optional[Any] = None
+    instructions: Optional[Any] = None
     approach: Optional[Any] = None
+    plan: Optional[Any] = None
+    knowledge_summary: Optional[Any] = None
+    constraints_summary: Optional[Any] = None
+    instructions_summary: Optional[Any] = None
+    approach_summary: Optional[Any] = None
+    plan_summary: Optional[Any] = None
+    # structured plan fields
+    task_analysis: Optional[Any] = None
+    plan_steps_only: Optional[Any] = None
+    augmented_plan: Optional[Any] = None
 
 
 @dataclass
 class TaskInstance:
     """A converted task entity instance"""
 
-    task: Optional[Task] = None
-    task_spec: Optional[TaskSpec] = None
-    plan: Optional[Any] = None
+    task_id: str
+    task: str
+    original: OriginalContext
+    augmented: AugmentedContext
 
     # Search indices
     task_embedding: Optional[np.ndarray] = None
@@ -105,6 +117,10 @@ class AgenticKnowledgeBase:
                     agent_planning = item.get("agent_planning", None)
                     agent_experience = item.get("agent_experience", None)
 
+                    task_analysis = item.get("task_analysis", None)
+                    plan_steps_only = item.get("plan_steps_only", None)
+                    augmented_plan = item.get("augmented_plan", None)
+
                     instance = TaskInstance(
                         task_id=task_id,
                         task=task_text,
@@ -126,6 +142,9 @@ class AgenticKnowledgeBase:
                             instructions_summary=instructions_summary,
                             approach_summary=approach_summary,
                             plan_summary=plan_summary,
+                            task_analysis=task_analysis,
+                            plan_steps_only=plan_steps_only,
+                            augmented_plan=augmented_plan,
                         ),
                     )
                     batch.append(instance)
@@ -303,6 +322,9 @@ class AKB_Manager:
                     "instructions_summary": task_obj.augmented.instructions_summary,
                     "approach_summary": task_obj.augmented.approach_summary,
                     "plan_summary": task_obj.augmented.plan_summary,
+                    "task_analysis": task_obj.augmented.task_analysis,
+                    "plan_steps_only": task_obj.augmented.plan_steps_only,
+                    "augmented_plan": task_obj.augmented.augmented_plan,
                 }
             )
 
@@ -335,6 +357,9 @@ class AKB_Manager:
                         "instructions_summary": task_obj.augmented.instructions_summary,
                         "approach_summary": task_obj.augmented.approach_summary,
                         "plan_summary": task_obj.augmented.plan_summary,
+                        "task_analysis": task_obj.augmented.task_analysis,
+                        "plan_steps_only": task_obj.augmented.plan_steps_only,
+                        "augmented_plan": task_obj.augmented.augmented_plan,
                     },
                 }
             )
@@ -367,6 +392,9 @@ class AKB_Manager:
                         "instructions_summary": task_obj.augmented.instructions_summary,
                         "approach_summary": task_obj.augmented.approach_summary,
                         "plan_summary": task_obj.augmented.plan_summary,
+                        "task_analysis": task_obj.augmented.task_analysis,
+                        "plan_steps_only": task_obj.augmented.plan_steps_only,
+                        "augmented_plan": task_obj.augmented.augmented_plan,
                     },
                 }
             )

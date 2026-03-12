@@ -20,7 +20,8 @@ class SubTaskInstance:
 
     subtask_id: str
     task_id: str
-    subtask: str
+    original_step: str          # from item["task"] in subtask_akb.json
+    actions: Optional[List[Any]] = None  # from item["actions"]
     do_raw: Optional[Any] = None
     do_sum: Optional[Any] = None
     inputs: Optional[Any] = None
@@ -45,9 +46,9 @@ class AgenticSubKnowledgeBase:
             "sentence-transformers/all-MiniLM-L6-v2"
         )
 
-        # TF-IDF components per field
+        # TF-IDF components per field — indexed on original_step
         self.field_components = {
-            "subtask": {
+            "original_step": {
                 "vectorizer": TfidfVectorizer(stop_words="english"),
                 "matrix": None,
                 "subtask_ids": [],
@@ -81,13 +82,14 @@ class AgenticSubKnowledgeBase:
                     )
                     task_id = item.get("task_id") or ""
 
-                    # Main text
-                    subtask_text = item.get("subtask", "")
+                    # original_step comes from "task" field in subtask_akb.json
+                    original_step = item.get("task", item.get("subtask", ""))
 
                     instance = SubTaskInstance(
                         subtask_id=str(subtask_id),
                         task_id=str(task_id),
-                        subtask=subtask_text,
+                        original_step=original_step,
+                        actions=item.get("actions"),
                         do_raw=item.get("do_raw"),
                         do_sum=item.get("do_sum"),
                         inputs=item.get("inputs"),
@@ -120,19 +122,19 @@ class AgenticSubKnowledgeBase:
     # Build indices
     # -----------------------------
     def build_tfidf_indices(self):
-        field_data = {"subtask": []}
+        field_data = {"original_step": []}
 
         for st in self.subtasks.values():
-            field_data["subtask"].append(st.subtask)
+            field_data["original_step"].append(st.original_step)
 
-        if not field_data["subtask"]:
+        if not field_data["original_step"]:
             return
 
-        vectorizer = self.field_components["subtask"]["vectorizer"]
-        self.field_components["subtask"]["matrix"] = vectorizer.fit_transform(
-            field_data["subtask"]
+        vectorizer = self.field_components["original_step"]["vectorizer"]
+        self.field_components["original_step"]["matrix"] = vectorizer.fit_transform(
+            field_data["original_step"]
         )
-        self.field_components["subtask"]["subtask_ids"] = list(self.subtasks.keys())
+        self.field_components["original_step"]["subtask_ids"] = list(self.subtasks.keys())
 
     def build_embeddings(self):
         print("Generating embeddings...")
@@ -141,7 +143,7 @@ class AgenticSubKnowledgeBase:
             return
 
         batch_size = 32
-        texts = [s.subtask for s in subtasks]
+        texts = [s.original_step for s in subtasks]
         embeddings = self.embedding_model.encode(
             texts,
             batch_size=batch_size,
@@ -156,7 +158,7 @@ class AgenticSubKnowledgeBase:
     # Search (Text / Semantic)
     # -----------------------------
     def field_text_search(
-        self, query: str, field: str = "subtask", top_k: int = 3
+        self, query: str, field: str = "original_step", top_k: int = 3
     ) -> List[dict]:
         if field not in self.field_components:
             return []
@@ -178,15 +180,15 @@ class AgenticSubKnowledgeBase:
                     "subtask_id": subtask_id,
                     "score": float(similarities[idx]),
                     "field": field,
-                    "content": st.subtask,  # 필드 텍스트(디버그/참고)
+                    "content": st.original_step,
                 }
             )
         return results
 
     def field_semantic_search(
-        self, query: str, field: str = "subtask", top_k: int = 3
+        self, query: str, field: str = "original_step", top_k: int = 3
     ) -> List[dict]:
-        if field != "subtask":
+        if field != "original_step":
             return []
 
         query_embedding = self.embedding_model.encode(query, convert_to_numpy=True)
@@ -211,7 +213,7 @@ class AgenticSubKnowledgeBase:
                     "subtask_id": subtasks[idx].subtask_id,
                     "score": float(similarities[idx]),
                     "field": field,
-                    "content": subtasks[idx].subtask,
+                    "content": subtasks[idx].original_step,
                 }
             )
         return results
@@ -228,7 +230,8 @@ class SubAKB_Manager:
         return {
             "subtask_id": st.subtask_id,
             "task_id": st.task_id,
-            "subtask": st.subtask,
+            "original_step": st.original_step,
+            "actions": st.actions,
             "do_raw": st.do_raw,
             "do_sum": st.do_sum,
             "inputs": st.inputs,
@@ -246,13 +249,13 @@ class SubAKB_Manager:
         score_board = defaultdict(float)
 
         # text
-        for r in self.knowledge_base.field_text_search(query, "subtask", top_k * 2):
+        for r in self.knowledge_base.field_text_search(query, "original_step", top_k * 2):
             score_board[r["subtask_id"]] += (
                 weights["text"] * field_weights["subtask"] * r["score"]
             )
 
         # semantic
-        for r in self.knowledge_base.field_semantic_search(query, "subtask", top_k * 2):
+        for r in self.knowledge_base.field_semantic_search(query, "original_step", top_k * 2):
             score_board[r["subtask_id"]] += (
                 weights["semantic"] * field_weights["subtask"] * r["score"]
             )

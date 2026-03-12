@@ -63,6 +63,18 @@ def build_similar_task_blocks(
         elif mode == "agent_planning":
             parts.append(f"[Similar Task #{i}] {task}")
             parts.append(f"Plan: {agent_planning}\n")
+        elif mode == "task_analysis":
+            task_analysis = d.get("task_analysis") or {}
+            decision_criterion = task_analysis.get("decision_criterion", "")
+            approach = task_analysis.get("approach", "")
+            parts.append(f"[Similar Task #{i}] {task}")
+            parts.append(f"Decision Criterion: {decision_criterion}")
+            parts.append(f"Approach: {approach}\n")
+        elif mode == "plan_steps":
+            plan_steps_only = d.get("plan_steps_only") or {}
+            steps = plan_steps_only.get("steps", [])
+            parts.append(f"[Similar Task #{i}] {task}")
+            parts.append(f"Steps: {steps}\n")
         lines.append("\n".join(parts).strip())
 
     return lines if mode == "spec" else "\n\n".join(lines).strip()
@@ -599,6 +611,224 @@ def generate_plan_subtasks(
     logger.info("=" * 100)
 
     return plan_str, results
+
+
+def _build_augmented_plan_reference_blocks(
+    similars: List[Any], max_tasks: int = 3, max_steps: int = 5
+) -> str:
+    """Build reference blocks from augmented_plan for Mode 1 action generation."""
+    blocks: List[str] = []
+    for i, d in enumerate(similars[:max_tasks], start=1):
+        augmented_plan = d.get("augmented_plan") or {}
+        steps = augmented_plan.get("steps", [])
+        step_parts: List[str] = []
+        for step in steps[:max_steps]:
+            original = step.get("original_step", "")
+            executions = step.get("step_executions", [])
+            step_parts.append(
+                f"  original_step: {original}\n  step_executions: {executions}"
+            )
+        if step_parts:
+            blocks.append(
+                f"[Reference Task #{i}]\n" + "\n".join(step_parts)
+            )
+    return "\n\n".join(blocks)
+
+
+def _build_subtask_actions_blocks(
+    subtask_results: List[Any], max_items: int = 3
+) -> str:
+    """Build action reference blocks from SubtaskKB results for Mode 2."""
+    blocks: List[str] = []
+    for i, d in enumerate(subtask_results[:max_items], start=1):
+        original_step = d.get("original_step", d.get("subtask", ""))
+        actions = d.get("actions", [])
+        blocks.append(f"[Subtask #{i}] {original_step}\nActions: {actions}")
+    return "\n\n".join(blocks)
+
+
+def _format_augmented_plan(steps: List[str], step_actions: List[List[str]]) -> str:
+    """Combine plan steps with their generated actions into a readable string."""
+    lines: List[str] = []
+    for i, (step, actions) in enumerate(zip(steps, step_actions), start=1):
+        lines.append(f"Step {i}: {step}")
+        if actions:
+            for action in actions:
+                lines.append(f"  - {action}")
+    return "\n".join(lines)
+
+
+def task_analysis_planning(
+    example,
+    augmented_question,
+    model_name,
+    key,
+    url,
+    model,
+    slm,
+    retrieval_method,
+    top_k,
+    use_summary=False,
+    mode=None,
+    sub_retrieval_method=None,
+):
+    """Two-step planner grounded in task_analysis fields from the KB.
+
+    Step 1: Retrieve similar tasks and use their task_analysis.decision_criterion /
+            task_analysis.approach to generate a question-specific decision_criterion
+            and approach.
+    Step 2: Use the generated decision_criterion, approach, and the retrieved tasks'
+            plan_steps_only.steps to generate question-specific plan steps.
+
+    Optional augmentation modes (applied after Step 2):
+        mode=None    – default; return plan_steps_only.steps as-is.
+        mode="mode1" – for each step, generate actions using augmented_plan reference
+                       blocks from the already-retrieved tasks.
+        mode="mode2" – for each step, retrieve matching subtasks from SubtaskKB and
+                       generate actions from their actions. Requires sub_retrieval_method.
+
+    Returns:
+        plan_str   : str  – formatted plan (steps + actions when mode is set)
+        directives : str  – The generated decision_criterion + approach
+    """
+    prompts = load_prompts(
+        path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
+    )
+
+    retrieval_results = retrieval_method(example["question"], top_k=top_k)
+
+    # ---- Step 1: generate decision_criterion and approach ---- #
+    logger.info("=" * 100)
+    logger.info("task_analysis_planning – Step 1: generate decision_criterion and approach")
+
+    similar_task_analysis = build_similar_task_blocks(
+        retrieval_results, mode="task_analysis"
+    )
+    task_analysis_prompt = populate_template(
+        prompts["task_analysis_prompt"],
+        variables={
+            "task": augmented_question,
+            "similar_blocks": similar_task_analysis,
+        },
+    )
+    task_analysis_str = call_model(
+        query=task_analysis_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info(f"task_analysis_prompt:\n{task_analysis_prompt}")
+    logger.info(f"task_analysis raw output:\n{task_analysis_str}")
+
+    task_analysis_obj = _safe_json_loads(task_analysis_str) or {}
+    decision_criterion = task_analysis_obj.get("decision_criterion", task_analysis_str)
+    approach = task_analysis_obj.get("approach", "")
+    logger.info(f"decision_criterion: {decision_criterion}")
+    logger.info(f"approach: {approach}")
+    logger.info("=" * 100)
+
+    # ---- Step 2: generate plan steps ---- #
+    logger.info("=" * 100)
+    logger.info("task_analysis_planning – Step 2: generate plan steps")
+
+    similar_plan_steps = build_similar_task_blocks(
+        retrieval_results, mode="plan_steps"
+    )
+    task_analysis_plan_prompt = populate_template(
+        prompts["task_analysis_plan_prompt"],
+        variables={
+            "task": augmented_question,
+            "decision_criterion": decision_criterion,
+            "approach": approach,
+            "similar_blocks": similar_plan_steps,
+        },
+    )
+    plan_str = call_model(
+        query=task_analysis_plan_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info(f"task_analysis_plan_prompt:\n{task_analysis_plan_prompt}")
+    logger.info(f"Generated plan:\n{plan_str}")
+    logger.info("=" * 100)
+
+    directives = f"Decision Criterion: {decision_criterion}\nApproach: {approach}"
+
+    if mode is None:
+        return plan_str, directives
+
+    # Parse plan steps from generated plan_str
+    plan_obj = _safe_json_loads(plan_str) or {}
+    plan_steps: List[str] = plan_obj.get("steps", [])
+    if not plan_steps:
+        logger.warning("task_analysis_planning: could not parse plan steps for augmentation")
+        return plan_str, directives
+
+    # ---- Mode 1: augment using augmented_plan reference blocks ---- #
+    if mode == "mode1":
+        logger.info("=" * 100)
+        logger.info("task_analysis_planning – Mode 1: augment with augmented_plan")
+        reference_blocks = _build_augmented_plan_reference_blocks(retrieval_results)
+        step_actions: List[List[str]] = []
+        for step in plan_steps:
+            action_prompt = populate_template(
+                prompts["step_actions_from_augmented_prompt"],
+                variables={"step": step, "reference_blocks": reference_blocks},
+            )
+            action_str = call_model(
+                query=action_prompt,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+            )
+            action_obj = _safe_json_loads(action_str) or {}
+            actions = action_obj.get("actions", [])
+            step_actions.append(actions)
+            logger.info(f"Step: {step}\nGenerated actions: {actions}")
+        logger.info("=" * 100)
+        plan_str = _format_augmented_plan(plan_steps, step_actions)
+        return plan_str, directives
+
+    # ---- Mode 2: augment using SubtaskKB per-step retrieval ---- #
+    if mode == "mode2":
+        if sub_retrieval_method is None:
+            logger.error("task_analysis_planning mode2: sub_retrieval_method is required")
+            return plan_str, directives
+        logger.info("=" * 100)
+        logger.info("task_analysis_planning – Mode 2: augment with SubtaskKB")
+        step_actions = []
+        for step in plan_steps:
+            sub_results = sub_retrieval_method(step, top_k=top_k)
+            retrieved_actions_block = _build_subtask_actions_blocks(sub_results)
+            action_prompt = populate_template(
+                prompts["step_actions_from_subtask_prompt"],
+                variables={"step": step, "retrieved_actions": retrieved_actions_block},
+            )
+            action_str = call_model(
+                query=action_prompt,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+            )
+            action_obj = _safe_json_loads(action_str) or {}
+            actions = action_obj.get("actions", [])
+            step_actions.append(actions)
+            logger.info(f"Step: {step}\nRetrieved subtasks: {[d.get('original_step') for d in sub_results]}\nGenerated actions: {actions}")
+        logger.info("=" * 100)
+        plan_str = _format_augmented_plan(plan_steps, step_actions)
+        return plan_str, directives
+
+    logger.warning(f"task_analysis_planning: unknown mode '{mode}', returning default")
+    return plan_str, directives
 
 
 def build_similar_task_direction_blocks(similars: List[Any], max_items: int = 3) -> str:

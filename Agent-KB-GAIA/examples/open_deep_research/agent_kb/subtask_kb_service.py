@@ -41,7 +41,8 @@ class SearchRequest(BaseModel):
 class SubTaskResponse(BaseModel):
     subtask_id: str
     task_id: str
-    subtask: str
+    original_step: str
+    actions: Optional[Any] = None
     inputs: Optional[Any] = None
     procedure: Optional[Any] = None
     do_raw: Optional[Any] = None
@@ -102,7 +103,8 @@ def _extract_subtask_fields(item: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "subtask_id": str(core.get("subtask_id", "")),
         "task_id": str(core.get("task_id", "")),
-        "subtask": core.get("subtask", ""),
+        "original_step": core.get("original_step", ""),
+        "actions": core.get("actions", None),
         "inputs": core.get("inputs", ""),
         "procedure": core.get("procedure", ""),
         "do_raw": core.get("do_raw", None),
@@ -136,7 +138,8 @@ async def hybrid_search(request: SearchRequest):
                 SubTaskResponse(
                     subtask_id=core["subtask_id"],
                     task_id=core["task_id"],
-                    subtask=core["subtask"],
+                    original_step=core["original_step"],
+                    actions=core["actions"],
                     do_raw=core["do_raw"],
                     do_sum=core["do_sum"],
                     inputs=core["inputs"],
@@ -168,8 +171,7 @@ async def text_search(request: SearchRequest):
         if cached is not None:
             return cached
 
-        # "subtask" 필드를 대상으로 텍스트 검색(원하시면 "task" 등으로 변경)
-        raw_results = manager.search_by_text(request.query, "subtask", request.top_k)
+        raw_results = manager.search_by_text(request.query, "original_step", request.top_k)
 
         response_data: List[SubTaskResponse] = []
         for item in raw_results:
@@ -178,7 +180,8 @@ async def text_search(request: SearchRequest):
                 SubTaskResponse(
                     subtask_id=core["subtask_id"],
                     task_id=core["task_id"],
-                    subtask=core["subtask"],
+                    original_step=core["original_step"],
+                    actions=core["actions"],
                     do_raw=core["do_raw"],
                     do_sum=core["do_sum"],
                     inputs=core["inputs"],
@@ -207,9 +210,8 @@ async def semantic_search(request: SearchRequest):
         if cached is not None:
             return cached
 
-        # "subtask" 필드를 대상으로 semantic 검색(원하시면 변경)
         raw_results = manager.search_by_semantic(
-            request.query, "subtask", request.top_k
+            request.query, "original_step", request.top_k
         )
 
         response_data: List[SubTaskResponse] = []
@@ -219,7 +221,8 @@ async def semantic_search(request: SearchRequest):
                 SubTaskResponse(
                     subtask_id=core["subtask_id"],
                     task_id=core["task_id"],
-                    subtask=core["subtask"],
+                    original_step=core["original_step"],
+                    actions=core["actions"],
                     do_raw=core["do_raw"],
                     do_sum=core["do_sum"],
                     inputs=core["inputs"],

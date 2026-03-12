@@ -482,3 +482,93 @@ subtask_plan_prmopt: |
 
     SIMILAR SUBTASKS:
     {{examples}}
+
+task_analysis_prompt: |
+    Given a TARGET TASK, derive its decision criterion and approach.
+
+    decision_criterion: The specific intermediate quantity, structure, or conclusion that must be produced to determine the final answer. Be concrete — name what must be computed or identified.
+    approach: The explicit method, algorithm, or reasoning strategy used to derive the decision criterion. Describe HOW, not just what.
+
+    Study the SIMILAR TASKS below as patterns. Adapt them to the TARGET TASK — do NOT copy them verbatim.
+
+    Return STRICT JSON only:
+    {
+        "decision_criterion": "...",
+        "approach": "..."
+    }
+
+    TARGET TASK:
+    {{task}}
+
+    SIMILAR TASKS AND THEIR ANALYSES:
+    {{similar_blocks}}
+
+step_actions_from_augmented_prompt: |
+    Generate concrete executable actions for the TARGET STEP.
+
+    Use the REFERENCE STEPS below as patterns — each shows an original_step and its step_executions.
+    Adapt the pattern to the TARGET STEP; do NOT copy verbatim.
+
+    Rules:
+    - Each action must be a single concrete operation (e.g. "Compute X using formula Y", "Retrieve Z from source W").
+    - Do NOT solve the task or state any final answer.
+
+    Return STRICT JSON only:
+    {
+        "actions": ["action 1", "action 2", "..."]
+    }
+
+    TARGET STEP:
+    {{step}}
+
+    REFERENCE STEPS AND EXECUTIONS:
+    {{reference_blocks}}
+
+step_actions_from_subtask_prompt: |
+    Generate concrete executable actions for the TARGET STEP.
+
+    Use the RETRIEVED SUBTASK ACTIONS below as patterns.
+    Adapt them to the TARGET STEP context; do NOT copy verbatim.
+
+    Rules:
+    - Each action must be a single concrete operation.
+    - Do NOT solve the task or state any final answer.
+
+    Return STRICT JSON only:
+    {
+        "actions": ["action 1", "action 2", "..."]
+    }
+
+    TARGET STEP:
+    {{step}}
+
+    RETRIEVED SUBTASK ACTIONS:
+    {{retrieved_actions}}
+
+task_analysis_plan_prompt: |
+    Generate a step-by-step plan to solve the TARGET TASK.
+
+    Use the DECISION CRITERION and APPROACH as your core strategy.
+    Reference the SIMILAR PLAN STEPS for structural patterns — adapt them to the TARGET TASK.
+
+    Rules:
+    - Each step must be concrete and actionable.
+    - Steps must collectively produce the DECISION CRITERION.
+    - Do NOT solve the task or state the final answer.
+
+    Return STRICT JSON only:
+    {
+        "steps": ["step 1", "step 2", "..."]
+    }
+
+    TARGET TASK:
+    {{task}}
+
+    DECISION CRITERION:
+    {{decision_criterion}}
+
+    APPROACH:
+    {{approach}}
+
+    SIMILAR PLAN STEPS:
+    {{similar_blocks}}

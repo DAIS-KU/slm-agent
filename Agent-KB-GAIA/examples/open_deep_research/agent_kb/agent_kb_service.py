@@ -63,6 +63,10 @@ class TaskResponse(BaseModel):
     # ===== Plan ===== #
     plan: Optional[Any] = None
     plan_summary: Optional[Any] = None
+    # ===== Structured plan fields ===== #
+    task_analysis: Optional[Any] = None
+    plan_steps_only: Optional[Any] = None
+    augmented_plan: Optional[Any] = None
     total_score: Optional[float] = None  # hybrid일 때만 있을 수도 있어서 Optional
 
 
@@ -114,6 +118,9 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
         "instructions_summary": item["instructions_summary"],
         "approach_summary": item["approach_summary"],
         "plan_summary": item.get("plan_summary", None),
+        "task_analysis": item.get("task_analysis", None),
+        "plan_steps_only": item.get("plan_steps_only", None),
+        "augmented_plan": item.get("augmented_plan", None),
     }
 
 
@@ -156,6 +163,9 @@ async def hybrid_search(request: SearchRequest):
                     instructions_summary=core["instructions_summary"],
                     approach_summary=core["approach_summary"],
                     plan_summary=core["plan_summary"],
+                    task_analysis=core["task_analysis"],
+                    plan_steps_only=core["plan_steps_only"],
+                    augmented_plan=core["augmented_plan"],
                     total_score=item.get("total_score"),
                 )
             )
@@ -204,6 +214,9 @@ async def text_search(request: SearchRequest):
                     instructions_summary=core["instructions_summary"],
                     approach_summary=core["approach_summary"],
                     plan_summary=core["plan_summary"],
+                    task_analysis=core["task_analysis"],
+                    plan_steps_only=core["plan_steps_only"],
+                    augmented_plan=core["augmented_plan"],
                     total_score=item.get(
                         "score"
                     ),  # text 검색은 score를 total_score로 매핑
@@ -252,6 +265,9 @@ async def semantic_search(request: SearchRequest):
                     instructions_summary=core["instructions_summary"],
                     approach_summary=core["approach_summary"],
                     plan_summary=core["plan_summary"],
+                    task_analysis=core["task_analysis"],
+                    plan_steps_only=core["plan_steps_only"],
+                    augmented_plan=core["augmented_plan"],
                     total_score=item.get(
                         "score"
                     ),  # semantic 검색도 score를 total_score로 매핑
