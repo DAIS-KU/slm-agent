@@ -17,6 +17,7 @@ from typing import (
     Tuple,
     TypedDict,
     Union,
+    Literal,
 )
 import sys
 from collections import Counter
@@ -48,9 +49,16 @@ from scripts.automodel import (
     prepare_model_kwargs,
 )
 
-from agent_kb.agent_kb_utils import AKBClient, call_model
+from agent_kb.agent_kb_utils import AKBClient, call_model, SubAKBClient
 
-from planner_kb import planning_task, progressive_planning_task
+from planner_kb import (
+    planning_task,
+    progressive_planning_task,
+    recontextulaized_planning_task,
+    generate_plan_subtasks,
+    plan_to_subtasks,
+    task_analysis_planning,
+)
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
 from smolagents.agents import populate_template
@@ -154,12 +162,6 @@ def parse_args():
     parser.add_argument("--run-name", type=str, required=True)
     parser.add_argument("--debug", default=False, action="store_true")
     parser.add_argument(
-        "--level",
-        type=str,
-        default="all",
-        choices=["all", "1", "2", "3"],
-    )
-    parser.add_argument(
         "--selected-tasks",
         default=None,
         nargs="*",
@@ -209,20 +211,42 @@ def parse_args():
         help="agent kb model choice",
     )
     parser.add_argument(
-        "--is_augmented", action="store_true", help="Enable augmented plan"
-    )
-    parser.add_argument(
         "--planning_field",
         type=str,
         default="plan",
     )
     parser.add_argument(
-        "--is_progressive", action="store_true", help="Enable progressive plan"
+        "--planning_type",
+        type=str,
+        default="default",
+        choices=["default", "progressive", "recontextualize", "subtask", "task_analysis"],
+    )
+    parser.add_argument("--use_summary", action="store_true")
+    parser.add_argument(
+        "--reflection_mode",
+        type=str,
+        default="raw_memory",
+        choices=["raw_memory", "llm_summary"],
     )
     parser.add_argument(
-        "--init_plan",
-        action="store_true",
-        help="Not reference, Use as a direct initial plan",
+        "--directive_injection",
+        type=str,
+        default="none",
+        choices=["directives", "eval", "eval_plan", "eval_actions", "none"],
+    )
+    parser.add_argument(
+        "--do_field",
+        type=str,
+        default="do_raw",
+        choices=["do_raw", "do_sum", "procedure"],
+    )
+    parser.add_argument("--use_sub_ex", action="store_true")
+    parser.add_argument(
+        "--augment_mode",
+        type=str,
+        default=None,
+        choices=["mode1", "mode2"],
+        help="Augmentation mode for task_analysis planning: mode1=augmented_plan, mode2=subtask KB",
     )
     return parser.parse_args()
 
@@ -232,6 +256,8 @@ logger.warning(
 )
 
 USE_OPEN_MODELS = False
+
+custom_role_conversions = {"tool-call": "assistant", "tool-response": "user"}
 
 user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
 serp_api_key = os.getenv("SERP_API_KEY")
@@ -247,7 +273,10 @@ BROWSER_CONFIG = {
 }
 
 
-def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False):
+def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False, sub_retrieval_method=None):
+    logger.info(
+        f"[Agent Setting] reflection_mode: {args.reflection_mode}, directive_injection: {args.directive_injection}"
+    )
     manager_agent = CodeAgent(
         model=model,
         tools=[],
@@ -260,7 +289,9 @@ def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False)
         agent_kb=args.agent_kb,
         top_k=args.top_k,
         retrieval_type=args.retrieval_type,
-        use_additional_knowledge_as_plan=args.init_plan,
+        reflection_mode=args.reflection_mode,
+        directive_injection=args.directive_injection,
+        sub_retrieval_method=sub_retrieval_method,
     )
     return manager_agent
 
@@ -289,9 +320,13 @@ def answer_single_question(
     slm=False,
     model=None,
     model_search=None,
-    is_augmented=True,
-    is_progressive=True,
+    planning_type="default",
     planning_field="plan",
+    reflection_mode="raw_memory",
+    use_summary=False,
+    do_field="do_raw",
+    use_sub_ex=False,
+    augment_mode=None,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -327,8 +362,18 @@ def answer_single_question(
     audio_inspection_tool = AudioInspectorTool(model, 100000)
     visual_inspection_tool = VisualInspectorTool(model, 100000)
 
-    agent = create_agent_hierarchy(model, model_search, args, debug)
     akb_client = AKBClient()
+    sub_akb_client = SubAKBClient()
+
+    sub_retrieval_method = None
+    if args.directive_injection == "eval_actions":
+        sub_retrieval_method = {
+            "hybrid": sub_akb_client.hybrid_search,
+            "text": sub_akb_client.text_search,
+            "semantic": sub_akb_client.semantic_search,
+        }[args.retrieval_type]
+
+    agent = create_agent_hierarchy(model, model_search, args, debug, sub_retrieval_method=sub_retrieval_method)
 
     model_name_retrieval = args.model_name_retrieval
     retrieval_method = {
@@ -337,91 +382,152 @@ def answer_single_question(
         "semantic": akb_client.semantic_search,
     }[args.retrieval_type]
 
+    sub_retrieval_method = {
+        "hybrid": sub_akb_client.hybrid_search,
+        "text": sub_akb_client.text_search,
+        "semantic": sub_akb_client.semantic_search,
+    }[args.retrieval_type]
+
     augmented_question = "Here is the task:" + example["question"]
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    try:
-        if retrieval:
-            if is_progressive:
-                additional_knowledge = progressive_planning_task(
-                    example=example,
-                    augmented_question=augmented_question,
-                    model_name=model_name,
-                    key=key,
-                    url=url,
-                    model=model,
-                    slm=slm,
-                    retrieval_method=retrieval_method,
-                    top_k=3,
-                )
-            else:
-                additional_knowledge = planning_task(
-                    example=example,
-                    augmented_question=augmented_question,
-                    model_name=model_name,
-                    key=key,
-                    url=url,
-                    model=model,
-                    slm=slm,
-                    retrieval_method=retrieval_method,
-                    top_k=3,
-                    is_augmented=is_augmented,
-                    planning_field=planning_field,
-                )
+    # try:
+    if retrieval:
+        if planning_type == "progressive":
+            additional_knowledge, directives = progressive_planning_task(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+                use_summary=use_summary,
+            )
+        elif planning_type == "recontextualize":
+            additional_knowledge, directives = recontextulaized_planning_task(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+            )
+        elif planning_type == "subtask":
+            plan_str, steps = task_spec_approach_planning(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+            )
+            subtask_and_plans = plan_to_subtasks(
+                plan=steps,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                sub_retrieval_method=sub_retrieval_method,
+                top_k=3,
+            )
+            additional_knowledge = plan_str + "\n\n" + subtask_and_plans
+            directives = None
+        elif planning_type == "task_analysis":
+            additional_knowledge, directives = task_analysis_planning(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+                use_summary=use_summary,
+                mode=augment_mode,
+                sub_retrieval_method=sub_retrieval_method if augment_mode == "mode2" else None,
+            )
         else:
-            additional_knowledge = None
-        final_result = agent.run(
-            augmented_question, additional_knowledge=additional_knowledge
-        )
-        agent_memory = agent.write_memory_to_messages(summary_mode=True)
-        final_result = prepare_response(
-            augmented_question, agent_memory, reformulation_model=model
-        )
-        output = str(final_result)
-        print("=" * 30 + "Final Output." + "=" * 30)
-        print(f"output:{output}")
-        print("=" * 30 + "Final Output." + "=" * 30)
+            additional_knowledge, directives = planning_task(
+                example=example,
+                augmented_question=augmented_question,
+                model_name=model_name,
+                key=key,
+                url=url,
+                model=model,
+                slm=slm,
+                retrieval_method=retrieval_method,
+                top_k=3,
+                planning_field=planning_field,
+                use_summary=use_summary,
+            )
+    else:
+        additional_knowledge = None
+        directives = None
+    final_result = agent.run(
+        augmented_question,
+        additional_knowledge=additional_knowledge,
+        initial_directives=directives,
+    )
+    agent_memory = agent.write_memory_to_messages(summary_mode=True)
+    final_result = prepare_response(
+        augmented_question, agent_memory, reformulation_model=model
+    )
+    output = str(final_result)
+    print("=" * 30 + "Final Output." + "=" * 30)
+    print(f"output:{output}")
+    print("=" * 30 + "Final Output." + "=" * 30)
 
-        intermediate_steps = []
-        for memory_step in agent.memory.steps:
-            memory_step.model_input_messages = None
-            step_dict = memory_step.dict()
-            if isinstance(memory_step, ActionStep):
-                step_dict["step_type"] = "action"
-                step_dict.pop("model_output_message", None)
-            elif isinstance(memory_step, TaskStep):
-                step_dict["step_type"] = "task"
-            elif isinstance(memory_step, PlanningStep):
-                step_dict["step_type"] = "planning"
-                step_dict.pop("model_output_message_facts", None)
-                step_dict.pop("model_output_message_plan", None)
-            else:
-                step_dict["step_type"] = "unknown"
-            intermediate_steps.append(step_dict)
+    intermediate_steps = []
+    for memory_step in agent.memory.steps:
+        memory_step.model_input_messages = None
+        step_dict = memory_step.dict()
+        if isinstance(memory_step, ActionStep):
+            step_dict["step_type"] = "action"
+            step_dict.pop("model_output_message", None)
+        elif isinstance(memory_step, TaskStep):
+            step_dict["step_type"] = "task"
+        elif isinstance(memory_step, PlanningStep):
+            step_dict["step_type"] = "planning"
+            step_dict.pop("model_output_message_facts", None)
+            step_dict.pop("model_output_message_plan", None)
+        else:
+            step_dict["step_type"] = "unknown"
+        intermediate_steps.append(step_dict)
 
-        intermediate_steps_check = [str(step) for step in agent.memory.steps]
-        parsing_error = (
-            True
-            if any(["AgentParsingError" in step for step in intermediate_steps_check])
-            else False
-        )
+    intermediate_steps_check = [str(step) for step in agent.memory.steps]
+    parsing_error = (
+        True
+        if any(["AgentParsingError" in step for step in intermediate_steps_check])
+        else False
+    )
 
-        iteration_limit_exceeded = (
-            True
-            if "Agent stopped due to iteration limit or time limit." in output
-            else False
-        )
-        raised_exception = False
+    iteration_limit_exceeded = (
+        True
+        if "Agent stopped due to iteration limit or time limit." in output
+        else False
+    )
+    raised_exception = False
 
-    except Exception as e:
-        logger.error(f"Error on task {example['task_id']}\n{e}")
-        output = None
-        intermediate_steps = []
-        action_trajectory = []
-        parsing_error = False
-        iteration_limit_exceeded = False
-        exception = e
-        raised_exception = True
+    # except Exception as e:
+    #     logger.error(f"Error on task {example['task_id']}\n{e}")
+    #     output = None
+    #     intermediate_steps = []
+    #     action_trajectory = []
+    #     parsing_error = False
+    #     iteration_limit_exceeded = False
+    #     exception = e
+    #     raised_exception = True
     end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     annotated_example = {
         "agent_name": model.model_id,
@@ -434,7 +540,8 @@ def answer_single_question(
         "agent_error": str(exception) if raised_exception else None,
         "start_time": start_time,
         "end_time": end_time,
-        "task": example["question"],
+        "task": example.get("task"),
+        "task_id": example.get("task_id"),
         "true_answer": example["answer"],
     }
     append_answer(annotated_example, answers_file, jsonl_lock)
@@ -447,7 +554,6 @@ def _load_json_array_or_jsonl(path: str) -> List[Dict[str, Any]]:
       - JSONL: one JSON object per line
     Return: list of dicts
     """
-    # Try JSON array first
     try:
         with open(path, "r", encoding="utf-8") as f:
             obj = json.load(f)
@@ -455,7 +561,6 @@ def _load_json_array_or_jsonl(path: str) -> List[Dict[str, Any]]:
             return obj
         raise ValueError("JSON root is not a list.")
     except Exception:
-        # Fallback to JSONL
         records = []
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
@@ -467,17 +572,13 @@ def _load_json_array_or_jsonl(path: str) -> List[Dict[str, Any]]:
 
 
 def get_examples_to_answer(answers_file, task_file) -> List[dict]:
-    # 1) done task_ids from answers_file
     try:
         answers = _load_json_array_or_jsonl(answers_file)
         done_ids = {r.get("task_id") for r in answers if r.get("task_id") is not None}
     except FileNotFoundError:
         done_ids = set()
 
-    # 2) tasks from task_file (the problems to run)
     tasks = _load_json_array_or_jsonl(task_file)
-
-    # 3) return only tasks not in done_ids
     return [t for t in tasks if t.get("task_id") not in done_ids]
 
 
@@ -486,7 +587,7 @@ def main():
     logger.info(f"Starting run with arguments: {args}")
 
     answers_file = f"output/mmlu/{args.run_name}.jsonl"
-    task_file = f"/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/mmlu_dev_one_per_subject.json"
+    task_file = "mmlu_dev_one_per_subject.json"
     tasks_to_run = get_examples_to_answer(answers_file, task_file)
 
     if args.slm:
@@ -494,21 +595,18 @@ def main():
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
             device_map="cuda:2",
-            # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
-            # max_new_tokens=2048,
             temperature=0.7,
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
             device_map="cuda:2",
-            # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
-            # max_new_tokens=2048,
             temperature=0.7,
         )
     else:
         model, model_search = None, None
+
     if args.debug or args.concurrency == 1:
         for example in tasks_to_run:
             answer_single_question(
@@ -524,15 +622,19 @@ def main():
                 args.slm,
                 model,
                 model_search,
-                args.is_augmented,
-                args.is_progressive,
+                args.planning_type,
                 args.planning_field,
+                args.reflection_mode,
+                args.use_summary,
+                args.do_field,
+                args.use_sub_ex,
+                args.augment_mode,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:
             futures = [
                 exe.submit(
-                    answer_singsle_question,
+                    answer_single_question,
                     example,
                     args,
                     args.model_id,
@@ -545,7 +647,13 @@ def main():
                     args.slm,
                     model,
                     model_search,
-                    args.is_augmented,
+                    args.planning_type,
+                    args.planning_field,
+                    args.reflection_mode,
+                    args.use_summary,
+                    args.do_field,
+                    args.use_sub_ex,
+                    args.augment_mode,
                 )
                 for example in tasks_to_run
             ]
