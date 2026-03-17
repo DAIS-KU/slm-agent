@@ -52,12 +52,8 @@ from scripts.automodel import (
 from agent_kb.agent_kb_utils import AKBClient, call_model, SubAKBClient
 
 from planner_kb import (
-    planning_task,
-    progressive_planning_task,
-    recontextulaized_planning_task,
-    generate_plan_subtasks,
     plan_to_subtasks,
-    task_analysis_planning,
+    task_spec_approach_planning,
 )
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
@@ -216,24 +212,6 @@ def parse_args():
         help="agent kb model choice",
     )
     parser.add_argument(
-        "--planning_field",
-        type=str,
-        default="plan",
-    )
-    parser.add_argument(
-        "--planning_type",
-        type=str,
-        default="default",
-        choices=[
-            "default",
-            "progressive",
-            "recontextualize",
-            "subtask",
-            "task_analysis",
-        ],
-    )
-    parser.add_argument("--use_summary", action="store_true")
-    parser.add_argument(
         "--reflection_mode",
         type=str,
         default="raw_memory",
@@ -252,13 +230,6 @@ def parse_args():
         choices=["do_raw", "do_sum", "procedure"],
     )
     parser.add_argument("--use_sub_ex", action="store_true")
-    parser.add_argument(
-        "--augment_mode",
-        type=str,
-        default=None,
-        choices=["mode1", "mode2"],
-        help="Augmentation mode for task_analysis planning: mode1=augmented_plan, mode2=subtask KB",
-    )
     return parser.parse_args()
 
 
@@ -352,13 +323,9 @@ def answer_single_question(
     slm=False,
     model=None,
     model_search=None,
-    planning_type="default",
-    planning_field="plan",
     reflection_mode="raw_memory",
-    use_summary=False,
     do_field="do_raw",
     use_sub_ex=False,
-    augment_mode=None,
 ):
     if slm:
         model_name, key, url, _ = get_api_model(model_id)
@@ -450,32 +417,7 @@ def answer_single_question(
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # try:
     if retrieval:
-        if planning_type == "progressive":
-            additional_knowledge, directives = progressive_planning_task(
-                example=example,
-                augmented_question=augmented_question,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method,
-                top_k=3,
-                use_summary=use_summary,
-            )
-        elif planning_type == "recontextualize":
-            additional_knowledge, directives = recontextulaized_planning_task(
-                example=example,
-                augmented_question=augmented_question,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method,
-                top_k=3,
-            )
-        elif planning_type == "subtask":
+        def planner_fn(task: str, kb_docs: Optional[str], observations: Optional[str]) -> str:
             plan_str, steps = task_spec_approach_planning(
                 example=example,
                 augmented_question=augmented_question,
@@ -486,6 +428,7 @@ def answer_single_question(
                 slm=slm,
                 retrieval_method=retrieval_method,
                 top_k=3,
+                observation=observations,
             )
             subtask_and_plans = plan_to_subtasks(
                 plan=steps,
@@ -497,47 +440,9 @@ def answer_single_question(
                 sub_retrieval_method=sub_retrieval_method,
                 top_k=3,
             )
-            additional_knowledge = plan_str + "\n\n" + subtask_and_plans
-            directives = None
-        elif planning_type == "task_analysis":
-            additional_knowledge, directives = task_analysis_planning(
-                example=example,
-                augmented_question=augmented_question,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method,
-                top_k=3,
-                use_summary=use_summary,
-                mode=augment_mode,
-                sub_retrieval_method=(
-                    sub_retrieval_method if augment_mode == "mode2" else None
-                ),
-            )
-        else:
-            additional_knowledge, directives = planning_task(
-                example=example,
-                augmented_question=augmented_question,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method,
-                top_k=3,
-                planning_field=planning_field,
-                use_summary=use_summary,
-            )
-    else:
-        additional_knowledge = None
-        directives = None
-    final_result = agent.run(
-        augmented_question,
-        additional_knowledge=additional_knowledge,
-        initial_directives=directives,
-    )
+            return plan_str + "\n\n" + subtask_and_plans
+        agent.planner_fn = planner_fn
+    final_result = agent.run(augmented_question)
     agent_memory = agent.write_memory_to_messages(summary_mode=True)
     final_result = prepare_response(
         augmented_question, agent_memory, reformulation_model=model
@@ -701,13 +606,9 @@ def main():
                 args.slm,
                 model,
                 model_search,
-                args.planning_type,
-                args.planning_field,
                 args.reflection_mode,
-                args.use_summary,
                 args.do_field,
                 args.use_sub_ex,
-                args.augment_mode,
             )
     else:
         with ThreadPoolExecutor(max_workers=args.concurrency) as exe:

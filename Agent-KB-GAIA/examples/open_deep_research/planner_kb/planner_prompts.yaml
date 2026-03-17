@@ -357,6 +357,9 @@ approach_to_plan_prompt: |
     APPROACH:
     {{approach}}
 
+    OBSERVATION:
+    {{observation}}
+
 generate_required_outcomes_prompt: |
     Enrich a steps-only plan by adding required_outcomes.
     We want to group tasks that are scattered across multiple Steps into Subtasks based on the same Outcome they produce.

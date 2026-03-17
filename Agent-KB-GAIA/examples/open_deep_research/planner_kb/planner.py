@@ -1037,6 +1037,7 @@ def task_spec_approach_planning(
     slm,
     retrieval_method,
     top_k,
+    observation=None,
 ):
     planning_prompt_template = load_prompts(
         path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
@@ -1054,7 +1055,7 @@ def task_spec_approach_planning(
         },
     )
     approach_str = call_model(
-        query=planning_prompt,
+        query=approach_prompt,
         model_name=model_name,
         key=key,
         url=url,
@@ -1068,12 +1069,19 @@ def task_spec_approach_planning(
     logger.info("=" * 100)
 
     # ====== [2] Generate plan ====== #
+    # Default observation to a summary derived from the approach
+    if observation is None:
+        observation = (
+            f"Decision Criterion: {goal_approach.get('decision_criterion', '')}\n"
+            f"Approach: {goal_approach.get('approach', '')}"
+        )
     approach_to_plan_prompt = populate_template(
         planning_prompt_template["approach_to_plan_prompt"],
         variables={
             "task": augmented_question,
             "decision_criterion": goal_approach.get("decision_criterion"),
             "approach": goal_approach.get("approach"),
+            "observation": observation,
         },
     )
     plan_str = call_model(

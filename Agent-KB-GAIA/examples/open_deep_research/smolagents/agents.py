@@ -1589,12 +1589,13 @@ class CodeAgent(MultiStepAgent):
         eval_prompt: Optional[str] = None,
         eval_plan_prompt: Optional[str] = None,
         sub_retrieval_method: Optional[Callable] = None,
-        planner_fn: Optional[Callable[[str], Tuple[str, str]]] = None,
+        planner_fn: Optional[Callable[[str, Optional[str], Optional[str]], str]] = None,
         use_focused_step: bool = False,
         **kwargs,
     ):
         self.initial_directives: str = ""
         self.planner_fn = planner_fn
+        self._kb_docs: Optional[str] = None
         self.use_focused_step = use_focused_step
 
         self.reflection_mode = reflection_mode
@@ -1778,30 +1779,38 @@ class CodeAgent(MultiStepAgent):
         is_first_step: bool,
         step: int,
         additional_knowledge: Optional[str] = None,
+        memory_steps: Optional[List] = None,
     ) -> None:
-        if is_first_step and self.planner_fn is not None:
-            plan_str, ci_str = self.planner_fn(task)
+        if self.planner_fn is not None:
+            # Persist initial KB docs so re-planning steps can reuse them
+            if additional_knowledge is not None:
+                self._kb_docs = additional_knowledge
+
+            # Collect tool observations accumulated so far
+            steps_source = memory_steps if memory_steps is not None else self.memory.steps
+            observations = [
+                f"Step {s.step_number}: {s.observations}"
+                for s in steps_source
+                if isinstance(s, ActionStep) and s.observations
+            ]
+            observations_str = "\n".join(observations) if observations else None
+
+            plan_str = self.planner_fn(task, self._kb_docs, observations_str)
             final_plan_redaction = textwrap.dedent(
                 f"""Here is the plan of action that I will follow to solve the task:
                 ```
                 {plan_str}
                 ```"""
             )
-            final_facts_redaction = textwrap.dedent(
-                f"""Constraints and Instructions:
-                ```
-                {ci_str}
-                ```""".strip()
-            )
             self.logger.log(
-                Rule("[bold]Initial plan (KB planner)", style="orange"),
+                Rule("[bold]Plan (KB planner)", style="orange"),
                 Text(final_plan_redaction),
                 level=LogLevel.INFO,
             )
             return PlanningStep(
                 model_input_messages=[],
                 plan=final_plan_redaction,
-                facts=final_facts_redaction,
+                facts="",
                 model_output_message_plan=None,
                 model_output_message_facts=None,
             )
@@ -1986,6 +1995,7 @@ class CodeAgent(MultiStepAgent):
             is_first_step=(self.step_number == 1),
             step=self.step_number,
             additional_knowledge=additional_knowledge,
+            memory_steps=memory_steps,
         )
         self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
         memory_steps.append(planning_step)
@@ -2003,6 +2013,7 @@ class CodeAgent(MultiStepAgent):
                     task,
                     is_first_step=(self.step_number == 1),
                     step=self.step_number,
+                    memory_steps=memory_steps,
                 )
                 self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
                 memory_steps.append(planning_step)
