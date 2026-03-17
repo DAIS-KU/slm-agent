@@ -1589,9 +1589,13 @@ class CodeAgent(MultiStepAgent):
         eval_prompt: Optional[str] = None,
         eval_plan_prompt: Optional[str] = None,
         sub_retrieval_method: Optional[Callable] = None,
+        planner_fn: Optional[Callable[[str], Tuple[str, str]]] = None,
+        use_focused_step: bool = False,
         **kwargs,
     ):
         self.initial_directives: str = ""
+        self.planner_fn = planner_fn
+        self.use_focused_step = use_focused_step
 
         self.reflection_mode = reflection_mode
         self.directive_injection = directive_injection
@@ -1766,6 +1770,82 @@ class CodeAgent(MultiStepAgent):
             raise AgentExecutionError(error_msg, self.logger)
 
     # ------------------------------------------------------------
+    # planning_step override: optionally use external KB planner
+    # ------------------------------------------------------------
+    def planning_step(
+        self,
+        task,
+        is_first_step: bool,
+        step: int,
+        additional_knowledge: Optional[str] = None,
+    ) -> None:
+        if is_first_step and self.planner_fn is not None:
+            plan_str, ci_str = self.planner_fn(task)
+            final_plan_redaction = textwrap.dedent(
+                f"""Here is the plan of action that I will follow to solve the task:
+                ```
+                {plan_str}
+                ```"""
+            )
+            final_facts_redaction = textwrap.dedent(
+                f"""Constraints and Instructions:
+                ```
+                {ci_str}
+                ```""".strip()
+            )
+            self.logger.log(
+                Rule("[bold]Initial plan (KB planner)", style="orange"),
+                Text(final_plan_redaction),
+                level=LogLevel.INFO,
+            )
+            return PlanningStep(
+                model_input_messages=[],
+                plan=final_plan_redaction,
+                facts=final_facts_redaction,
+                model_output_message_plan=None,
+                model_output_message_facts=None,
+            )
+        return super().planning_step(task, is_first_step, step, additional_knowledge)
+
+    # ------------------------------------------------------------
+    # _build_focused_messages: task + plan + observations only
+    # ------------------------------------------------------------
+    def _build_focused_messages(
+        self,
+        memory_steps: List[ActionStep | PlanningStep | TaskStep],
+    ) -> List[Dict[str, Any]]:
+        """Build input messages restricted to task, plan, and observation results."""
+        task_text = ""
+        plan_text = ""
+        observations: List[str] = []
+
+        for s in memory_steps:
+            if isinstance(s, TaskStep):
+                task_text = s.task or ""
+            elif isinstance(s, PlanningStep):
+                plan_text = s.plan or ""
+            elif isinstance(s, ActionStep) and s.observations:
+                observations.append(
+                    f"Step {s.step_number}: {s.observations}"
+                )
+
+        obs_text = "\n".join(observations) if observations else "No observations yet."
+        user_content = (
+            f"## Task\n{task_text}\n\n"
+            f"## Plan\n{plan_text}\n\n"
+            f"## Observations So Far\n{obs_text}\n\n"
+            "Based on the task, plan, and observations above, write the next code action."
+        )
+
+        system_messages = self.memory.system_prompt.to_messages()
+        return system_messages + [
+            {
+                "role": MessageRole.USER,
+                "content": [{"type": "text", "text": user_content}],
+            }
+        ]
+
+    # ------------------------------------------------------------
     # step() 수정: 액션 전에 pre-action reflection을 만들고 additional_prompt로 주입
     # ------------------------------------------------------------
     def step(
@@ -1777,15 +1857,18 @@ class CodeAgent(MultiStepAgent):
         initial_directives=None,
     ) -> Union[None, Any]:
 
-        memory_messages = (
-            self.write_memory_to_messages()
-            if memory_messages is None
-            else memory_messages
-        )
-        self.input_messages = memory_messages.copy()
+        if self.use_focused_step and memory_steps is not None:
+            self.input_messages = self._build_focused_messages(memory_steps)
+        else:
+            memory_messages = (
+                self.write_memory_to_messages()
+                if memory_messages is None
+                else memory_messages
+            )
+            self.input_messages = memory_messages.copy()
 
         # ✅ pre-action reflection + 주입
-        if memory_steps is not None:
+        if not self.use_focused_step and memory_steps is not None:
             artifacts = self.build_pre_action_artifacts(
                 memory_steps, initial_directives
             )
