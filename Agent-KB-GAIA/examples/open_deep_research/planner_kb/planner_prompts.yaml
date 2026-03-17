@@ -486,11 +486,15 @@ subtask_plan_prmopt: |
 
 task_analysis_prompt: |
     Given a TARGET TASK, derive its decision criterion and approach.
-
-    decision_criterion: The specific intermediate quantity, structure, or conclusion that must be produced to determine the final answer. Be concrete — name what must be computed or identified.
-    approach: The explicit method, algorithm, or reasoning strategy used to derive the decision criterion. Describe HOW, not just what.
-
-    Study the SIMILAR TASKS below as patterns. Adapt them to the TARGET TASK — do NOT copy them verbatim.
+    - decision_criterion:
+    An intermediate, task-specific decision quantity or structure that is established/produced/derived to select the final answer.
+    - approach:
+    Must explicitly state:
+    (a) which domain concept/definition(s) are used 
+    (b) which domain methodology/paradigm/algorithm is used
+    (c) how these are applied step-by-step to derive the decision_criterion.
+    - Requirement:
+    Once decision_criterion is satisfied, the final answer must be directly obtainable (no additional unknown leaps).
 
     Return STRICT JSON only:
     {

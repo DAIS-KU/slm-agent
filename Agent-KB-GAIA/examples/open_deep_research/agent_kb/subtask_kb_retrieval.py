@@ -20,7 +20,7 @@ class SubTaskInstance:
 
     subtask_id: str
     task_id: str
-    original_step: str          # from item["task"] in subtask_akb.json
+    original_step: str  # from item["task"] in subtask_akb.json
     actions: Optional[List[Any]] = None  # from item["actions"]
     do_raw: Optional[Any] = None
     do_sum: Optional[Any] = None
@@ -134,7 +134,9 @@ class AgenticSubKnowledgeBase:
         self.field_components["original_step"]["matrix"] = vectorizer.fit_transform(
             field_data["original_step"]
         )
-        self.field_components["original_step"]["subtask_ids"] = list(self.subtasks.keys())
+        self.field_components["original_step"]["subtask_ids"] = list(
+            self.subtasks.keys()
+        )
 
     def build_embeddings(self):
         print("Generating embeddings...")
@@ -249,13 +251,17 @@ class SubAKB_Manager:
         score_board = defaultdict(float)
 
         # text
-        for r in self.knowledge_base.field_text_search(query, "original_step", top_k * 2):
+        for r in self.knowledge_base.field_text_search(
+            query, "original_step", top_k * 2
+        ):
             score_board[r["subtask_id"]] += (
                 weights["text"] * field_weights["subtask"] * r["score"]
             )
 
         # semantic
-        for r in self.knowledge_base.field_semantic_search(query, "original_step", top_k * 2):
+        for r in self.knowledge_base.field_semantic_search(
+            query, "original_step", top_k * 2
+        ):
             score_board[r["subtask_id"]] += (
                 weights["semantic"] * field_weights["subtask"] * r["score"]
             )

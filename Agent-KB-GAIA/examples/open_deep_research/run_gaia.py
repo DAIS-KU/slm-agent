@@ -224,7 +224,13 @@ def parse_args():
         "--planning_type",
         type=str,
         default="default",
-        choices=["default", "progressive", "recontextualize", "subtask", "task_analysis"],
+        choices=[
+            "default",
+            "progressive",
+            "recontextualize",
+            "subtask",
+            "task_analysis",
+        ],
     )
     parser.add_argument("--use_summary", action="store_true")
     parser.add_argument(
@@ -297,7 +303,9 @@ BROWSER_CONFIG = {
 os.makedirs(f"./{BROWSER_CONFIG['downloads_folder']}", exist_ok=True)
 
 
-def create_agent_hierarchy(model: Model, model_search: Model, args, debug=False, sub_retrieval_method=None):
+def create_agent_hierarchy(
+    model: Model, model_search: Model, args, debug=False, sub_retrieval_method=None
+):
     logger.info(
         f"[Agent Setting] reflection_mode: {args.reflection_mode}, directive_injection: {args.directive_injection}"
     )
@@ -397,7 +405,9 @@ def answer_single_question(
             "semantic": sub_akb_client.semantic_search,
         }[args.retrieval_type]
 
-    agent = create_agent_hierarchy(model, model_search, args, debug, sub_retrieval_method=sub_retrieval_method)
+    agent = create_agent_hierarchy(
+        model, model_search, args, debug, sub_retrieval_method=sub_retrieval_method
+    )
 
     model_name_retrieval = args.model_name_retrieval
     retrieval_method = {
@@ -502,7 +512,9 @@ def answer_single_question(
                 top_k=3,
                 use_summary=use_summary,
                 mode=augment_mode,
-                sub_retrieval_method=sub_retrieval_method if augment_mode == "mode2" else None,
+                sub_retrieval_method=(
+                    sub_retrieval_method if augment_mode == "mode2" else None
+                ),
             )
         else:
             additional_knowledge, directives = planning_task(
@@ -591,7 +603,7 @@ def answer_single_question(
         "task": example["task"],
         "task_id": example["task_id"],
     }
-    # append_answer(annotated_example, answers_file, jsonl_lock)
+    append_answer(annotated_example, answers_file, jsonl_lock)
 
 
 def get_examples_to_answer(

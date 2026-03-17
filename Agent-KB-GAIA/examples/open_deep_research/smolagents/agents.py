@@ -1581,7 +1581,9 @@ class CodeAgent(MultiStepAgent):
         top_k: Optional[int] = 1,
         retrieval_type: Optional[str] = "hybrid",
         reflection_mode: Literal["llm_summary", "raw_memory"] = "llm_summary",
-        directive_injection: Literal["eval", "eval_plan", "eval_actions", "directives", "none"] = "eval",
+        directive_injection: Literal[
+            "eval", "eval_plan", "eval_actions", "directives", "none"
+        ] = "eval",
         raw_memory_max_steps: int = 12,
         summary_prompt: Optional[str] = None,
         eval_prompt: Optional[str] = None,
@@ -2173,7 +2175,10 @@ class CodeAgent(MultiStepAgent):
             ]
             evaluation = self._call_model_text(eval_plan_messages)
 
-        elif self.directive_injection == "eval_actions" and self.sub_retrieval_method is not None:
+        elif (
+            self.directive_injection == "eval_actions"
+            and self.sub_retrieval_method is not None
+        ):
             # Step 1: identify the next required step from current progress
             next_step_prompt = (
                 "Based on the plan and the current progress, identify the single next "
@@ -2203,9 +2208,7 @@ class CodeAgent(MultiStepAgent):
                 do_raw = content.get("do_raw") or ""
                 if actions:
                     actions_str = "\n".join(f"  - {a}" for a in actions)
-                    action_blocks.append(
-                        f"Step: {step_desc}\nActions:\n{actions_str}"
-                    )
+                    action_blocks.append(f"Step: {step_desc}\nActions:\n{actions_str}")
                 elif do_raw:
                     action_blocks.append(f"Step: {step_desc}\nInstructions: {do_raw}")
 

@@ -465,22 +465,192 @@ def recontextulaized_planning_task(
     return plan_str, ci_str
 
 
+import json
+import re
+from typing import Any, Dict, Optional
+
+_VALID_JSON_ESCAPES = {'"', "\\", "/", "b", "f", "n", "r", "t", "u"}
+
+
+def _escape_invalid_backslashes(s: str) -> str:
+    out = []
+    i = 0
+    n = len(s)
+
+    while i < n:
+        ch = s[i]
+        if ch != "\\":
+            out.append(ch)
+            i += 1
+            continue
+
+        # ch == "\\"
+        if i + 1 >= n:
+            out.append("\\\\")
+            i += 1
+            continue
+
+        nxt = s[i + 1]
+
+        if nxt in _VALID_JSON_ESCAPES:
+            if nxt == "u":
+                # \uXXXX
+                if i + 5 < n and all(
+                    c in "0123456789abcdefABCDEF" for c in s[i + 2 : i + 6]
+                ):
+                    out.append("\\u")
+                    out.append(s[i + 2 : i + 6])
+                    i += 6
+                else:
+                    out.append("\\\\")
+                    i += 1
+            else:
+                out.append("\\")
+                out.append(nxt)
+                i += 2
+            continue
+
+        # invalid escape: \(
+        out.append("\\\\")
+        i += 1
+
+    return "".join(out)
+
+
+def _escape_control_chars_in_strings(s: str) -> str:
+    """
+    JSON 문자열 내부에 들어간 리터럴 제어문자(개행/탭/CR 등)를 \\n, \\t, \\r 형태로 보정.
+    문자열 밖의 개행은 그대로 둬도 무방(공백처럼 처리됨).
+    """
+    out = []
+    in_str = False
+    esc = False
+
+    for ch in s:
+        if not in_str:
+            out.append(ch)
+            if ch == '"':
+                in_str = True
+            continue
+
+        # in_str == True
+        if esc:
+            out.append(ch)
+            esc = False
+            continue
+
+        if ch == "\\":
+            out.append(ch)
+            esc = True
+            continue
+
+        if ch == '"':
+            out.append(ch)
+            in_str = False
+            continue
+
+        # 문자열 내부 제어문자 보정
+        if ch == "\n":
+            out.append("\\n")
+        elif ch == "\r":
+            out.append("\\r")
+        elif ch == "\t":
+            out.append("\\t")
+        else:
+            out.append(ch)
+
+    return "".join(out)
+
+
+def _remove_trailing_commas(s: str) -> str:
+    # { "a": 1, } / [1,2,] 같은 케이스 보정
+    return re.sub(r",(\s*[}\]])", r"\1", s)
+
+
+def _extract_first_json_object(text: str) -> Optional[str]:
+    """
+    text에서 첫 번째로 완결되는 JSON object/array 구간만 추출.
+    기존의 find('{')~rfind('}')보다 훨씬 안전함(Traceback 등 뒤에 붙어도 OK).
+    """
+    text = text.strip()
+    start = None
+    opener = None
+    for i, ch in enumerate(text):
+        if ch in "{[":
+            start = i
+            opener = ch
+            break
+    if start is None:
+        return None
+
+    stack = []
+    in_str = False
+    esc = False
+
+    for j in range(start, len(text)):
+        ch = text[j]
+
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+
+        # not in string
+        if ch == '"':
+            in_str = True
+            continue
+
+        if ch in "{[":
+            stack.append(ch)
+        elif ch in "}]":
+            if not stack:
+                return None
+            top = stack.pop()
+            if (top == "{" and ch != "}") or (top == "[" and ch != "]"):
+                return None
+            if not stack:
+                return text[start : j + 1]
+
+    return None
+
+
 def _safe_json_loads(text: str) -> Dict[str, Any]:
     text = text.strip()
 
-    # 1) 바로 파싱
+    # 1) 그대로 시도
     try:
-        return json.loads(text)
+        obj = json.loads(text)
+        if isinstance(obj, dict):
+            return obj
+        raise ValueError("Top-level JSON is not an object")
     except Exception:
-        logger.info(f"Failed to parse JSON from model output:\n{text}")
+        # logger가 없다면 print로 대체하거나, 상위에서 logger 주입하세요.
+        # logger.info(f"Failed to parse JSON from model output:\n{text}")
         pass
 
-    # 2) 첫 '{' ~ 마지막 '}' 범위 파싱
-    l = text.find("{")
-    r = text.rfind("}")
-    if l != -1 and r != -1 and r > l:
-        candidate = text[l : r + 1]
-        return json.loads(candidate)
+    # 2) 첫 완결 JSON 덩어리만 추출
+    candidate = _extract_first_json_object(text)
+    if not candidate:
+        raise ValueError("No JSON object/array found in text")
+
+    # 3) 단계적 보정 후 재시도 (핵심: 문자열 내부 개행 이스케이프)
+    fixed = candidate
+    fixed = _escape_invalid_backslashes(fixed)
+    fixed = _escape_control_chars_in_strings(fixed)
+    fixed = _remove_trailing_commas(fixed)
+
+    try:
+        obj = json.loads(fixed)
+        if isinstance(obj, dict):
+            return obj
+        raise ValueError("Top-level JSON is not an object")
+    except Exception:
+        # logger.info(f"Failed to parse JSON after fixes:\n{fixed}")
+        raise ValueError("Unable to parse JSON from text")
 
 
 def build_do_blocks(similars: List[Any], max_items: int = 5, do_field="do_raw") -> str:
@@ -629,9 +799,7 @@ def _build_augmented_plan_reference_blocks(
                 f"  original_step: {original}\n  step_executions: {executions}"
             )
         if step_parts:
-            blocks.append(
-                f"[Reference Task #{i}]\n" + "\n".join(step_parts)
-            )
+            blocks.append(f"[Reference Task #{i}]\n" + "\n".join(step_parts))
     return "\n\n".join(blocks)
 
 
@@ -645,7 +813,9 @@ def _build_subtask_actions_blocks(
         task = d.get("task")
         given = d.get("given")
         input_data = d.get("input_data")
-        subtask_str= f"Task: {original_step}/n{task}/nGiven: {given}/nInput: {input_data}"
+        subtask_str = (
+            f"Task: {original_step}/n{task}/nGiven: {given}/nInput: {input_data}"
+        )
         actions = d.get("actions", [])
         blocks.append(f"[Subtask #{i}] {subtask_str}\nActions: {actions}")
     return "\n\n".join(blocks)
@@ -703,7 +873,9 @@ def task_analysis_planning(
 
     # ---- Step 1: generate decision_criterion and approach ---- #
     logger.info("=" * 100)
-    logger.info("task_analysis_planning – Step 1: generate decision_criterion and approach")
+    logger.info(
+        "task_analysis_planning – Step 1: generate decision_criterion and approach"
+    )
 
     similar_task_analysis = build_similar_task_blocks(
         retrieval_results, mode="task_analysis"
@@ -737,9 +909,7 @@ def task_analysis_planning(
     logger.info("=" * 100)
     logger.info("task_analysis_planning – Step 2: generate plan steps")
 
-    similar_plan_steps = build_similar_task_blocks(
-        retrieval_results, mode="plan_steps"
-    )
+    similar_plan_steps = build_similar_task_blocks(retrieval_results, mode="plan_steps")
     task_analysis_plan_prompt = populate_template(
         prompts["task_analysis_plan_prompt"],
         variables={
@@ -770,7 +940,9 @@ def task_analysis_planning(
     plan_obj = _safe_json_loads(plan_str) or {}
     plan_steps: List[str] = plan_obj.get("steps", [])
     if not plan_steps:
-        logger.warning("task_analysis_planning: could not parse plan steps for augmentation")
+        logger.warning(
+            "task_analysis_planning: could not parse plan steps for augmentation"
+        )
         return plan_str, directives
 
     # ---- Mode 1: augment using augmented_plan reference blocks ---- #
@@ -803,7 +975,9 @@ def task_analysis_planning(
     # ---- Mode 2: augment using SubtaskKB per-step retrieval ---- #
     if mode == "mode2":
         if sub_retrieval_method is None:
-            logger.error("task_analysis_planning mode2: sub_retrieval_method is required")
+            logger.error(
+                "task_analysis_planning mode2: sub_retrieval_method is required"
+            )
             return plan_str, directives
         logger.info("=" * 100)
         logger.info("task_analysis_planning – Mode 2: augment with SubtaskKB")
@@ -826,7 +1000,9 @@ def task_analysis_planning(
             action_obj = _safe_json_loads(action_str) or {}
             actions = action_obj.get("actions", [])
             step_actions.append(actions)
-            logger.info(f"Step: {step}\nRetrieved subtasks: {[d.get('original_step') for d in sub_results]}\nGenerated actions: {actions}")
+            logger.info(
+                f"Step: {step}\nRetrieved subtasks: {[d.get('original_step') for d in sub_results]}\nGenerated actions: {actions}"
+            )
         logger.info("=" * 100)
         plan_str = _format_augmented_plan(plan_steps, step_actions)
         return plan_str, directives

@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-manager = SubAKB_Manager(json_file_paths=["./subtask_akb.json"])
+manager = SubAKB_Manager(json_file_paths=["./subtask_ab.json"])
 
 performance_stats = {
     "total_requests": 0,
@@ -171,7 +171,9 @@ async def text_search(request: SearchRequest):
         if cached is not None:
             return cached
 
-        raw_results = manager.search_by_text(request.query, "original_step", request.top_k)
+        raw_results = manager.search_by_text(
+            request.query, "original_step", request.top_k
+        )
 
         response_data: List[SubTaskResponse] = []
         for item in raw_results:
@@ -267,7 +269,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8001,
+        port=8003,
         workers=int(os.getenv("UVICORN_WORKERS", 1)),
         limit_concurrency=MAX_CONCURRENT_SEARCHES,
     )
