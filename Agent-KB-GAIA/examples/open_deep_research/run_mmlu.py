@@ -370,8 +370,11 @@ def answer_single_question(
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # try:
     if retrieval:
-        def planner_fn(task: str, kb_docs: Optional[str], observations: Optional[str]) -> str:
-            plan_str, steps = task_spec_approach_planning(
+
+        def planner_fn(
+            task: str, kb_docs: Optional[str], observations: Optional[str]
+        ) -> str:
+            plan_str = task_spec_approach_planning(
                 example=example,
                 augmented_question=augmented_question,
                 model_name=model_name,
@@ -383,17 +386,8 @@ def answer_single_question(
                 top_k=3,
                 observation=observations,
             )
-            subtask_and_plans = plan_to_subtasks(
-                plan=steps,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                sub_retrieval_method=sub_retrieval_method,
-                top_k=3,
-            )
-            return plan_str + "\n\n" + subtask_and_plans
+            return plan_str
+
         agent.planner_fn = planner_fn
     final_result = agent.run(augmented_question)
     agent_memory = agent.write_memory_to_messages(summary_mode=True)

@@ -324,12 +324,16 @@ solve_subtask_prompt: |
 
 approach_prompt: |
     Extract the following information for the given task.
-    - decision_criterion: An intermediate, task-specific decision quantity or structure that is established/produced/derived to select the final answer.
-    - approach: explicit methodology/paradigm/algorithm and HOW it is used to obtain decision_criterion.
+    - knowledge: Background knowledge required to understand/solve the problem (core concepts, definitions, necessary theorems/tools)
+    - approach:
+        (a) which domain concept/definition(s) are used 
+        (b) which domain methodology/paradigm/algorithm is used
+        (c) how these are applied step-by-step to derive the decision criterion(an intermediate, task-specific decision quantity or structure that is established/produced/derived to select the final answer).
+        (d) once decision criterion is satisfied, the final answer must be directly obtainable (no additional unknown leaps).
 
     Return STRICT JSON:
     {
-        "decision_criterion": "...", 
+        "knowledge": "...", 
         "approach": "..."
     }
 
@@ -342,23 +346,22 @@ approach_prompt: |
 
 approach_to_plan_prompt: |
     Develop a problem-solving plan by referring to the decision-making criteria below and the approach used to derive them.
-
-    Return STRICT JSON:
-    {
-        "plan": {"type":"array","items":{"type":"string"}}
-    }
+    Strict Output Format (no extra keys, no prose outside fields):
+        - <step>
+        - <step>
+        ...
 
     TASK:
     {{task}}}
-
-    WHAT TO DERIVE:
-    {{decision_criterion}}
 
     APPROACH:
     {{approach}}
 
     OBSERVATION:
     {{observation}}
+
+    SIMILAR TASKS:
+    {{examples}}
 
 generate_required_outcomes_prompt: |
     Enrich a steps-only plan by adding required_outcomes.
@@ -446,9 +449,9 @@ outcome_to_subtasks_prompt: |
     Extract structured fields from the given self-contained subtask_text.
     Return:
     - subtask_title: concise
-    - task_spec: problem_type, domain, decision_criterion, approach (scoped to this subtask)
-        - decision_criterion: An intermediate, task-specific decision quantity or structure that is established/produced/derived to select the final answer.
-        - approach: explicit methodology/paradigm/algorithm and HOW it is used to obtain decision_criterion.
+    - task_spec: problem_type, domain, knowledge, approach (scoped to this subtask)
+        - knowledge: relevant information and facts required to solve the subtask.
+        - approach: explicit methodology/paradigm/algorithm and HOW it is used to obtain knowledge.
     - checklist: conditions and items that must be checked to verify whether the task has been properly carried out
     
     Return STRICT JSON:
@@ -457,8 +460,8 @@ outcome_to_subtasks_prompt: |
         "task_spec": {
             "problem_type": "...",
             "domain": ["..."],
-            "approach": ["..."],
-            "decision_criterion": ["..."]
+            "knowledge": ["..."],
+            "approach": ["..."]
         },
         "checklist": [
             "...",
@@ -489,19 +492,17 @@ subtask_plan_prmopt: |
 
 task_analysis_prompt: |
     Given a TARGET TASK, derive its decision criterion and approach.
-    - decision_criterion:
-    An intermediate, task-specific decision quantity or structure that is established/produced/derived to select the final answer.
+    - knowledge: Background knowledge required to understand/solve the problem (core concepts, definitions, necessary theorems/tools)
     - approach:
-    Must explicitly state:
-    (a) which domain concept/definition(s) are used 
-    (b) which domain methodology/paradigm/algorithm is used
-    (c) how these are applied step-by-step to derive the decision_criterion.
-    - Requirement:
-    Once decision_criterion is satisfied, the final answer must be directly obtainable (no additional unknown leaps).
+        (a) which domain concept/definition(s) are used 
+        (b) which domain methodology/paradigm/algorithm is used
+        (c) how these are applied step-by-step to derive the decision criterion(an intermediate, task-specific decision quantity or structure that is established/produced/derived to select the final answer).
+        (d) once decision criterion is satisfied, the final answer must be directly obtainable (no additional unknown leaps).
+
 
     Return STRICT JSON only:
     {
-        "decision_criterion": "...",
+        "knowledge": "...",
         "approach": "..."
     }
 

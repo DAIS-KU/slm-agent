@@ -40,6 +40,7 @@ def build_similar_task_blocks(
         )
         approach = d.get("approach_summary") if use_summary else d.get("approach")
         plan = d.get("plan_summary") if use_summary else d.get("plan")
+        plan_steps_only = d.get("plan_steps_only")
         agent_planning = d.get("agent_planning")
 
         parts: List[str] = []
@@ -56,6 +57,9 @@ def build_similar_task_blocks(
         elif mode == "plan":
             parts.append(f"[Similar Task #{i}] {task}")
             parts.append(f"Plan: {plan}\n")
+        elif mode == "plan_steps_only":
+            parts.append(f"[Similar Task #{i}] {task}")
+            parts.append(f"Plan: {plan_steps_only}\n")
         elif mode == "spec":
             parts.append(
                 f"[Similar Task #{i}] {task}\nDomain:{domain}\nSkills:{skills}\nObjective:{objective}\n"
@@ -664,7 +668,7 @@ def build_do_blocks(similars: List[Any], max_items: int = 5, do_field="do_raw") 
         lines.append(
             f"[Similar SubTask #{i}] {subtask}\nSolve: {_do}\nExpected Answer: {expected_answer}, Final Answer: {actual_answer}"
         )
-    return "\n\n".join(lines).strip()
+    return "\n".join(lines).strip()
 
 
 def generate_plan_subtasks(
@@ -818,7 +822,7 @@ def _build_subtask_actions_blocks(
         )
         actions = d.get("actions", [])
         blocks.append(f"[Subtask #{i}] {subtask_str}\nActions: {actions}")
-    return "\n\n".join(blocks)
+    return "\n".join(blocks)
 
 
 def _format_augmented_plan(steps: List[str], step_actions: List[List[str]]) -> str:
@@ -1017,13 +1021,13 @@ def build_similar_task_direction_blocks(similars: List[Any], max_items: int = 3)
 
     for i, d in enumerate(similars[:max_items], start=1):
         task = d.get("task") or d.get("query") or d.get("question") or ""
-        problem_type = d.get("task_spec").get("problem_type")
-        decision_criterion = d.get("task_spec").get("decision_criterion")
-        approach = d.get("task_spec").get("approach")
-        pparts.append(
-            f"[Similar Task #{i}] {task}\ProblemType:{problem_type}\WhatToDerieve:{decision_criterion}\Approach:{approach}\n"
+        problem_type = d.get("task_analysis").get("problem_type")
+        domain = d.get("task_analysis").get("domain")
+        knowledge = d.get("task_analysis").get("knowledge")
+        approach = d.get("task_analysis").get("approach")
+        lines.append(
+            f"[Similar Task #{i}] {task}\nProblemType: {problem_type}\nDomain: {domain}\nKnowledge: {knowledge}\nApproach: {approach}\n"
         )
-        lines.append("\n".join(parts).strip())
     return "\n\n".join(lines).strip()
 
 
@@ -1043,7 +1047,7 @@ def task_spec_approach_planning(
         path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
     )
 
-    # ====== [1] Generate decision_criterion, approach ====== #
+    # ====== [1] Generate knowledge, approach ====== #
     retrieval_results = retrieval_method(example["question"], top_k=top_k)
     examples = build_similar_task_direction_blocks(similars=retrieval_results)
     logger.info(f"Retrieved examples:\n {examples}")
@@ -1062,26 +1066,21 @@ def task_spec_approach_planning(
         model=model,
         slm=slm,
     )
-    goal_approach = _safe_json_loads(approach_str)
     logger.info("=" * 100)
     logger.info(f"Generated Approach Prompt:\n{approach_prompt}")
-    logger.info(f"Generated Approach:\n{goal_approach}")
+    logger.info(f"Generated Approach:\n{approach_str}")
     logger.info("=" * 100)
 
     # ====== [2] Generate plan ====== #
     # Default observation to a summary derived from the approach
-    if observation is None:
-        observation = (
-            f"Decision Criterion: {goal_approach.get('decision_criterion', '')}\n"
-            f"Approach: {goal_approach.get('approach', '')}"
-        )
+    examples = build_similar_task_blocks(retrieval_results, mode="plan_steps_only")
     approach_to_plan_prompt = populate_template(
         planning_prompt_template["approach_to_plan_prompt"],
         variables={
             "task": augmented_question,
-            "decision_criterion": goal_approach.get("decision_criterion"),
-            "approach": goal_approach.get("approach"),
+            "approach": approach_str,
             "observation": observation,
+            "examples": examples,
         },
     )
     plan_str = call_model(
@@ -1092,13 +1091,12 @@ def task_spec_approach_planning(
         model=model,
         slm=slm,
     )
-    steps = _safe_json_loads(plan_str)
     logger.info("=" * 100)
     logger.info(f"Generated Plan Prompt:\n{approach_to_plan_prompt}")
-    logger.info(f"Generated Plan:\n{steps}")
+    logger.info(f"Generated Plan:\n{plan_str}")
     logger.info("=" * 100)
 
-    return plan_str, steps
+    return plan_str
 
 
 def plan_to_subtasks(
@@ -1204,7 +1202,7 @@ def plan_to_subtasks(
             "subtask_text": subtask_text,
             "required_outcomes": required_outcomes,
             "checklist": s2b.get("checklist", []),
-            "task_spec": s2b.get("task_spec", {}),
+            "task_analysis": s2b.get("task_analysis", {}),
         }
         new_subtask_records.append(record)
 

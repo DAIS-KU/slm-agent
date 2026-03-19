@@ -1787,7 +1787,9 @@ class CodeAgent(MultiStepAgent):
                 self._kb_docs = additional_knowledge
 
             # Collect tool observations accumulated so far
-            steps_source = memory_steps if memory_steps is not None else self.memory.steps
+            steps_source = (
+                memory_steps if memory_steps is not None else self.memory.steps
+            )
             observations = [
                 f"Step {s.step_number}: {s.observations}"
                 for s in steps_source
@@ -1834,9 +1836,7 @@ class CodeAgent(MultiStepAgent):
             elif isinstance(s, PlanningStep):
                 plan_text = s.plan or ""
             elif isinstance(s, ActionStep) and s.observations:
-                observations.append(
-                    f"Step {s.step_number}: {s.observations}"
-                )
+                observations.append(f"Step {s.step_number}: {s.observations}")
 
         obs_text = "\n".join(observations) if observations else "No observations yet."
         user_content = (
