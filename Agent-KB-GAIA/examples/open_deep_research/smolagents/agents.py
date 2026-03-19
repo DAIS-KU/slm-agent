@@ -1573,8 +1573,8 @@ class CodeAgent(MultiStepAgent):
         eval_plan_prompt: Optional[str] = None,
         sub_retrieval_method: Optional[Callable] = None,
         planner_fn: Optional[Callable[[str, Optional[str], Optional[str]], str]] = None,
-        use_focused_step: bool = False,
-        use_full_memory: bool = False,
+        use_focused_step: bool = True,
+        use_full_memory: bool = True,
         **kwargs,
     ):
         self.initial_directives: str = ""

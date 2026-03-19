@@ -621,7 +621,7 @@ You have been provided with these additional arguments, that you can access usin
         )
         return  reflection_step
 
-    def planning_step(self, task, is_first_step: bool, step: int, additional_knowledge: Optional[str] = None) -> None:
+    def planning_step(self, task, is_first_step: bool, step: int, additional_knowledge: Optional[str] = None, memory_steps: Optional[List] = None) -> None:
         """
         Used periodically by the agent to plan the next steps to reach the objective.
 
@@ -728,7 +728,15 @@ You have been provided with these additional arguments, that you can access usin
                 )
 
         else:
-            memory_messages = self.write_memory_to_messages()[1:]
+            if memory_steps is not None:
+                last_plan_idx = -1
+                for i, s in enumerate(memory_steps):
+                    if isinstance(s, PlanningStep):
+                        last_plan_idx = i
+                steps_since_last_plan = memory_steps[last_plan_idx + 1:]
+                memory_messages = self.write_memory_to_messages(memory_steps=steps_since_last_plan)[1:]
+            else:
+                memory_messages = self.write_memory_to_messages()[1:]
 
             facts_update_pre_messages = {
                 "role": MessageRole.SYSTEM,
@@ -1647,7 +1655,8 @@ class CodeAgent(MultiStepAgent):
                     task,
                     is_first_step=(self.step_number == 1),
                     step=self.step_number,
-                ) 
+                    memory_steps=memory_steps,
+                )
                 self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
                 memory_steps.append(planning_step)
 
