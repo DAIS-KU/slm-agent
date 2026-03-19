@@ -52,7 +52,6 @@ from scripts.automodel import (
 from agent_kb.agent_kb_utils import AKBClient, call_model, SubAKBClient
 
 from planner_kb import (
-    plan_to_subtasks,
     task_spec_approach_planning,
 )
 

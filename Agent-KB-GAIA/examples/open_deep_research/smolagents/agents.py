@@ -743,15 +743,9 @@ You have been provided with these additional arguments, that you can access usin
             chat_message_facts: ChatMessage = self.model(input_messages)
             answer_facts = chat_message_facts.content
 
-            if self.agent_kb and additional_knowledge != None:
+            if additional_knowledge is not None:
                 knowledge_data_all = "Please strictly follow the suggestions below:\n"
                 knowledge_data_all += additional_knowledge
-                final_facts_knowledge = textwrap.dedent(
-                    f"""Here are the similar tasks, plans and relevant experience that I should follow:
-                    ```
-                    {knowledge_data_all}
-                    ```""".strip()
-                )
                 initial_plan_template = populate_template(
                     self.prompt_templates["planning"]["initial_plan_with_knowledge"],
                     variables={
@@ -772,7 +766,6 @@ You have been provided with these additional arguments, that you can access usin
                         "answer_facts": answer_facts,
                     },
                 )
-                final_facts_knowledge = textwrap.dedent(f"""No retrieval process""")
 
             message_prompt_plan = {
                 "role": MessageRole.USER,
@@ -801,12 +794,6 @@ You have been provided with these additional arguments, that you can access usin
                 {answer_facts}
                 ```""".strip()
             )
-            if self.agent_kb:
-                self.logger.log(
-                    Rule("[bold]retrieved task and plan", style="orange"),
-                    Text(final_facts_knowledge),
-                    level=LogLevel.INFO,
-                )
             self.logger.log(
                 Rule("[bold]Initial plan", style="orange"),
                 Text(final_plan_redaction),
@@ -867,25 +854,21 @@ You have been provided with these additional arguments, that you can access usin
                     }
                 ],
             }
+            update_plan_post_text = populate_template(
+                self.prompt_templates["planning"]["update_plan_post_messages"],
+                variables={
+                    "task": task,
+                    "tools": self.tools,
+                    "managed_agents": self.managed_agents,
+                    "facts_update": facts_update,
+                    "remaining_steps": (self.max_steps - step),
+                },
+            )
+            if additional_knowledge is not None:
+                update_plan_post_text += f"\n\nAdditional guidance from knowledge base:\n```\n{additional_knowledge}\n```"
             update_plan_post_messages = {
                 "role": MessageRole.USER,
-                "content": [
-                    {
-                        "type": "text",
-                        "text": populate_template(
-                            self.prompt_templates["planning"][
-                                "update_plan_post_messages"
-                            ],
-                            variables={
-                                "task": task,
-                                "tools": self.tools,
-                                "managed_agents": self.managed_agents,
-                                "facts_update": facts_update,
-                                "remaining_steps": (self.max_steps - step),
-                            },
-                        ),
-                    }
-                ],
+                "content": [{"type": "text", "text": update_plan_post_text}],
             }
             chat_message_plan: ChatMessage = self.model(
                 [update_plan_pre_messages]
@@ -1591,12 +1574,14 @@ class CodeAgent(MultiStepAgent):
         sub_retrieval_method: Optional[Callable] = None,
         planner_fn: Optional[Callable[[str, Optional[str], Optional[str]], str]] = None,
         use_focused_step: bool = False,
+        use_full_memory: bool = False,
         **kwargs,
     ):
         self.initial_directives: str = ""
         self.planner_fn = planner_fn
         self._kb_docs: Optional[str] = None
         self.use_focused_step = use_focused_step
+        self.use_full_memory = use_full_memory
 
         self.reflection_mode = reflection_mode
         self.directive_injection = directive_injection
@@ -1797,26 +1782,9 @@ class CodeAgent(MultiStepAgent):
             ]
             observations_str = "\n".join(observations) if observations else None
 
-            plan_str = self.planner_fn(task, self._kb_docs, observations_str)
-            final_plan_redaction = textwrap.dedent(
-                f"""Here is the plan of action that I will follow to solve the task:
-                ```
-                {plan_str}
-                ```"""
-            )
-            self.logger.log(
-                Rule("[bold]Plan (KB planner)", style="orange"),
-                Text(final_plan_redaction),
-                level=LogLevel.INFO,
-            )
-            return PlanningStep(
-                model_input_messages=[],
-                plan=final_plan_redaction,
-                facts="",
-                model_output_message_plan=None,
-                model_output_message_facts=None,
-            )
-        return super().planning_step(task, is_first_step, step, additional_knowledge)
+            kb_plan_str = self.planner_fn(task, self._kb_docs, observations_str)
+            return super().planning_step(task, is_first_step, step, additional_knowledge=kb_plan_str)
+        return super().planning_step(task, is_first_step, step, additional_knowledge=additional_knowledge)
 
     # ------------------------------------------------------------
     # _build_focused_messages: task + plan + observations only
@@ -2017,6 +1985,7 @@ class CodeAgent(MultiStepAgent):
                 )
                 self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
                 memory_steps.append(planning_step)
+                memory_messages.extend(planning_step.to_messages())
 
             final_answer = self.process_step(
                 step_number=self.step_number,
@@ -2109,6 +2078,27 @@ class CodeAgent(MultiStepAgent):
             final_message += item["content"][0]["text"] + "\n"
         return final_message
 
+    def _build_windowed_messages(
+        self,
+        memory_steps: List[ActionStep | PlanningStep | TaskStep],
+    ) -> List[Dict[str, Any]]:
+        """SystemPromptStep + TaskStep + 가장 최근 PlanningStep + 그 이후 ActionStep만 포함."""
+        last_planning_idx = -1
+        for i, step in enumerate(memory_steps):
+            if isinstance(step, PlanningStep):
+                last_planning_idx = i
+
+        filtered = []
+        for i, step in enumerate(memory_steps):
+            if isinstance(step, TaskStep):
+                filtered.append(step)
+            elif isinstance(step, PlanningStep) and i == last_planning_idx:
+                filtered.append(step)
+            elif isinstance(step, ActionStep) and i > last_planning_idx:
+                filtered.append(step)
+
+        return self.write_memory_to_messages(memory_steps=filtered)
+
     def process_step(
         self,
         step_number,
@@ -2131,12 +2121,18 @@ class CodeAgent(MultiStepAgent):
             observations_images=images,
         )
 
+        effective_messages = (
+            memory_messages
+            if self.use_full_memory
+            else self._build_windowed_messages(memory_steps)
+        )
+
         final_answer = None
 
         try:
             final_answer = self.step(
                 memory_step,
-                memory_messages,
+                effective_messages,
                 additional_prompt,
                 memory_steps,
                 initial_directives,
