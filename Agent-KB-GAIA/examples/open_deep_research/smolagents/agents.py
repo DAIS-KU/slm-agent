@@ -40,7 +40,6 @@ from typing import (
     Tuple,
     TypedDict,
     Union,
-    Literal,
 )
 import heapq
 from collections import deque
@@ -99,16 +98,8 @@ from .utils import (
     parse_json_tool_call,
     truncate_content,
 )
-from dataclasses import dataclass
-from typing import Any, Optional
 
 logger = getLogger(__name__)
-
-
-@dataclass
-class PreActionArtifacts:
-    summary_or_memory: Any
-    evaluation: Any
 
 
 class AKBClient:
@@ -305,6 +296,8 @@ class MultiStepAgent:
         agent_kb: bool = False,
         top_k: Optional[int] = 3,
         retrieval_type: Optional[str] = "hybrid",
+        plan_mode: Optional[str] = None,
+        facts_mode: Optional[str] = None,
     ):
         if tool_parser is None:
             tool_parser = parse_json_tool_call
@@ -370,6 +363,9 @@ class MultiStepAgent:
         self.agent_kb = agent_kb
         self.top_k = top_k
         self.retrieval_type = retrieval_type
+        self.plan_mode = plan_mode
+        self.facts_mode = facts_mode
+        self.planner_fn = None
 
     @property
     def logs(self):
@@ -544,7 +540,6 @@ class MultiStepAgent:
         images: Optional[List[str]] = None,
         additional_args: Optional[Dict] = None,
         additional_knowledge: Optional[str] = None,
-        initial_directives: Optional[Union[str, List[str]]] = None,
     ):
         """
         Run the agent for the given task.
@@ -587,17 +582,10 @@ You have been provided with these additional arguments, that you can access usin
         self.memory.steps.append(TaskStep(task=self.task, task_images=images))
 
         if stream:
-            return self._run(
-                task=self.task,
-                images=images,
-                initial_directives=initial_directives,
-            )
+            return self._run(task=self.task, images=images)
         return deque(
             self._run(
-                task=self.task,
-                images=images,
-                additional_knowledge=additional_knowledge,
-                initial_directives=initial_directives,
+                task=self.task, images=images, additional_knowledge=additional_knowledge
             ),
             maxlen=1,
         )[0]
@@ -740,12 +728,152 @@ You have been provided with these additional arguments, that you can access usin
                 },
             ]
 
-            chat_message_facts: ChatMessage = self.model(input_messages)
-            answer_facts = chat_message_facts.content
+            # ---- facts generation ----
+            if self.facts_mode == "kno_app" and self.planner_fn is not None:
+                # Call proposal_planning first; use its knowledge+approach as facts.
+                # Skips the LLM facts-extraction call entirely.
+                _proposal_result = self.planner_fn(task, None, None)
+                if isinstance(_proposal_result, dict):
+                    _proposal_plan = _proposal_result.get("plan", "")
+                    _proposal_approach = _proposal_result.get("approach", "")
+                    _proposal_examples = _proposal_result.get("examples", {})
+                else:
+                    _proposal_plan = _proposal_result
+                    _proposal_approach = ""
+                    _proposal_examples = {}
+                answer_facts = _proposal_approach
+                chat_message_facts = None
+                _planner_result_cached = {
+                    "plan": _proposal_plan,
+                    "approach": _proposal_approach,
+                    "examples": _proposal_examples,
+                }
+            else:
+                chat_message_facts: ChatMessage = self.model(input_messages)
+                answer_facts = chat_message_facts.content
+                _planner_result_cached = None
 
-            if additional_knowledge is not None:
+            if self.planner_fn is not None:
+                # --- proposal_planning branch ---
+                # Reuse cached result if planner_fn was already called for kno_app facts.
+                if _planner_result_cached is not None:
+                    result = _planner_result_cached
+                else:
+                    result = self.planner_fn(task, None, None)
+                if isinstance(result, dict):
+                    proposal = result.get("plan", "")
+                    kb_examples = result.get("examples", {})
+                else:
+                    proposal = result
+                    kb_examples = {}
+                final_facts_knowledge = textwrap.dedent(
+                    f"""Proposal plan from KB retrieval:
+                    ```
+                    {proposal}
+                    ```""".strip()
+                )
+
+                def _make_user_msg(text):
+                    return {
+                        "role": MessageRole.USER,
+                        "content": [{"type": "text", "text": text}],
+                    }
+
+                if self.plan_mode == "action_augmented_plan":
+                    plan_prompt = populate_template(
+                        self.prompt_templates["planning"]["initial_plan_action_augmented_with_proposal"],
+                        variables={
+                            "task": task,
+                            "tools": self.tools,
+                            "managed_agents": self.managed_agents,
+                            "answer_facts": answer_facts,
+                            "proposal": proposal,
+                            "examples": kb_examples.get("action_augmented_plan", ""),
+                        },
+                    )
+                    chat_message_plan: ChatMessage = self.model(
+                        [_make_user_msg(plan_prompt)], stop_sequences=["<end_plan>"]
+                    )
+
+                elif self.plan_mode == "plan_and_subtask":
+                    plan_prompt = populate_template(
+                        self.prompt_templates["planning"]["initial_plan_and_subtask_with_proposal"],
+                        variables={
+                            "task": task,
+                            "tools": self.tools,
+                            "managed_agents": self.managed_agents,
+                            "answer_facts": answer_facts,
+                            "proposal": proposal,
+                            "examples": kb_examples.get("plan_and_subtask", ""),
+                        },
+                    )
+                    chat_message_plan: ChatMessage = self.model(
+                        [_make_user_msg(plan_prompt)], stop_sequences=["<end_plan>"]
+                    )
+
+                elif self.plan_mode == "plan_subtask_action":
+                    # Stage 1: generate subtask decomposition
+                    stage1_prompt = populate_template(
+                        self.prompt_templates["planning"]["initial_plan_subtask_action_stage1"],
+                        variables={
+                            "task": task,
+                            "tools": self.tools,
+                            "managed_agents": self.managed_agents,
+                            "answer_facts": answer_facts,
+                            "proposal": proposal,
+                            "examples": kb_examples.get("plan_and_subtask", ""),
+                        },
+                    )
+                    chat_message_subtasks: ChatMessage = self.model(
+                        [_make_user_msg(stage1_prompt)], stop_sequences=["<end_plan>"]
+                    )
+                    subtask_plan = chat_message_subtasks.content
+                    self.logger.log(
+                        Rule("[bold]Subtask decomposition", style="orange"),
+                        Text(subtask_plan),
+                        level=LogLevel.INFO,
+                    )
+                    # Stage 2: generate action_augmented_subtask plan
+                    stage2_prompt = populate_template(
+                        self.prompt_templates["planning"]["initial_plan_subtask_action_stage2"],
+                        variables={
+                            "task": task,
+                            "tools": self.tools,
+                            "managed_agents": self.managed_agents,
+                            "subtask_plan": subtask_plan,
+                            "examples": kb_examples.get("action_augmented_subtask", ""),
+                        },
+                    )
+                    chat_message_plan: ChatMessage = self.model(
+                        [_make_user_msg(stage2_prompt)], stop_sequences=["<end_plan>"]
+                    )
+
+                else:
+                    # Default: use proposal directly via advance-knowledge template
+                    plan_prompt = populate_template(
+                        self.prompt_templates["planning"]["initial_plan_with_advance_knowledge"],
+                        variables={
+                            "task": task,
+                            "tools": self.tools,
+                            "managed_agents": self.managed_agents,
+                            "answer_facts": answer_facts,
+                            "knowledge_data": "",
+                            "initial_plan": proposal,
+                        },
+                    )
+                    chat_message_plan: ChatMessage = self.model(
+                        [_make_user_msg(plan_prompt)], stop_sequences=["<end_plan>"]
+                    )
+
+            elif self.agent_kb and additional_knowledge != None:
                 knowledge_data_all = "Please strictly follow the suggestions below:\n"
                 knowledge_data_all += additional_knowledge
+                final_facts_knowledge = textwrap.dedent(
+                    f"""Here are the similar tasks, plans and relevant experience that I should follow:
+                    ```
+                    {knowledge_data_all}
+                    ```""".strip()
+                )
                 initial_plan_template = populate_template(
                     self.prompt_templates["planning"]["initial_plan_with_knowledge"],
                     variables={
@@ -755,6 +883,10 @@ You have been provided with these additional arguments, that you can access usin
                         "answer_facts": answer_facts,
                         "knowledge_data": knowledge_data_all,
                     },
+                )
+                chat_message_plan: ChatMessage = self.model(
+                    [{"role": MessageRole.USER, "content": [{"type": "text", "text": initial_plan_template}]}],
+                    stop_sequences=["<end_plan>"],
                 )
             else:
                 initial_plan_template = populate_template(
@@ -766,20 +898,12 @@ You have been provided with these additional arguments, that you can access usin
                         "answer_facts": answer_facts,
                     },
                 )
+                final_facts_knowledge = textwrap.dedent(f"""No retrieval process""")
+                chat_message_plan: ChatMessage = self.model(
+                    [{"role": MessageRole.USER, "content": [{"type": "text", "text": initial_plan_template}]}],
+                    stop_sequences=["<end_plan>"],
+                )
 
-            message_prompt_plan = {
-                "role": MessageRole.USER,
-                "content": [
-                    {
-                        "type": "text",
-                        "text": initial_plan_template,
-                    }
-                ],
-            }
-            chat_message_plan: ChatMessage = self.model(
-                [message_prompt_plan],
-                stop_sequences=["<end_plan>"],
-            )
             answer_plan = chat_message_plan.content
 
             final_plan_redaction = textwrap.dedent(
@@ -794,6 +918,12 @@ You have been provided with these additional arguments, that you can access usin
                 {answer_facts}
                 ```""".strip()
             )
+            if self.agent_kb or self.planner_fn is not None:
+                self.logger.log(
+                    Rule("[bold]retrieved task and plan", style="orange"),
+                    Text(final_facts_knowledge),
+                    level=LogLevel.INFO,
+                )
             self.logger.log(
                 Rule("[bold]Initial plan", style="orange"),
                 Text(final_plan_redaction),
@@ -854,21 +984,25 @@ You have been provided with these additional arguments, that you can access usin
                     }
                 ],
             }
-            update_plan_post_text = populate_template(
-                self.prompt_templates["planning"]["update_plan_post_messages"],
-                variables={
-                    "task": task,
-                    "tools": self.tools,
-                    "managed_agents": self.managed_agents,
-                    "facts_update": facts_update,
-                    "remaining_steps": (self.max_steps - step),
-                },
-            )
-            if additional_knowledge is not None:
-                update_plan_post_text += f"\n\nAdditional guidance from knowledge base:\n```\n{additional_knowledge}\n```"
             update_plan_post_messages = {
                 "role": MessageRole.USER,
-                "content": [{"type": "text", "text": update_plan_post_text}],
+                "content": [
+                    {
+                        "type": "text",
+                        "text": populate_template(
+                            self.prompt_templates["planning"][
+                                "update_plan_post_messages"
+                            ],
+                            variables={
+                                "task": task,
+                                "tools": self.tools,
+                                "managed_agents": self.managed_agents,
+                                "facts_update": facts_update,
+                                "remaining_steps": (self.max_steps - step),
+                            },
+                        ),
+                    }
+                ],
             }
             chat_message_plan: ChatMessage = self.model(
                 [update_plan_pre_messages]
@@ -1349,7 +1483,6 @@ class ToolCallingAgent(MultiStepAgent):
             task (`str`): Task to perform.
             images (`list[str]`): Paths to image(s).
         """
-
         final_answer = None
         self.step_number = 1
         while final_answer is None and self.step_number <= self.max_steps:
@@ -1563,57 +1696,10 @@ class CodeAgent(MultiStepAgent):
         agent_kb: bool = False,
         top_k: Optional[int] = 1,
         retrieval_type: Optional[str] = "hybrid",
-        reflection_mode: Literal["llm_summary", "raw_memory"] = "llm_summary",
-        directive_injection: Literal[
-            "eval", "eval_plan", "eval_actions", "directives", "none"
-        ] = "eval",
-        raw_memory_max_steps: int = 12,
-        summary_prompt: Optional[str] = None,
-        eval_prompt: Optional[str] = None,
-        eval_plan_prompt: Optional[str] = None,
-        sub_retrieval_method: Optional[Callable] = None,
-        planner_fn: Optional[Callable[[str, Optional[str], Optional[str]], str]] = None,
-        use_focused_step: bool = True,
-        use_full_memory: bool = True,
+        plan_mode: Optional[str] = None,
+        facts_mode: Optional[str] = None,
         **kwargs,
     ):
-        self.initial_directives: str = ""
-        self.planner_fn = planner_fn
-        self._kb_docs: Optional[str] = None
-        self.use_focused_step = use_focused_step
-        self.use_full_memory = use_full_memory
-
-        self.reflection_mode = reflection_mode
-        self.directive_injection = directive_injection
-        self.raw_memory_max_steps = raw_memory_max_steps
-        self.sub_retrieval_method = sub_retrieval_method
-
-        self.summary_prompt = summary_prompt or (
-            "Summarize the agent's progress so far in 5-10 bullet points.\n"
-            "Include: goal, what has been tried, current state, errors, and what is needed next.\n"
-            "Be concise."
-        )
-        self.eval_prompt = eval_prompt or (
-            "Compare the progress summary against the initial directives.\n"
-            "Output:\n"
-            "- Compliance: compliant / partially_compliant / non_compliant\n"
-            "- Reasons: bullet points citing what in the summary conflicts or aligns\n"
-            "- Guidance: what the next action should do to comply\n"
-            "Be concise."
-        )
-        self.eval_plan_prompt = eval_plan_prompt or (
-            "You are evaluating an agent's progress against a structured plan.\n"
-            "The plan defines explicit conditions and steps that must be satisfied.\n"
-            "For each condition or step in the plan, determine whether it has been satisfied, "
-            "partially satisfied, or not yet addressed based on the current progress.\n"
-            "Output:\n"
-            "- Satisfied conditions: list each plan condition that has been fully met\n"
-            "- Unsatisfied conditions: list each plan condition not yet met\n"
-            "- Next required action: the specific next step the agent must take to satisfy "
-            "the next pending condition\n"
-            "Be concise and specific."
-        )
-
         self.additional_authorized_imports = (
             additional_authorized_imports if additional_authorized_imports else []
         )
@@ -1639,6 +1725,8 @@ class CodeAgent(MultiStepAgent):
             agent_type=agent_type,
             top_k=top_k,
             retrieval_type=retrieval_type,
+            plan_mode=plan_mode,
+            facts_mode=facts_mode,
             **kwargs,
         )
         if "*" in self.additional_authorized_imports:
@@ -1755,116 +1843,46 @@ class CodeAgent(MultiStepAgent):
                     self.execute_code(memory_step, new_code)
             raise AgentExecutionError(error_msg, self.logger)
 
-    # ------------------------------------------------------------
-    # planning_step override: optionally use external KB planner
-    # ------------------------------------------------------------
-    def planning_step(
-        self,
-        task,
-        is_first_step: bool,
-        step: int,
-        additional_knowledge: Optional[str] = None,
-        memory_steps: Optional[List] = None,
-    ) -> None:
-        if self.planner_fn is not None:
-            # Persist initial KB docs so re-planning steps can reuse them
-            if additional_knowledge is not None:
-                self._kb_docs = additional_knowledge
-
-            # Collect tool observations accumulated so far
-            steps_source = (
-                memory_steps if memory_steps is not None else self.memory.steps
-            )
-            observations = [
-                f"Step {s.step_number}: {s.observations}"
-                for s in steps_source
-                if isinstance(s, ActionStep) and s.observations
-            ]
-            observations_str = "\n".join(observations) if observations else None
-
-            kb_plan_str = self.planner_fn(task, self._kb_docs, observations_str)
-            return super().planning_step(task, is_first_step, step, additional_knowledge=kb_plan_str)
-        return super().planning_step(task, is_first_step, step, additional_knowledge=additional_knowledge)
-
-    # ------------------------------------------------------------
-    # _build_focused_messages: task + plan + observations only
-    # ------------------------------------------------------------
-    def _build_focused_messages(
-        self,
-        memory_steps: List[ActionStep | PlanningStep | TaskStep],
-    ) -> List[Dict[str, Any]]:
-        """Build input messages restricted to task, plan, and observation results."""
-        task_text = ""
-        plan_text = ""
-        observations: List[str] = []
-
-        for s in memory_steps:
-            if isinstance(s, TaskStep):
-                task_text = s.task or ""
-            elif isinstance(s, PlanningStep):
-                plan_text = s.plan or ""
-            elif isinstance(s, ActionStep) and s.observations:
-                observations.append(f"Step {s.step_number}: {s.observations}")
-
-        obs_text = "\n".join(observations) if observations else "No observations yet."
-        user_content = (
-            f"## Task\n{task_text}\n\n"
-            f"## Plan\n{plan_text}\n\n"
-            f"## Observations So Far\n{obs_text}\n\n"
-            "Based on the task, plan, and observations above, write the next code action."
-        )
-
-        system_messages = self.memory.system_prompt.to_messages()
-        return system_messages + [
-            {
-                "role": MessageRole.USER,
-                "content": [{"type": "text", "text": user_content}],
-            }
-        ]
-
-    # ------------------------------------------------------------
-    # step() 수정: 액션 전에 pre-action reflection을 만들고 additional_prompt로 주입
-    # ------------------------------------------------------------
     def step(
         self,
         memory_step: ActionStep,
         memory_messages=None,
         additional_prompt: str = "",
         memory_steps: List[ActionStep | PlanningStep | TaskStep] = None,
-        initial_directives=None,
     ) -> Union[None, Any]:
+        """
+        Perform one step in the ReAct framework: the agent thinks, acts, and observes the result.
+        This function executes a step by sending messages to a model, processing the response,
+        and interacting with external tools (e.g., code execution). It updates the memory step with
+        relevant information and returns the final answer if the step is complete.
 
-        if self.use_focused_step and memory_steps is not None:
-            self.input_messages = self._build_focused_messages(memory_steps)
-        else:
-            memory_messages = (
-                self.write_memory_to_messages()
-                if memory_messages is None
-                else memory_messages
-            )
-            self.input_messages = memory_messages.copy()
+        Args:
+            memory_step (ActionStep): The current memory step which holds the state and information of the step.
+            memory_messages (list[Message], optional): List of previous memory messages. If None, memory is fetched from `write_memory_to_messages()`.
+            additional_prompt (str, optional): An optional prompt to add to the model input to guide the model's behavior.
 
-        # ✅ pre-action reflection + 주입
-        if not self.use_focused_step and memory_steps is not None:
-            artifacts = self.build_pre_action_artifacts(
-                memory_steps, initial_directives
+        Returns:
+            Union[None, Any]: The model's output if the step is final; otherwise, None.
+        """
+        memory_messages = (
+            self.write_memory_to_messages()
+            if memory_messages is None
+            else memory_messages
+        )
+
+        self.input_messages = memory_messages.copy()
+
+        if additional_prompt and self.reflection:
+            self.input_messages.insert(
+                0,
+                Message(
+                    role=MessageRole.SYSTEM,
+                    content=[{"type": "text", "text": additional_prompt}],
+                ),
             )
-            injected = self._make_additional_prompt_from_artifacts(
-                artifacts, initial_directives
-            )
-            logger.info(f"[Inject pre-action reflection]\n{injected}")
-            if injected is not None:
-                self.input_messages.insert(
-                    0,
-                    Message(
-                        role=MessageRole.SYSTEM,
-                        content=[{"type": "text", "text": injected}],
-                    ),
-                )
 
         memory_step.model_input_messages = self.input_messages.copy()
 
-        # --- 이하 기존 step 로직 그대로 ---
         try:
             additional_args = (
                 {"grammar": self.grammar} if self.grammar is not None else {}
@@ -1916,13 +1934,9 @@ class CodeAgent(MultiStepAgent):
             )
         ]
 
-        (
-            observation,
-            output,
-            memory_step,
-            is_final_answer,
-            execution_outputs_console,
-        ) = self.execute_code(memory_step, code_action)
+        observation, output, memory_step, is_final_answer, execution_outputs_console = (
+            self.execute_code(memory_step, code_action)
+        )
 
         truncated_output = truncate_content(str(output))
         observation += "Last output from code snippet:\n" + truncated_output
@@ -1948,12 +1962,8 @@ class CodeAgent(MultiStepAgent):
         task: str,
         images: List[str] | None = None,
         additional_knowledge: Optional[str] = None,
-        # ✅ NEW: run 호출 시점에 directives 받기
-        initial_directives: Optional[Union[str, List[str]]] = None,
     ) -> Generator[ActionStep | AgentType, None, None]:
-        logger.info(
-            f"CodeAgent._run called.(initial_directives: {initial_directives is not None})"
-        )
+
         Task_steps = self.memory.steps
         memory_steps = Task_steps.copy()
         final_answer = None
@@ -1963,7 +1973,6 @@ class CodeAgent(MultiStepAgent):
             is_first_step=(self.step_number == 1),
             step=self.step_number,
             additional_knowledge=additional_knowledge,
-            memory_steps=memory_steps,
         )
         self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
         memory_steps.append(planning_step)
@@ -1981,18 +1990,12 @@ class CodeAgent(MultiStepAgent):
                     task,
                     is_first_step=(self.step_number == 1),
                     step=self.step_number,
-                    memory_steps=memory_steps,
                 )
                 self.logger.log_rule(f"Step {self.step_number}", level=LogLevel.INFO)
                 memory_steps.append(planning_step)
-                memory_messages.extend(planning_step.to_messages())
 
             final_answer = self.process_step(
-                step_number=self.step_number,
-                images=images,
-                memory_messages=memory_messages,
-                memory_steps=memory_steps,
-                initial_directives=initial_directives,
+                self.step_number, images, memory_messages, memory_steps
             )
 
             if final_answer is not None:
@@ -2078,27 +2081,6 @@ class CodeAgent(MultiStepAgent):
             final_message += item["content"][0]["text"] + "\n"
         return final_message
 
-    def _build_windowed_messages(
-        self,
-        memory_steps: List[ActionStep | PlanningStep | TaskStep],
-    ) -> List[Dict[str, Any]]:
-        """SystemPromptStep + TaskStep + 가장 최근 PlanningStep + 그 이후 ActionStep만 포함."""
-        last_planning_idx = -1
-        for i, step in enumerate(memory_steps):
-            if isinstance(step, PlanningStep):
-                last_planning_idx = i
-
-        filtered = []
-        for i, step in enumerate(memory_steps):
-            if isinstance(step, TaskStep):
-                filtered.append(step)
-            elif isinstance(step, PlanningStep) and i == last_planning_idx:
-                filtered.append(step)
-            elif isinstance(step, ActionStep) and i > last_planning_idx:
-                filtered.append(step)
-
-        return self.write_memory_to_messages(memory_steps=filtered)
-
     def process_step(
         self,
         step_number,
@@ -2106,11 +2088,8 @@ class CodeAgent(MultiStepAgent):
         memory_messages,
         memory_steps,
         additional_prompt: str = "",
-        initial_directives=None,
     ):
-        logger.info(
-            f"CodeAgent.process_step called.(initial_directives: {initial_directives is not None})"
-        )
+
         self.step_number = step_number
 
         step_start_time = time.time()
@@ -2121,21 +2100,11 @@ class CodeAgent(MultiStepAgent):
             observations_images=images,
         )
 
-        effective_messages = (
-            memory_messages
-            if self.use_full_memory
-            else self._build_windowed_messages(memory_steps)
-        )
-
         final_answer = None
 
         try:
             final_answer = self.step(
-                memory_step,
-                effective_messages,
-                additional_prompt,
-                memory_steps,
-                initial_directives,
+                memory_step, memory_messages, additional_prompt, memory_steps
             )
 
             if final_answer is not None and self.final_answer_checks is not None:
@@ -2163,201 +2132,3 @@ class CodeAgent(MultiStepAgent):
                 else:
                     callback(memory_step, agent=self)
         return final_answer
-
-    # ------------------------------------------------------------
-    # (1) pre-action reflection: LLM summary or raw memory
-    # ------------------------------------------------------------
-    def _render_recent_steps_as_text(
-        self,
-        memory_steps: List[ActionStep | PlanningStep | TaskStep],
-        max_steps: int,
-    ) -> str:
-        recent = (
-            memory_steps[-max_steps:] if len(memory_steps) > max_steps else memory_steps
-        )
-
-        def step_to_string(step):
-            if isinstance(step, ActionStep):
-                obs = (step.observations or "")[:800]
-                out = (str(getattr(step, "action_output", "")) or "")[:400]
-                err = f" | error: {step.error}" if step.error else ""
-                return f"[Action#{step.step_number}] obs: {obs} | out: {out}{err}"
-            if isinstance(step, PlanningStep):
-                return f"[Planning] plan: {getattr(step, 'plan', '')} | facts: {getattr(step, 'facts', '')}"
-            if isinstance(step, TaskStep):
-                return f"[Task] task: {getattr(step, 'task', '')}"
-            return f"[{type(step).__name__}]"
-
-        return "\n".join(step_to_string(s) for s in recent)
-
-    def _call_model_text(self, messages: List[Dict[str, Any]]) -> str:
-        """모델을 호출해서 text를 받아오는 최소 wrapper"""
-        chat_message: ChatMessage = self.model(messages)
-        if chat_message is None or chat_message.content is None:
-            raise ValueError("Model returned empty or invalid chat message.")
-        if isinstance(chat_message.content, list):
-            return "".join([str(item) for item in chat_message.content])
-        return str(chat_message.content)
-
-    def build_pre_action_artifacts(
-        self,
-        memory_steps: List[ActionStep | PlanningStep | TaskStep],
-        initial_directives,
-    ) -> PreActionArtifacts:
-        """
-        - reflection_mode에 따라 summary_or_memory 생성
-        - directive_injection="eval"일 때만 evaluation 생성(LLM 호출)
-        """
-        # 1) summary_or_memory
-        raw_text = self._render_recent_steps_as_text(
-            memory_steps, self.raw_memory_max_steps
-        )
-
-        if self.reflection_mode == "raw_memory":
-            summary_or_memory = raw_text
-        else:
-            # LLM 요약 생성
-            summary_messages = [
-                {
-                    "role": "system",
-                    "content": [{"type": "text", "text": self.summary_prompt}],
-                },
-                {
-                    "role": "user",
-                    "content": [{"type": "text", "text": raw_text}],
-                },
-            ]
-            summary_or_memory = self._call_model_text(summary_messages)
-
-        # 2) evaluation (옵션)
-        evaluation = ""
-        if self.directive_injection == "eval":
-            eval_input = (
-                f"## Initial directives\n{initial_directives}\n\n"
-                f"## Progress\n{summary_or_memory}\n"
-            )
-            eval_messages = [
-                {
-                    "role": "system",
-                    "content": [{"type": "text", "text": self.eval_prompt}],
-                },
-                {
-                    "role": "user",
-                    "content": [{"type": "text", "text": eval_input}],
-                },
-            ]
-            evaluation = self._call_model_text(eval_messages)
-
-        elif self.directive_injection == "eval_plan":
-            eval_plan_input = (
-                f"## Plan\n{initial_directives}\n\n"
-                f"## Current Progress\n{summary_or_memory}\n"
-            )
-            eval_plan_messages = [
-                {
-                    "role": "system",
-                    "content": [{"type": "text", "text": self.eval_plan_prompt}],
-                },
-                {
-                    "role": "user",
-                    "content": [{"type": "text", "text": eval_plan_input}],
-                },
-            ]
-            evaluation = self._call_model_text(eval_plan_messages)
-
-        elif (
-            self.directive_injection == "eval_actions"
-            and self.sub_retrieval_method is not None
-        ):
-            # Step 1: identify the next required step from current progress
-            next_step_prompt = (
-                "Based on the plan and the current progress, identify the single next "
-                "required step that the agent must execute.\n"
-                "Output only a concise one-sentence description of that step.\n\n"
-                f"## Plan\n{initial_directives}\n\n"
-                f"## Current Progress\n{summary_or_memory}\n"
-            )
-            next_step_messages = [
-                {
-                    "role": "user",
-                    "content": [{"type": "text", "text": next_step_prompt}],
-                },
-            ]
-            next_step_text = self._call_model_text(next_step_messages)
-            logger.info(f"[eval_actions] next_step_text: {next_step_text}")
-
-            # Step 2: retrieve matching subtasks from the subtask KB
-            retrieved = self.sub_retrieval_method(next_step_text, top_k=self.top_k)
-
-            # Step 3: format retrieved actions as evaluation guidance
-            action_blocks = []
-            for item in retrieved:
-                content = item.get("content", {})
-                step_desc = content.get("original_step", "")
-                actions = content.get("actions") or []
-                do_raw = content.get("do_raw") or ""
-                if actions:
-                    actions_str = "\n".join(f"  - {a}" for a in actions)
-                    action_blocks.append(f"Step: {step_desc}\nActions:\n{actions_str}")
-                elif do_raw:
-                    action_blocks.append(f"Step: {step_desc}\nInstructions: {do_raw}")
-
-            if action_blocks:
-                evaluation = (
-                    f"## Next Required Step\n{next_step_text}\n\n"
-                    "## Reference Actions from Similar Subtasks\n"
-                    + "\n\n".join(action_blocks)
-                )
-            else:
-                evaluation = f"## Next Required Step\n{next_step_text}\n"
-
-        return PreActionArtifacts(
-            summary_or_memory=summary_or_memory, evaluation=evaluation
-        )
-
-    # ------------------------------------------------------------
-    # (2) directives/eval을 additional_prompt로 주입 or 안함
-    # ------------------------------------------------------------
-    def _make_additional_prompt_from_artifacts(
-        self, artifacts: PreActionArtifacts, initial_directives
-    ) -> str:
-        logger.info(
-            f"CodeAgent._make_additional_prompt_from_artifacts called.(initial_directives: {initial_directives is not None})"
-        )
-        if self.directive_injection == "none":
-            return None
-
-        if self.directive_injection == "directives":
-            return (
-                "Follow these initial directives strictly:\n" f"{initial_directives}\n"
-            )
-
-        if self.directive_injection == "eval":
-            return (
-                "## Summary / Memory\n"
-                f"{artifacts.summary_or_memory}\n\n"
-                "## Directive evaluation\n"
-                f"{artifacts.evaluation}\n\n"
-                "Now decide the next code action accordingly.\n"
-                "- Output ONLY a single valid code blob.\n"
-            )
-
-        if self.directive_injection == "eval_plan":
-            return (
-                "## Current Progress\n"
-                f"{artifacts.summary_or_memory}\n\n"
-                "## Plan Condition Evaluation\n"
-                f"{artifacts.evaluation}\n\n"
-                "Proceed to satisfy the next unsatisfied plan condition.\n"
-                "- Output ONLY a single valid code blob.\n"
-            )
-
-        # directive_injection == "eval_actions"
-        return (
-            "## Current Progress\n"
-            f"{artifacts.summary_or_memory}\n\n"
-            "## Action Guidance\n"
-            f"{artifacts.evaluation}\n\n"
-            "Execute the next required step using the reference actions above as guidance.\n"
-            "- Output ONLY a single valid code blob.\n"
-        )

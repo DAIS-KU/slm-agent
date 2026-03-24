@@ -331,6 +331,208 @@ planning:
     Now, analyze the original plan for any issues, inefficiencies or logical flaws.
     Refer to similar tasks, plans and experience and provide a refined, optimized plan that addresses any identified problems.
     OK! begin! Present your step-by-step plan. End with '\n<end_plan>'.
+  initial_plan_action_augmented_with_proposal: |-
+    You are a world expert at making efficient plans to solve any task using a set of carefully crafted tools.
+
+    A proposal plan has already been generated for this task. Your job is to convert it into a concrete
+    execution plan where each step is paired with a specific action that can be executed using the available tools.
+
+    Here is your task:
+
+    Task:
+    ```
+    {{task}}
+    ```
+    You can leverage these tools:
+    {%- for tool in tools.values() %}
+    - {{ tool.name }}: {{ tool.description }}
+        Takes inputs: {{tool.inputs}}
+        Returns an output of type: {{tool.output_type}}
+    {%- endfor %}
+
+    {%- if managed_agents and managed_agents.values() | list %}
+    You can also give tasks to team members.
+    Here is a list of the team members that you can call:
+    {%- for agent in managed_agents.values() %}
+    - {{ agent.name }}: {{ agent.description }}
+    {%- endfor %}
+    {%- else %}
+    {%- endif %}
+
+    List of facts that you know:
+    ```
+    {{answer_facts}}
+    ```
+
+    Proposal plan:
+    ```
+    {{proposal}}
+    ```
+
+    Similar task examples showing (step, action) pairs:
+    ```
+    {{examples}}
+    ```
+
+    Based on the proposal, produce a step-by-step execution plan where each step includes a concrete
+    action using one of the available tools. Format each entry as:
+    - Step: <what to do>
+      Action: <which tool/code to use and how>
+
+    Do not skip steps, do not add superfluous steps.
+    After writing the final step, write the '\n<end_plan>' tag and stop there.
+
+    Now write your plan below.
+  initial_plan_and_subtask_with_proposal: |-
+    You are a world expert at making efficient plans to solve any task using a set of carefully crafted tools.
+
+    A proposal plan has already been generated for this task. Your job is to decompose the task into
+    independent subtasks with a step-by-step plan for each subtask.
+
+    Here is your task:
+
+    Task:
+    ```
+    {{task}}
+    ```
+    You can leverage these tools:
+    {%- for tool in tools.values() %}
+    - {{ tool.name }}: {{ tool.description }}
+        Takes inputs: {{tool.inputs}}
+        Returns an output of type: {{tool.output_type}}
+    {%- endfor %}
+
+    {%- if managed_agents and managed_agents.values() | list %}
+    You can also give tasks to team members.
+    Here is a list of the team members that you can call:
+    {%- for agent in managed_agents.values() %}
+    - {{ agent.name }}: {{ agent.description }}
+    {%- endfor %}
+    {%- else %}
+    {%- endif %}
+
+    List of facts that you know:
+    ```
+    {{answer_facts}}
+    ```
+
+    Proposal plan:
+    ```
+    {{proposal}}
+    ```
+
+    Similar task examples showing subtask decomposition:
+    ```
+    {{examples}}
+    ```
+
+    Analyze whether the task can be effectively broken down into independent subtasks:
+    - If it can, break it down and provide a separate step-by-step plan for each subtask.
+    - If it cannot be efficiently divided, treat it as a single task with one comprehensive plan.
+
+    Format each subtask as:
+    ##STX[subtask description] (where X is the subtask number)
+    [Step-by-step plan for this subtask]
+
+    If the task cannot be divided, provide just one plan without the subtask structure.
+    Do not add superfluous steps. After the final step, write the '\n<end_plan>' tag and stop there.
+
+    Now write your plan below.
+  initial_plan_subtask_action_stage1: |-
+    You are a world expert at making efficient plans to solve any task using a set of carefully crafted tools.
+
+    A proposal plan has already been generated. Your job is to decompose the task into subtasks.
+
+    Here is your task:
+
+    Task:
+    ```
+    {{task}}
+    ```
+    You can leverage these tools:
+    {%- for tool in tools.values() %}
+    - {{ tool.name }}: {{ tool.description }}
+        Takes inputs: {{tool.inputs}}
+        Returns an output of type: {{tool.output_type}}
+    {%- endfor %}
+
+    {%- if managed_agents and managed_agents.values() | list %}
+    You can also give tasks to team members.
+    Here is a list of the team members that you can call:
+    {%- for agent in managed_agents.values() %}
+    - {{ agent.name }}: {{ agent.description }}
+    {%- endfor %}
+    {%- else %}
+    {%- endif %}
+
+    List of facts that you know:
+    ```
+    {{answer_facts}}
+    ```
+
+    Proposal plan:
+    ```
+    {{proposal}}
+    ```
+
+    Similar task examples showing subtask decomposition:
+    ```
+    {{examples}}
+    ```
+
+    Decompose the task into independent subtasks. For each subtask provide a short description.
+    Format each subtask as:
+    ##STX[subtask description] (where X is the subtask number)
+
+    After listing all subtasks, write the '\n<end_plan>' tag and stop there.
+
+    Now write your subtask decomposition below.
+  initial_plan_subtask_action_stage2: |-
+    You are a world expert at making efficient plans to solve any task using a set of carefully crafted tools.
+
+    Subtasks have already been identified for this task. Your job is to produce a concrete action plan
+    for each subtask, specifying what tool or code action to take.
+
+    Here is your task:
+
+    Task:
+    ```
+    {{task}}
+    ```
+    You can leverage these tools:
+    {%- for tool in tools.values() %}
+    - {{ tool.name }}: {{ tool.description }}
+        Takes inputs: {{tool.inputs}}
+        Returns an output of type: {{tool.output_type}}
+    {%- endfor %}
+
+    {%- if managed_agents and managed_agents.values() | list %}
+    You can also give tasks to team members.
+    Here is a list of the team members that you can call:
+    {%- for agent in managed_agents.values() %}
+    - {{ agent.name }}: {{ agent.description }}
+    {%- endfor %}
+    {%- else %}
+    {%- endif %}
+
+    Subtask decomposition:
+    ```
+    {{subtask_plan}}
+    ```
+
+    Similar task examples showing (subtask, action) pairs:
+    ```
+    {{examples}}
+    ```
+
+    For each subtask, produce a concrete action plan. Format each entry as:
+    ##STX[subtask description]
+    - Subtask: <the subtask>
+      Action: <which tool/code to use and how>
+
+    Do not add superfluous steps. After the final entry, write the '\n<end_plan>' tag and stop there.
+
+    Now write your action plan below.
   update_facts_pre_messages: |-
     You are a world expert at gathering known and unknown facts based on a conversation.
     Below you will find a task, and a history of attempts made to solve the task. You will have to produce a list of these:

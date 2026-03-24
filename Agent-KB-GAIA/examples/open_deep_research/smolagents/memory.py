@@ -175,7 +175,7 @@ class ActionStep(MemoryStep):
 @dataclass
 class PlanningStep(MemoryStep):
     model_input_messages: List[Message]
-    model_output_message_facts: ChatMessage
+    model_output_message_facts: Optional[ChatMessage]
     facts: str
     model_output_message_plan: ChatMessage
     plan: str

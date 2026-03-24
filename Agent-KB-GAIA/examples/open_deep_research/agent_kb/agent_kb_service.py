@@ -43,6 +43,13 @@ class SearchRequest(BaseModel):
     )
 
 
+class TypeDomainSearchRequest(BaseModel):
+    query: str
+    task_types: List[str]
+    domains: List[str]
+    top_k: int = 3
+
+
 class TaskResponse(BaseModel):
     task_id: str
     task: str
@@ -280,6 +287,59 @@ async def semantic_search(request: SearchRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Semantic search failed: {str(e)}")
+
+
+@app.post("/search/type_domain_text", response_model=List[TaskResponse])
+async def type_domain_text_search(request: TypeDomainSearchRequest):
+    start_time = time.time()
+    cache_key = f"type_domain_{request.query}_{request.task_types}_{request.domains}_{request.top_k}"
+
+    try:
+        cached = _get_cached(cache_key)
+        if cached is not None:
+            return cached
+
+        results = manager.type_domain_text_search(
+            query=request.query,
+            task_types=request.task_types,
+            domains=request.domains,
+            top_k=request.top_k,
+        )
+
+        response_data: List[TaskResponse] = []
+        for item in results:
+            core = _extract_task_fields(item)
+            response_data.append(
+                TaskResponse(
+                    task_id=str(core["task_id"]),
+                    task=core["task"],
+                    agent_planning=core["agent_planning"],
+                    domain=core["domain"],
+                    skills=core["skills"],
+                    objective=core["objective"],
+                    knowledge=core["knowledge"],
+                    constraints=core["constraints"],
+                    instructions=core["instructions"],
+                    approach=core["approach"],
+                    plan=core["plan"],
+                    knowledge_summary=core["knowledge_summary"],
+                    constraints_summary=core["constraints_summary"],
+                    instructions_summary=core["instructions_summary"],
+                    approach_summary=core["approach_summary"],
+                    plan_summary=core["plan_summary"],
+                    task_analysis=core["task_analysis"],
+                    plan_steps_only=core["plan_steps_only"],
+                    augmented_plan=core["augmented_plan"],
+                    total_score=item.get("score"),
+                )
+            )
+
+        _set_cached(cache_key, response_data)
+        update_performance_stats(time.time() - start_time)
+        return response_data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Type-domain text search failed: {str(e)}")
 
 
 @app.get("/performance", response_model=PerformanceStats)

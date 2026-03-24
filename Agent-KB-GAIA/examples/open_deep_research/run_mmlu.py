@@ -52,7 +52,7 @@ from scripts.automodel import (
 from agent_kb.agent_kb_utils import AKBClient, call_model, SubAKBClient
 
 from planner_kb import (
-    task_spec_approach_planning,
+    proposal_planning,
 )
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
@@ -224,6 +224,27 @@ def parse_args():
         choices=["do_raw", "do_sum", "procedure"],
     )
     parser.add_argument("--use_sub_ex", action="store_true")
+    parser.add_argument(
+        "--retrieval_option",
+        type=str,
+        default="task_text",
+        choices=["task_text", "type_and_domain"],
+        help="Retrieval mode for proposal_planning",
+    )
+    parser.add_argument(
+        "--plan_mode",
+        type=str,
+        default=None,
+        choices=["action_augmented_plan", "plan_and_subtask", "plan_subtask_action"],
+        help="Plan generation mode when planner_fn is used",
+    )
+    parser.add_argument(
+        "--facts_mode",
+        type=str,
+        default=None,
+        choices=["facts", "kno_app"],
+        help="Facts source: 'facts' (LLM-extracted, default) or 'kno_app' (knowledge+approach from proposal_planning)",
+    )
     return parser.parse_args()
 
 
@@ -270,6 +291,8 @@ def create_agent_hierarchy(
         reflection_mode=args.reflection_mode,
         directive_injection=args.directive_injection,
         sub_retrieval_method=sub_retrieval_method,
+        plan_mode=args.plan_mode,
+        facts_mode=args.facts_mode,
     )
     return manager_agent
 
@@ -372,8 +395,8 @@ def answer_single_question(
 
         def planner_fn(
             task: str, kb_docs: Optional[str], observations: Optional[str]
-        ) -> str:
-            plan_str = task_spec_approach_planning(
+        ) -> dict:
+            return proposal_planning(
                 example=example,
                 augmented_question=augmented_question,
                 model_name=model_name,
@@ -383,9 +406,9 @@ def answer_single_question(
                 slm=slm,
                 retrieval_method=retrieval_method,
                 top_k=3,
-                observation=observations,
+                retrieval_option=args.retrieval_option,
+                type_domain_retrieval_method=akb_client.type_domain_text_search,
             )
-            return plan_str
 
         agent.planner_fn = planner_fn
     final_result = agent.run(augmented_question)

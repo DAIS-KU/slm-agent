@@ -1,14 +1,117 @@
 from __future__ import annotations
 
+import json
+
 from smolagents.agents import populate_template
 from agent_kb.agent_kb_utils import call_model
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from .mece_utils import load_prompts
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Predefined constants for type_and_domain retrieval mode.
+# These map to task_analysis.problem_type and task_analysis.domain in the KB.
+# Modify as needed.
+# ---------------------------------------------------------------------------
+TASK_TYPE_CONSTANTS: List[str] = [
+    "reasoning",
+    "information_retrieval",
+    "calculation",
+    "classification",
+    "multi_step_reasoning",
+    "data_extraction",
+    "comparison",
+    "verification",
+    "summarization",
+    "question_answering",
+]
+
+DOMAIN_CONSTANTS: List[str] = [
+    "math",
+    "science",
+    "history",
+    "programming",
+    "general_knowledge",
+    "language",
+    "geography",
+    "music",
+    "sports",
+    "economics",
+    "biology",
+    "chemistry",
+    "physics",
+    "literature",
+    "law",
+    "medicine",
+    "technology",
+    "culture",
+]
+
+
+def build_action_augmented_plan_examples(
+    similars: List[Any], max_items: int = 3
+) -> str:
+    """Build example blocks from the action_augmented_plan field (step + step_action)."""
+    lines: List[str] = []
+    for i, d in enumerate(similars[:max_items], start=1):
+        task = d.get("task") or d.get("query") or d.get("question") or ""
+        items = d.get("action_augmented_plan") or []
+        if not items:
+            continue
+        steps = []
+        for j, item in enumerate(items, start=1):
+            step = item.get("step", "")
+            action = item.get("step_action", "")
+            steps.append(f"  Step {j}: {step}\n  Action: {action}")
+        if steps:
+            lines.append(f"[Similar Task #{i}] {task}\n" + "\n".join(steps))
+    return "\n\n".join(lines).strip()
+
+
+def build_plan_and_subtask_examples(
+    similars: List[Any], max_items: int = 3
+) -> str:
+    """Build example blocks from plan_only_steps (step) and subtasks_only_subtask (subtask)."""
+    lines: List[str] = []
+    for i, d in enumerate(similars[:max_items], start=1):
+        task = d.get("task") or d.get("query") or d.get("question") or ""
+        steps = d.get("plan_only_steps") or []
+        subtasks = d.get("subtasks_only_subtask") or []
+        if not steps and not subtasks:
+            continue
+        block = [f"[Similar Task #{i}] {task}"]
+        if steps:
+            step_strs = [s.get("step", s) if isinstance(s, dict) else s for s in steps]
+            block.append("Steps:\n" + "\n".join(f"  - {s}" for s in step_strs))
+        if subtasks:
+            sub_strs = [s.get("subtask", s) if isinstance(s, dict) else s for s in subtasks]
+            block.append("Subtasks:\n" + "\n".join(f"  - {s}" for s in sub_strs))
+        lines.append("\n".join(block))
+    return "\n\n".join(lines).strip()
+
+
+def build_action_augmented_subtask_examples(
+    similars: List[Any], max_items: int = 3
+) -> str:
+    """Build example blocks from action_augmented_subtask (subtask + subtask_action)."""
+    lines: List[str] = []
+    for i, d in enumerate(similars[:max_items], start=1):
+        task = d.get("task") or d.get("query") or d.get("question") or ""
+        items = d.get("action_augmented_subtask") or []
+        if not items:
+            continue
+        steps = []
+        for j, item in enumerate(items, start=1):
+            subtask = item.get("subtask", "")
+            action = item.get("subtask_action", "")
+            steps.append(f"  Subtask {j}: {subtask}\n  Action: {action}")
+        if steps:
+            lines.append(f"[Similar Task #{i}] {task}\n" + "\n".join(steps))
+    return "\n\n".join(lines).strip()
 
 
 def build_similar_task_blocks(
@@ -44,7 +147,50 @@ def build_similar_task_direction_blocks(similars: List[Any], max_items: int = 3)
     return "\n\n".join(lines).strip()
 
 
-def task_spec_approach_planning(
+def classify_task_type_and_domain(
+    task: str,
+    planning_prompt_template: Dict[str, str],
+    model_name: str,
+    key: str,
+    url: str,
+    model: Any,
+    slm: bool,
+) -> Dict[str, List[str]]:
+    """Call the LLM to classify task into predefined task_type and domain constants."""
+    classification_prompt = populate_template(
+        planning_prompt_template["task_classification_prompt"],
+        variables={
+            "task": task,
+            "task_types": "\n".join(f"- {t}" for t in TASK_TYPE_CONSTANTS),
+            "domains": "\n".join(f"- {d}" for d in DOMAIN_CONSTANTS),
+        },
+    )
+    raw = call_model(
+        query=classification_prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    try:
+        # Strip markdown fences if present
+        text = raw.strip()
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+        result = json.loads(text.strip())
+        task_types = result.get("task_type_normalized") or []
+        domains = result.get("domain_normalized") or []
+    except Exception as e:
+        logger.warning(f"Task classification parsing failed: {e}. Raw: {raw}")
+        task_types, domains = [], []
+    logger.info(f"Task classification → task_type_normalized={task_types}, domain_normalized={domains}")
+    return {"task_type_normalized": task_types, "domain_normalized": domains}
+
+
+def proposal_planning(
     example,
     augmented_question,
     model_name,
@@ -54,14 +200,40 @@ def task_spec_approach_planning(
     slm,
     retrieval_method,
     top_k,
-    observation=None,
+    retrieval_option: Literal["task_text", "type_and_domain"] = "task_text",
+    type_domain_retrieval_method=None,
 ):
     planning_prompt_template = load_prompts(
         path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
     )
 
-    # ====== [1] Generate knowledge, approach ====== #
-    retrieval_results = retrieval_method(example["question"], top_k=top_k)
+    # ====== [1] Retrieve similar tasks ====== #
+    if retrieval_option == "type_and_domain" and type_domain_retrieval_method is not None:
+        # Step 1: Classify current task into predefined constants
+        classification = classify_task_type_and_domain(
+            task=augmented_question,
+            planning_prompt_template=planning_prompt_template,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+        )
+        task_types = classification["task_type_normalized"]
+        domains = classification["domain_normalized"]
+
+        # Step 2: Filter by type+domain overlap in the KB, rank by (overlap DESC, text_score DESC)
+        retrieval_results = type_domain_retrieval_method(
+            example["question"], task_types=task_types, domains=domains, top_k=top_k
+        )
+        if not retrieval_results:
+            logger.warning(
+                "type_and_domain retrieval returned no results; falling back to task_text retrieval."
+            )
+            retrieval_results = retrieval_method(example["question"], top_k=top_k)
+    else:
+        # Default: retrieve by task text similarity only
+        retrieval_results = retrieval_method(example["question"], top_k=top_k)
     examples = build_similar_task_direction_blocks(similars=retrieval_results)
     logger.info(f"Retrieved examples:\n {examples}")
     approach_prompt = populate_template(
@@ -91,7 +263,6 @@ def task_spec_approach_planning(
         variables={
             "task": augmented_question,
             "approach": approach_str,
-            "observation": observation,
             "examples": examples,
         },
     )
@@ -108,4 +279,14 @@ def task_spec_approach_planning(
     logger.info(f"Generated Plan:\n{plan_str}")
     logger.info("=" * 100)
 
-    return plan_str
+    examples = {
+        "action_augmented_plan": build_action_augmented_plan_examples(retrieval_results),
+        "plan_and_subtask": build_plan_and_subtask_examples(retrieval_results),
+        "action_augmented_subtask": build_action_augmented_subtask_examples(retrieval_results),
+    }
+    return {
+        "plan": plan_str,
+        "approach": approach_str,
+        "retrieval_results": retrieval_results,
+        "examples": examples,
+    }

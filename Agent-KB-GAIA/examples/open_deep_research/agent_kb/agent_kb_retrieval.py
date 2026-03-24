@@ -206,6 +206,85 @@ class AgenticKnowledgeBase:
     # -----------------------------
     # Search (Text / Semantic)
     # -----------------------------
+    def type_domain_filtered_text_search(
+        self,
+        query: str,
+        task_types: List[str],
+        domains: List[str],
+        top_k: int = 3,
+    ) -> List[dict]:
+        """Filter tasks that overlap in both task_type and domain, then rank by
+        (overlap_count DESC, TF-IDF text similarity DESC) and return top_k.
+
+        KB records store task_type under task_analysis.problem_type (or
+        task_type_normalized) and domain under task_analysis.domain (or
+        domain_normalized).
+        """
+        type_set = set(task_types)
+        domain_set = set(domains)
+
+        # Build the filtered candidate list with overlap counts
+        filtered: List[tuple] = []  # (overlap_count, task_id, task_obj)
+        for task_id, task_obj in self.tasks.items():
+            ta = task_obj.augmented.task_analysis or {}
+            kb_types = set(ta.get("task_type_normalized") or ta.get("problem_type") or [])
+            kb_domains = set(ta.get("domain_normalized") or ta.get("domain") or [])
+
+            type_overlap = len(type_set & kb_types)
+            domain_overlap = len(domain_set & kb_domains)
+
+            if type_overlap > 0 and domain_overlap > 0:
+                filtered.append((type_overlap + domain_overlap, task_id, task_obj))
+
+        if not filtered:
+            return []
+
+        # Compute TF-IDF similarity for each filtered task against the query
+        component = self.field_components["task"]
+        if component["matrix"] is None or not component["task_ids"]:
+            # No TF-IDF index available; sort by overlap count only
+            filtered.sort(key=lambda x: x[0], reverse=True)
+            results = []
+            for overlap_count, task_id, _ in filtered[:top_k]:
+                results.append({
+                    "task_id": task_id,
+                    "score": float(overlap_count),
+                    "field": "task",
+                    "content": self.tasks[task_id].task,
+                })
+            return results
+
+        query_vec = component["vectorizer"].transform([query])
+        # Build index mapping task_id → position in the TF-IDF matrix
+        id_to_pos = {tid: pos for pos, tid in enumerate(component["task_ids"])}
+
+        scored: List[tuple] = []  # (overlap_count, text_score, task_id)
+        for overlap_count, task_id, _ in filtered:
+            pos = id_to_pos.get(task_id)
+            if pos is not None:
+                import scipy.sparse as sp
+                row = component["matrix"][pos]
+                text_score = float(
+                    (query_vec * row.T).toarray()[0][0]
+                )
+            else:
+                text_score = 0.0
+            scored.append((overlap_count, text_score, task_id))
+
+        # Primary sort: overlap_count DESC; secondary: text_score DESC
+        scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+
+        results = []
+        for overlap_count, text_score, task_id in scored[:top_k]:
+            results.append({
+                "task_id": task_id,
+                "score": text_score,
+                "overlap_count": overlap_count,
+                "field": "task",
+                "content": self.tasks[task_id].task,
+            })
+        return results
+
     def field_text_search(
         self, query: str, field: str = "task", top_k: int = 3
     ) -> List[dict]:
@@ -329,6 +408,45 @@ class AKB_Manager:
             )
 
         return detailed_results
+
+    def type_domain_text_search(
+        self,
+        query: str,
+        task_types: List[str],
+        domains: List[str],
+        top_k: int = 3,
+    ) -> List[dict]:
+        results = []
+        for result in self.knowledge_base.type_domain_filtered_text_search(
+            query, task_types, domains, top_k
+        ):
+            task_obj = self.get_task_details(result["task_id"])
+            results.append(
+                {
+                    "task_id": result["task_id"],
+                    "score": result["score"],
+                    "overlap_count": result.get("overlap_count", 0),
+                    "task": task_obj.task,
+                    "agent_planning": task_obj.original.agent_planning,
+                    "domain": task_obj.augmented.domain,
+                    "skills": task_obj.augmented.skills,
+                    "objective": task_obj.augmented.objective,
+                    "knowledge": task_obj.augmented.knowledge,
+                    "constraints": task_obj.augmented.constraints,
+                    "instructions": task_obj.augmented.instructions,
+                    "approach": task_obj.augmented.approach,
+                    "plan": task_obj.augmented.plan,
+                    "knowledge_summary": task_obj.augmented.knowledge_summary,
+                    "constraints_summary": task_obj.augmented.constraints_summary,
+                    "instructions_summary": task_obj.augmented.instructions_summary,
+                    "approach_summary": task_obj.augmented.approach_summary,
+                    "plan_summary": task_obj.augmented.plan_summary,
+                    "task_analysis": task_obj.augmented.task_analysis,
+                    "plan_steps_only": task_obj.augmented.plan_steps_only,
+                    "augmented_plan": task_obj.augmented.augmented_plan,
+                }
+            )
+        return results
 
     def search_by_text(
         self, query: str, field: str = "task", top_k: int = 3

@@ -108,6 +108,29 @@ class AKBClient:
             print(f"Semantic search error: {str(e)}")
             return []
 
+    def type_domain_text_search(
+        self,
+        query: str,
+        task_types: List[str],
+        domains: List[str],
+        top_k: int = 3,
+    ) -> List[Dict]:
+        endpoint = f"{self.base_url}/search/type_domain_text"
+        payload = {
+            "query": query,
+            "task_types": task_types,
+            "domains": domains,
+            "top_k": top_k,
+        }
+
+        try:
+            response = self.session.post(endpoint, json=payload)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Type-domain text search error: {str(e)}")
+            return []
+
 
 class SubAKBClient:
     def __init__(self, base_url="http://localhost:8003"):

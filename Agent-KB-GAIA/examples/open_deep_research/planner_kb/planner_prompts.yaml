@@ -1,3 +1,23 @@
+task_classification_prompt: |
+    Given the task below, select all applicable task types and domains from the predefined lists.
+    Choose only values that appear in the provided lists. You may select multiple values.
+
+    TASK_TYPES (choose one or more):
+    {{task_types}}
+
+    DOMAINS (choose one or more):
+    {{domains}}
+
+    Return STRICT JSON (no extra keys, no prose outside the JSON):
+    {
+        "task_type_normalized": ["<type1>", ...],
+        "domain_normalized": ["<domain1>", ...]
+    }
+
+    TASK:
+    {{task}}}
+
+
 approach_prompt: |
     Extract the following information for the given task.
     - knowledge: Background knowledge required to understand/solve the problem (core concepts, definitions, necessary theorems/tools)
@@ -32,9 +52,6 @@ approach_to_plan_prompt: |
 
     APPROACH:
     {{approach}}
-
-    OBSERVATION:
-    {{observation}}
 
     SIMILAR TASKS:
     {{examples}}
