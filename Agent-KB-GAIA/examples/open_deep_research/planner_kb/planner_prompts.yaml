@@ -20,8 +20,8 @@ task_classification_prompt: |
 
 approach_prompt: |
     Extract the following information for the given task.
-    - knowledge: Background knowledge required to understand/solve the problem (core concepts, definitions, necessary theorems/tools)
-    - approach:
+    - knowledge: simple explanations of background knowledge required to understand/solve the problem (core concepts, definitions, necessary theorems/tools)
+    - approach must consist of four steps:
         (a) which domain concept/definition(s) are used
         (b) which domain methodology/paradigm/algorithm is used
         (c) how these are applied step-by-step to derive the decision criterion(an intermediate, task-specific decision quantity or structure that is established/produced/derived to select the final answer).

@@ -22,23 +22,11 @@ class OriginalContext:
 
 @dataclass
 class AugmentedContext:
-    domain: Optional[Any] = None
-    skills: Optional[Any] = None
-    objective: Optional[Any] = None
-    knowledge: Optional[Any] = None
-    constraints: Optional[Any] = None
-    instructions: Optional[Any] = None
-    approach: Optional[Any] = None
-    plan: Optional[Any] = None
-    knowledge_summary: Optional[Any] = None
-    constraints_summary: Optional[Any] = None
-    instructions_summary: Optional[Any] = None
-    approach_summary: Optional[Any] = None
-    plan_summary: Optional[Any] = None
-    # structured plan fields
     task_analysis: Optional[Any] = None
-    plan_steps_only: Optional[Any] = None
-    augmented_plan: Optional[Any] = None
+    plan_only_steps: Optional[Any] = None
+    action_augmented_plan: Optional[Any] = None
+    subtasks_only_subtask: Optional[Any] = None
+    action_augmented_subtask: Optional[Any] = None
 
 
 @dataclass
@@ -47,6 +35,7 @@ class TaskInstance:
 
     task_id: str
     task: str
+    true_answer: str
     original: OriginalContext
     augmented: AugmentedContext
 
@@ -99,52 +88,30 @@ class AgenticKnowledgeBase:
                     task_id = item.get("task_id") or str(datetime.now().timestamp())
                     task_text = item.get("task", "")
 
-                    domain = item.get("domain", None)
-                    skills = item.get("skills", None)
-                    objective = item.get("objective", None)
-                    knowledge = item.get("knowledge", None)
-                    constraints = item.get("constraints", None)
-                    instructions = item.get("instructions", None)
-                    approach = item.get("approach", None)
-                    plan = item.get("plan", None)
-
-                    knowledge_summary = item.get("knowledge_summary", None)
-                    constraints_summary = item.get("constraints_summary", None)
-                    instructions_summary = item.get("instructions_summary", None)
-                    approach_summary = item.get("approach_summary", None)
-                    plan_summary = item.get("plan_summary", None)
-
+                    true_answer = item.get("true_answer", "")
                     agent_planning = item.get("agent_planning", None)
                     agent_experience = item.get("agent_experience", None)
 
                     task_analysis = item.get("task_analysis", None)
-                    plan_steps_only = item.get("plan_steps_only", None)
-                    augmented_plan = item.get("augmented_plan", None)
+                    plan_only_steps = item.get("plan_only_steps", None)
+                    action_augmented_plan = item.get("action_augmented_plan", None)
+                    subtasks_only_subtask = item.get("subtasks_only_subtask", None)
+                    action_augmented_subtask = item.get("action_augmented_subtask", None)
 
                     instance = TaskInstance(
                         task_id=task_id,
                         task=task_text,
+                        true_answer=true_answer,
                         original=OriginalContext(
                             agent_planning=agent_planning,
                             agent_experience=agent_experience,
                         ),
                         augmented=AugmentedContext(
-                            domain=domain,
-                            skills=skills,
-                            objective=objective,
-                            knowledge=knowledge,
-                            constraints=constraints,
-                            instructions=instructions,
-                            approach=approach,
-                            plan=plan,
-                            knowledge_summary=knowledge_summary,
-                            constraints_summary=constraints_summary,
-                            instructions_summary=instructions_summary,
-                            approach_summary=approach_summary,
-                            plan_summary=plan_summary,
                             task_analysis=task_analysis,
-                            plan_steps_only=plan_steps_only,
-                            augmented_plan=augmented_plan,
+                            plan_only_steps=plan_only_steps,
+                            action_augmented_plan=action_augmented_plan,
+                            subtasks_only_subtask=subtasks_only_subtask,
+                            action_augmented_subtask=action_augmented_subtask,
                         ),
                     )
                     batch.append(instance)
@@ -216,9 +183,8 @@ class AgenticKnowledgeBase:
         """Filter tasks that overlap in both task_type and domain, then rank by
         (overlap_count DESC, TF-IDF text similarity DESC) and return top_k.
 
-        KB records store task_type under task_analysis.problem_type (or
-        task_type_normalized) and domain under task_analysis.domain (or
-        domain_normalized).
+        KB records store task_type under task_analysis.task_type and domain
+        under task_analysis.domain.
         """
         type_set = set(task_types)
         domain_set = set(domains)
@@ -227,8 +193,8 @@ class AgenticKnowledgeBase:
         filtered: List[tuple] = []  # (overlap_count, task_id, task_obj)
         for task_id, task_obj in self.tasks.items():
             ta = task_obj.augmented.task_analysis or {}
-            kb_types = set(ta.get("task_type_normalized") or ta.get("problem_type") or [])
-            kb_domains = set(ta.get("domain_normalized") or ta.get("domain") or [])
+            kb_types = set(ta.get("task_type") or [])
+            kb_domains = set(ta.get("domain") or [])
 
             type_overlap = len(type_set & kb_types)
             domain_overlap = len(domain_set & kb_domains)
@@ -387,23 +353,14 @@ class AKB_Manager:
                     "task_id": task_id,
                     "total_score": float(total_score),
                     "task": task_obj.task,
+                    "true_answer": task_obj.true_answer,
                     "agent_planning": task_obj.original.agent_planning,
-                    "domain": task_obj.augmented.domain,
-                    "skills": task_obj.augmented.skills,
-                    "objective": task_obj.augmented.objective,
-                    "knowledge": task_obj.augmented.knowledge,
-                    "constraints": task_obj.augmented.constraints,
-                    "instructions": task_obj.augmented.instructions,
-                    "approach": task_obj.augmented.approach,
-                    "plan": task_obj.augmented.plan,
-                    "knowledge_summary": task_obj.augmented.knowledge_summary,
-                    "constraints_summary": task_obj.augmented.constraints_summary,
-                    "instructions_summary": task_obj.augmented.instructions_summary,
-                    "approach_summary": task_obj.augmented.approach_summary,
-                    "plan_summary": task_obj.augmented.plan_summary,
+                    "agent_experience": task_obj.original.agent_experience,
                     "task_analysis": task_obj.augmented.task_analysis,
-                    "plan_steps_only": task_obj.augmented.plan_steps_only,
-                    "augmented_plan": task_obj.augmented.augmented_plan,
+                    "plan_only_steps": task_obj.augmented.plan_only_steps,
+                    "action_augmented_plan": task_obj.augmented.action_augmented_plan,
+                    "subtasks_only_subtask": task_obj.augmented.subtasks_only_subtask,
+                    "action_augmented_subtask": task_obj.augmented.action_augmented_subtask,
                 }
             )
 
@@ -427,23 +384,14 @@ class AKB_Manager:
                     "score": result["score"],
                     "overlap_count": result.get("overlap_count", 0),
                     "task": task_obj.task,
+                    "true_answer": task_obj.true_answer,
                     "agent_planning": task_obj.original.agent_planning,
-                    "domain": task_obj.augmented.domain,
-                    "skills": task_obj.augmented.skills,
-                    "objective": task_obj.augmented.objective,
-                    "knowledge": task_obj.augmented.knowledge,
-                    "constraints": task_obj.augmented.constraints,
-                    "instructions": task_obj.augmented.instructions,
-                    "approach": task_obj.augmented.approach,
-                    "plan": task_obj.augmented.plan,
-                    "knowledge_summary": task_obj.augmented.knowledge_summary,
-                    "constraints_summary": task_obj.augmented.constraints_summary,
-                    "instructions_summary": task_obj.augmented.instructions_summary,
-                    "approach_summary": task_obj.augmented.approach_summary,
-                    "plan_summary": task_obj.augmented.plan_summary,
+                    "agent_experience": task_obj.original.agent_experience,
                     "task_analysis": task_obj.augmented.task_analysis,
-                    "plan_steps_only": task_obj.augmented.plan_steps_only,
-                    "augmented_plan": task_obj.augmented.augmented_plan,
+                    "plan_only_steps": task_obj.augmented.plan_only_steps,
+                    "action_augmented_plan": task_obj.augmented.action_augmented_plan,
+                    "subtasks_only_subtask": task_obj.augmented.subtasks_only_subtask,
+                    "action_augmented_subtask": task_obj.augmented.action_augmented_subtask,
                 }
             )
         return results
@@ -461,23 +409,14 @@ class AKB_Manager:
                     "content": {
                         "task_id": task_obj.task_id,
                         "task": task_obj.task,
+                        "true_answer": task_obj.true_answer,
                         "agent_planning": task_obj.original.agent_planning,
-                        "domain": task_obj.augmented.domain,
-                        "skills": task_obj.augmented.skills,
-                        "objective": task_obj.augmented.objective,
-                        "knowledge": task_obj.augmented.knowledge,
-                        "constraints": task_obj.augmented.constraints,
-                        "instructions": task_obj.augmented.instructions,
-                        "approach": task_obj.augmented.approach,
-                        "plan": task_obj.augmented.plan,
-                        "knowledge_summary": task_obj.augmented.knowledge_summary,
-                        "constraints_summary": task_obj.augmented.constraints_summary,
-                        "instructions_summary": task_obj.augmented.instructions_summary,
-                        "approach_summary": task_obj.augmented.approach_summary,
-                        "plan_summary": task_obj.augmented.plan_summary,
+                        "agent_experience": task_obj.original.agent_experience,
                         "task_analysis": task_obj.augmented.task_analysis,
-                        "plan_steps_only": task_obj.augmented.plan_steps_only,
-                        "augmented_plan": task_obj.augmented.augmented_plan,
+                        "plan_only_steps": task_obj.augmented.plan_only_steps,
+                        "action_augmented_plan": task_obj.augmented.action_augmented_plan,
+                        "subtasks_only_subtask": task_obj.augmented.subtasks_only_subtask,
+                        "action_augmented_subtask": task_obj.augmented.action_augmented_subtask,
                     },
                 }
             )
@@ -496,23 +435,14 @@ class AKB_Manager:
                     "content": {
                         "task_id": task_obj.task_id,
                         "task": task_obj.task,
+                        "true_answer": task_obj.true_answer,
                         "agent_planning": task_obj.original.agent_planning,
-                        "domain": task_obj.augmented.domain,
-                        "skills": task_obj.augmented.skills,
-                        "objective": task_obj.augmented.objective,
-                        "knowledge": task_obj.augmented.knowledge,
-                        "constraints": task_obj.augmented.constraints,
-                        "instructions": task_obj.augmented.instructions,
-                        "approach": task_obj.augmented.approach,
-                        "plan": task_obj.augmented.plan,
-                        "knowledge_summary": task_obj.augmented.knowledge_summary,
-                        "constraints_summary": task_obj.augmented.constraints_summary,
-                        "instructions_summary": task_obj.augmented.instructions_summary,
-                        "approach_summary": task_obj.augmented.approach_summary,
-                        "plan_summary": task_obj.augmented.plan_summary,
+                        "agent_experience": task_obj.original.agent_experience,
                         "task_analysis": task_obj.augmented.task_analysis,
-                        "plan_steps_only": task_obj.augmented.plan_steps_only,
-                        "augmented_plan": task_obj.augmented.augmented_plan,
+                        "plan_only_steps": task_obj.augmented.plan_only_steps,
+                        "action_augmented_plan": task_obj.augmented.action_augmented_plan,
+                        "subtasks_only_subtask": task_obj.augmented.subtasks_only_subtask,
+                        "action_augmented_subtask": task_obj.augmented.action_augmented_subtask,
                     },
                 }
             )

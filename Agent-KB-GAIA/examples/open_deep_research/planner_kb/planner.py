@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Predefined constants for type_and_domain retrieval mode.
-# These map to task_analysis.problem_type and task_analysis.domain in the KB.
+# These map to task_analysis.task_type and task_analysis.domain in the KB.
 # Modify as needed.
 # ---------------------------------------------------------------------------
 TASK_TYPE_CONSTANTS: List[str] = [
@@ -121,12 +121,13 @@ def build_similar_task_blocks(
 
     for i, d in enumerate(similars[:max_items], start=1):
         task = d.get("task") or d.get("query") or d.get("question") or ""
-        plan_steps_only = d.get("plan_steps_only")
+        plan_only_steps = d.get("plan_only_steps") or []
 
         parts: List[str] = []
         if mode == "plan_steps_only":
             parts.append(f"[Similar Task #{i}] {task}")
-            parts.append(f"Plan: {plan_steps_only}\n")
+            step_strs = [s.get("step", s) if isinstance(s, dict) else s for s in plan_only_steps]
+            parts.append("Plan:\n" + "\n".join(f"  - {s}" for s in step_strs) + "\n")
         lines.append("\n".join(parts).strip())
 
     return "\n\n".join(lines).strip()
@@ -137,12 +138,12 @@ def build_similar_task_direction_blocks(similars: List[Any], max_items: int = 3)
 
     for i, d in enumerate(similars[:max_items], start=1):
         task = d.get("task") or d.get("query") or d.get("question") or ""
-        problem_type = d.get("task_analysis").get("problem_type")
+        task_type = d.get("task_analysis").get("task_type")
         domain = d.get("task_analysis").get("domain")
         knowledge = d.get("task_analysis").get("knowledge")
         approach = d.get("task_analysis").get("approach")
         lines.append(
-            f"[Similar Task #{i}] {task}\nProblemType: {problem_type}\nDomain: {domain}\nKnowledge: {knowledge}\nApproach: {approach}\n"
+            f"[Similar Task #{i}] {task}\nTaskType: {task_type}\nDomain: {domain}\nKnowledge: {knowledge}\nApproach: {approach}\n"
         )
     return "\n\n".join(lines).strip()
 

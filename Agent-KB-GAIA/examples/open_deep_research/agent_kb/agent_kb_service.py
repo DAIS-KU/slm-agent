@@ -53,28 +53,15 @@ class TypeDomainSearchRequest(BaseModel):
 class TaskResponse(BaseModel):
     task_id: str
     task: str
+    true_answer: Optional[str] = None
     agent_planning: Optional[Any] = None
-    # ===== TaskSpec ===== #
-    domain: Optional[Any] = None
-    skills: Optional[Any] = None
-    objective: Optional[Any] = None
-    # ===== Context ===== #
-    knowledge: Optional[Any] = None
-    constraints: Optional[Any] = None
-    instructions: Optional[Any] = None
-    approach: Optional[Any] = None
-    knowledge_summary: Optional[Any] = None
-    constraints_summary: Optional[Any] = None
-    instructions_summary: Optional[Any] = None
-    approach_summary: Optional[Any] = None
-    # ===== Plan ===== #
-    plan: Optional[Any] = None
-    plan_summary: Optional[Any] = None
-    # ===== Structured plan fields ===== #
+    agent_experience: Optional[Any] = None
     task_analysis: Optional[Any] = None
-    plan_steps_only: Optional[Any] = None
-    augmented_plan: Optional[Any] = None
-    total_score: Optional[float] = None  # hybrid일 때만 있을 수도 있어서 Optional
+    plan_only_steps: Optional[Any] = None
+    action_augmented_plan: Optional[Any] = None
+    subtasks_only_subtask: Optional[Any] = None
+    action_augmented_subtask: Optional[Any] = None
+    total_score: Optional[float] = None
 
 
 class PerformanceStats(BaseModel):
@@ -111,23 +98,14 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "task_id": str(item["task_id"]),
         "task": item["task"],
-        "agent_planning": item["agent_planning"],
-        "domain": item["domain"],
-        "skills": item["skills"],
-        "objective": item["objective"],
-        "knowledge": item["knowledge"],
-        "constraints": item["constraints"],
-        "instructions": item["instructions"],
-        "approach": item["approach"],
-        "plan": item.get("plan", None),
-        "knowledge_summary": item["knowledge_summary"],
-        "constraints_summary": item["constraints_summary"],
-        "instructions_summary": item["instructions_summary"],
-        "approach_summary": item["approach_summary"],
-        "plan_summary": item.get("plan_summary", None),
+        "true_answer": item.get("true_answer", None),
+        "agent_planning": item.get("agent_planning", None),
+        "agent_experience": item.get("agent_experience", None),
         "task_analysis": item.get("task_analysis", None),
-        "plan_steps_only": item.get("plan_steps_only", None),
-        "augmented_plan": item.get("augmented_plan", None),
+        "plan_only_steps": item.get("plan_only_steps", None),
+        "action_augmented_plan": item.get("action_augmented_plan", None),
+        "subtasks_only_subtask": item.get("subtasks_only_subtask", None),
+        "action_augmented_subtask": item.get("action_augmented_subtask", None),
     }
 
 
@@ -156,23 +134,14 @@ async def hybrid_search(request: SearchRequest):
                 TaskResponse(
                     task_id=str(core["task_id"]),
                     task=core["task"],
+                    true_answer=core["true_answer"],
                     agent_planning=core["agent_planning"],
-                    domain=core["domain"],
-                    skills=core["skills"],
-                    objective=core["objective"],
-                    knowledge=core["knowledge"],
-                    constraints=core["constraints"],
-                    instructions=core["instructions"],
-                    approach=core["approach"],
-                    plan=core["plan"],
-                    knowledge_summary=core["knowledge_summary"],
-                    constraints_summary=core["constraints_summary"],
-                    instructions_summary=core["instructions_summary"],
-                    approach_summary=core["approach_summary"],
-                    plan_summary=core["plan_summary"],
+                    agent_experience=core["agent_experience"],
                     task_analysis=core["task_analysis"],
-                    plan_steps_only=core["plan_steps_only"],
-                    augmented_plan=core["augmented_plan"],
+                    plan_only_steps=core["plan_only_steps"],
+                    action_augmented_plan=core["action_augmented_plan"],
+                    subtasks_only_subtask=core["subtasks_only_subtask"],
+                    action_augmented_subtask=core["action_augmented_subtask"],
                     total_score=item.get("total_score"),
                 )
             )
@@ -207,26 +176,15 @@ async def text_search(request: SearchRequest):
                 TaskResponse(
                     task_id=str(core["task_id"]),
                     task=core["task"],
+                    true_answer=core["true_answer"],
                     agent_planning=core["agent_planning"],
-                    domain=core["domain"],
-                    skills=core["skills"],
-                    objective=core["objective"],
-                    knowledge=core["knowledge"],
-                    constraints=core["constraints"],
-                    instructions=core["instructions"],
-                    approach=core["approach"],
-                    plan=core["plan"],
-                    knowledge_summary=core["knowledge_summary"],
-                    constraints_summary=core["constraints_summary"],
-                    instructions_summary=core["instructions_summary"],
-                    approach_summary=core["approach_summary"],
-                    plan_summary=core["plan_summary"],
+                    agent_experience=core["agent_experience"],
                     task_analysis=core["task_analysis"],
-                    plan_steps_only=core["plan_steps_only"],
-                    augmented_plan=core["augmented_plan"],
-                    total_score=item.get(
-                        "score"
-                    ),  # text 검색은 score를 total_score로 매핑
+                    plan_only_steps=core["plan_only_steps"],
+                    action_augmented_plan=core["action_augmented_plan"],
+                    subtasks_only_subtask=core["subtasks_only_subtask"],
+                    action_augmented_subtask=core["action_augmented_subtask"],
+                    total_score=item.get("score"),
                 )
             )
 
@@ -258,26 +216,15 @@ async def semantic_search(request: SearchRequest):
                 TaskResponse(
                     task_id=str(core["task_id"]),
                     task=core["task"],
+                    true_answer=core["true_answer"],
                     agent_planning=core["agent_planning"],
-                    domain=core["domain"],
-                    skills=core["skills"],
-                    objective=core["objective"],
-                    knowledge=core["knowledge"],
-                    constraints=core["constraints"],
-                    instructions=core["instructions"],
-                    approach=core["approach"],
-                    plan=core["plan"],
-                    knowledge_summary=core["knowledge_summary"],
-                    constraints_summary=core["constraints_summary"],
-                    instructions_summary=core["instructions_summary"],
-                    approach_summary=core["approach_summary"],
-                    plan_summary=core["plan_summary"],
+                    agent_experience=core["agent_experience"],
                     task_analysis=core["task_analysis"],
-                    plan_steps_only=core["plan_steps_only"],
-                    augmented_plan=core["augmented_plan"],
-                    total_score=item.get(
-                        "score"
-                    ),  # semantic 검색도 score를 total_score로 매핑
+                    plan_only_steps=core["plan_only_steps"],
+                    action_augmented_plan=core["action_augmented_plan"],
+                    subtasks_only_subtask=core["subtasks_only_subtask"],
+                    action_augmented_subtask=core["action_augmented_subtask"],
+                    total_score=item.get("score"),
                 )
             )
 
@@ -313,23 +260,14 @@ async def type_domain_text_search(request: TypeDomainSearchRequest):
                 TaskResponse(
                     task_id=str(core["task_id"]),
                     task=core["task"],
+                    true_answer=core["true_answer"],
                     agent_planning=core["agent_planning"],
-                    domain=core["domain"],
-                    skills=core["skills"],
-                    objective=core["objective"],
-                    knowledge=core["knowledge"],
-                    constraints=core["constraints"],
-                    instructions=core["instructions"],
-                    approach=core["approach"],
-                    plan=core["plan"],
-                    knowledge_summary=core["knowledge_summary"],
-                    constraints_summary=core["constraints_summary"],
-                    instructions_summary=core["instructions_summary"],
-                    approach_summary=core["approach_summary"],
-                    plan_summary=core["plan_summary"],
+                    agent_experience=core["agent_experience"],
                     task_analysis=core["task_analysis"],
-                    plan_steps_only=core["plan_steps_only"],
-                    augmented_plan=core["augmented_plan"],
+                    plan_only_steps=core["plan_only_steps"],
+                    action_augmented_plan=core["action_augmented_plan"],
+                    subtasks_only_subtask=core["subtasks_only_subtask"],
+                    action_augmented_subtask=core["action_augmented_subtask"],
                     total_score=item.get("score"),
                 )
             )
