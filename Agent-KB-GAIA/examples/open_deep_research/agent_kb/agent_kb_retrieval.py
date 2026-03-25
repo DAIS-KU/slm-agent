@@ -27,6 +27,7 @@ class AugmentedContext:
     action_augmented_plan: Optional[Any] = None
     subtasks_only_subtask: Optional[Any] = None
     action_augmented_subtask: Optional[Any] = None
+    plan_subtask_action: Optional[Any] = None
 
 
 @dataclass
@@ -97,6 +98,7 @@ class AgenticKnowledgeBase:
                     action_augmented_plan = item.get("action_augmented_plan", None)
                     subtasks_only_subtask = item.get("subtasks_only_subtask", None)
                     action_augmented_subtask = item.get("action_augmented_subtask", None)
+                    plan_subtask_action = item.get("plan_subtask_action", None)
 
                     instance = TaskInstance(
                         task_id=task_id,
@@ -112,6 +114,7 @@ class AgenticKnowledgeBase:
                             action_augmented_plan=action_augmented_plan,
                             subtasks_only_subtask=subtasks_only_subtask,
                             action_augmented_subtask=action_augmented_subtask,
+                            plan_subtask_action=plan_subtask_action,
                         ),
                     )
                     batch.append(instance)
@@ -361,6 +364,7 @@ class AKB_Manager:
                     "action_augmented_plan": task_obj.augmented.action_augmented_plan,
                     "subtasks_only_subtask": task_obj.augmented.subtasks_only_subtask,
                     "action_augmented_subtask": task_obj.augmented.action_augmented_subtask,
+                    "plan_subtask_action": task_obj.augmented.plan_subtask_action,
                 }
             )
 
@@ -392,6 +396,7 @@ class AKB_Manager:
                     "action_augmented_plan": task_obj.augmented.action_augmented_plan,
                     "subtasks_only_subtask": task_obj.augmented.subtasks_only_subtask,
                     "action_augmented_subtask": task_obj.augmented.action_augmented_subtask,
+                    "plan_subtask_action": task_obj.augmented.plan_subtask_action,
                 }
             )
         return results

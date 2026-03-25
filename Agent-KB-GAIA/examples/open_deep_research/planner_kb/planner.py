@@ -18,37 +18,11 @@ logger = logging.getLogger(__name__)
 # Modify as needed.
 # ---------------------------------------------------------------------------
 TASK_TYPE_CONSTANTS: List[str] = [
-    "reasoning",
-    "information_retrieval",
-    "calculation",
-    "classification",
-    "multi_step_reasoning",
-    "data_extraction",
-    "comparison",
-    "verification",
-    "summarization",
-    "question_answering",
+'algebra', 'algorithm_design', 'analysis', 'arithmetic', 'calculus', 'causal_inference', 'chemical_analysis', 'circuit_analysis', 'classification', 'clinical_evaluation', 'code_analysis', 'combinatorial_analysis', 'computation_geometry', 'data_transformation', 'decision_making', 'decomposition', 'definition', 'document_analysis', 'estimation', 'formalization', 'game_analysis', 'graph_theory', 'group_theory', 'inequality_proof', 'legal_analysis', 'mapping', 'mathematical_reasoning', 'model_theory', 'networking', 'quantum_computation', 'statistical_analysis'
 ]
 
 DOMAIN_CONSTANTS: List[str] = [
-    "math",
-    "science",
-    "history",
-    "programming",
-    "general_knowledge",
-    "language",
-    "geography",
-    "music",
-    "sports",
-    "economics",
-    "biology",
-    "chemistry",
-    "physics",
-    "literature",
-    "law",
-    "medicine",
-    "technology",
-    "culture",
+'acoustics', 'algebra', 'algorithm_design', 'analysis', 'biology', 'business', 'chemistry', 'computer_science', 'cryptography', 'education', 'engineering', 'ethics', 'experiment_design', 'games', 'healthcare', 'law', 'mathematics', 'medicine', 'music', 'networking', 'physics', 'political_science', 'protein_engineering', 'puzzles', 'representation_theory', 'robotics', 'sports', 'statistical_mechanics'
 ]
 
 
@@ -111,6 +85,35 @@ def build_action_augmented_subtask_examples(
             steps.append(f"  Subtask {j}: {subtask}\n  Action: {action}")
         if steps:
             lines.append(f"[Similar Task #{i}] {task}\n" + "\n".join(steps))
+    return "\n\n".join(lines).strip()
+
+
+def build_plan_subtask_action_examples(
+    similars: List[Any], max_items: int = 3
+) -> str:
+    """Build nested examples from the plan_subtask_action field.
+    Each entry has: step, step_action, subtasks: [{subtask, subtask_action}].
+    """
+    lines: List[str] = []
+    for i, d in enumerate(similars[:max_items], start=1):
+        task = d.get("task") or d.get("query") or d.get("question") or ""
+        items = d.get("plan_subtask_action") or []
+        if not items:
+            continue
+        block = [f"[Similar Task #{i}] {task}"]
+        for j, step_item in enumerate(items, start=1):
+            step = step_item.get("step", "")
+            step_action = step_item.get("step_action", "")
+            block.append(f"  ## Step {j}: {step}")
+            if step_action:
+                block.append(f"     Step Action: {step_action}")
+            for k, st in enumerate(step_item.get("subtasks", []), start=1):
+                subtask = st.get("subtask", "")
+                subtask_action = st.get("subtask_action", "")
+                block.append(f"     - Subtask {j}.{k}: {subtask}")
+                if subtask_action:
+                    block.append(f"       Action: {subtask_action}")
+        lines.append("\n".join(block))
     return "\n\n".join(lines).strip()
 
 
@@ -284,6 +287,7 @@ def proposal_planning(
         "action_augmented_plan": build_action_augmented_plan_examples(retrieval_results),
         "plan_and_subtask": build_plan_and_subtask_examples(retrieval_results),
         "action_augmented_subtask": build_action_augmented_subtask_examples(retrieval_results),
+        "plan_subtask_action": build_plan_subtask_action_examples(retrieval_results),
     }
     return {
         "plan": plan_str,

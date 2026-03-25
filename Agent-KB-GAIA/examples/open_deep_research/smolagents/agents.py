@@ -804,7 +804,7 @@ You have been provided with these additional arguments, that you can access usin
                             "managed_agents": self.managed_agents,
                             "answer_facts": answer_facts,
                             "proposal": proposal,
-                            "examples": kb_examples.get("plan_and_subtask", ""),
+                            "examples": kb_examples.get("plan_subtask_action", ""),
                         },
                     )
                     chat_message_plan: ChatMessage = self.model(
@@ -812,7 +812,7 @@ You have been provided with these additional arguments, that you can access usin
                     )
 
                 elif self.plan_mode == "plan_subtask_action":
-                    # Stage 1: generate subtask decomposition
+                    # Stage 1: generate plan steps using action_augmented_plan examples
                     stage1_prompt = populate_template(
                         self.prompt_templates["planning"]["initial_plan_subtask_action_stage1"],
                         variables={
@@ -821,27 +821,27 @@ You have been provided with these additional arguments, that you can access usin
                             "managed_agents": self.managed_agents,
                             "answer_facts": answer_facts,
                             "proposal": proposal,
-                            "examples": kb_examples.get("plan_and_subtask", ""),
+                            "examples": kb_examples.get("action_augmented_plan", ""),
                         },
                     )
-                    chat_message_subtasks: ChatMessage = self.model(
+                    chat_message_steps: ChatMessage = self.model(
                         [_make_user_msg(stage1_prompt)], stop_sequences=["<end_plan>"]
                     )
-                    subtask_plan = chat_message_subtasks.content
+                    plan_steps = chat_message_steps.content
                     self.logger.log(
-                        Rule("[bold]Subtask decomposition", style="orange"),
-                        Text(subtask_plan),
+                        Rule("[bold]Plan steps", style="orange"),
+                        Text(plan_steps),
                         level=LogLevel.INFO,
                     )
-                    # Stage 2: generate action_augmented_subtask plan
+                    # Stage 2: for each step, generate subtasks with actions → nested plan
                     stage2_prompt = populate_template(
                         self.prompt_templates["planning"]["initial_plan_subtask_action_stage2"],
                         variables={
                             "task": task,
                             "tools": self.tools,
                             "managed_agents": self.managed_agents,
-                            "subtask_plan": subtask_plan,
-                            "examples": kb_examples.get("action_augmented_subtask", ""),
+                            "plan_steps": plan_steps,
+                            "examples": kb_examples.get("plan_subtask_action", ""),
                         },
                     )
                     chat_message_plan: ChatMessage = self.model(

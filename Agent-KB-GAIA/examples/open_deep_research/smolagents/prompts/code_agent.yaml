@@ -386,8 +386,8 @@ planning:
   initial_plan_and_subtask_with_proposal: |-
     You are a world expert at making efficient plans to solve any task using a set of carefully crafted tools.
 
-    A proposal plan has already been generated for this task. Your job is to decompose the task into
-    independent subtasks with a step-by-step plan for each subtask.
+    A proposal plan has already been generated for this task. Your job is to produce a nested
+    plan where each plan step is decomposed into its concrete subtasks.
 
     Here is your task:
 
@@ -421,27 +421,25 @@ planning:
     {{proposal}}
     ```
 
-    Similar task examples showing subtask decomposition:
+    Similar task examples showing nested step → subtask mapping:
     ```
     {{examples}}
     ```
 
-    Analyze whether the task can be effectively broken down into independent subtasks:
-    - If it can, break it down and provide a separate step-by-step plan for each subtask.
-    - If it cannot be efficiently divided, treat it as a single task with one comprehensive plan.
+    Referring to the step → subtask mapping in the examples, generate a nested plan for this task.
+    For each plan step, list the subtasks that belong to it.
 
-    Format each subtask as:
-    ##STX[subtask description] (where X is the subtask number)
-    [Step-by-step plan for this subtask]
+    Format each entry as:
+    ## Step X: <step description>
+    - Subtask X.Y: <subtask description>
 
-    If the task cannot be divided, provide just one plan without the subtask structure.
-    Do not add superfluous steps. After the final step, write the '\n<end_plan>' tag and stop there.
+    Do not add superfluous steps. After the final subtask, write the '\n<end_plan>' tag and stop there.
 
-    Now write your plan below.
+    Now write your nested plan below.
   initial_plan_subtask_action_stage1: |-
     You are a world expert at making efficient plans to solve any task using a set of carefully crafted tools.
 
-    A proposal plan has already been generated. Your job is to decompose the task into subtasks.
+    A proposal plan has already been generated. Your job is to generate concrete plan steps for this task.
 
     Here is your task:
 
@@ -475,23 +473,23 @@ planning:
     {{proposal}}
     ```
 
-    Similar task examples showing subtask decomposition:
+    Similar task examples showing plan steps and their concrete actions:
     ```
     {{examples}}
     ```
 
-    Decompose the task into independent subtasks. For each subtask provide a short description.
-    Format each subtask as:
-    ##STX[subtask description] (where X is the subtask number)
+    Generate a list of plan steps to solve the task. Each step should be a concise, actionable description.
+    Format each step as:
+    - Step X: <step description> (where X is the step number)
 
-    After listing all subtasks, write the '\n<end_plan>' tag and stop there.
+    Do not add superfluous steps. After the final step, write the '\n<end_plan>' tag and stop there.
 
-    Now write your subtask decomposition below.
+    Now write your plan steps below.
   initial_plan_subtask_action_stage2: |-
     You are a world expert at making efficient plans to solve any task using a set of carefully crafted tools.
 
-    Subtasks have already been identified for this task. Your job is to produce a concrete action plan
-    for each subtask, specifying what tool or code action to take.
+    Plan steps have already been generated. Your job is to decompose each step into subtasks and
+    provide a concrete action for each subtask, producing a nested plan-subtask-action structure.
 
     Here is your task:
 
@@ -515,24 +513,25 @@ planning:
     {%- else %}
     {%- endif %}
 
-    Subtask decomposition:
+    Plan steps:
     ```
-    {{subtask_plan}}
+    {{plan_steps}}
     ```
 
-    Similar task examples showing (subtask, action) pairs:
+    Similar task examples showing nested step → subtask → action structure:
     ```
     {{examples}}
     ```
 
-    For each subtask, produce a concrete action plan. Format each entry as:
-    ##STX[subtask description]
-    - Subtask: <the subtask>
+    For each plan step, decompose it into subtasks and provide a concrete action per subtask.
+    Format each entry as:
+    ## Step X: <step description>
+    - Subtask X.Y: <subtask description>
       Action: <which tool/code to use and how>
 
     Do not add superfluous steps. After the final entry, write the '\n<end_plan>' tag and stop there.
 
-    Now write your action plan below.
+    Now write your nested plan below.
   update_facts_pre_messages: |-
     You are a world expert at gathering known and unknown facts based on a conversation.
     Below you will find a task, and a history of attempts made to solve the task. You will have to produce a list of these:
