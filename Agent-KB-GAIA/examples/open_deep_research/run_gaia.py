@@ -211,18 +211,6 @@ def parse_args():
         help="agent kb model choice",
     )
     parser.add_argument(
-        "--reflection_mode",
-        type=str,
-        default="raw_memory",
-        choices=["raw_memory", "llm_summary"],
-    )
-    parser.add_argument(
-        "--directive_injection",
-        type=str,
-        default="none",
-        choices=["directives", "eval", "eval_plan", "eval_actions", "none"],
-    )
-    parser.add_argument(
         "--do_field",
         type=str,
         default="do_raw",
@@ -297,9 +285,6 @@ os.makedirs(f"./{BROWSER_CONFIG['downloads_folder']}", exist_ok=True)
 def create_agent_hierarchy(
     model: Model, model_search: Model, args, debug=False, sub_retrieval_method=None
 ):
-    logger.info(
-        f"[Agent Setting] reflection_mode: {args.reflection_mode}, directive_injection: {args.directive_injection}"
-    )
     manager_agent = CodeAgent(
         model=model,
         tools=[],
@@ -312,9 +297,6 @@ def create_agent_hierarchy(
         agent_kb=args.agent_kb,
         top_k=args.top_k,
         retrieval_type=args.retrieval_type,
-        reflection_mode=args.reflection_mode,
-        directive_injection=args.directive_injection,
-        sub_retrieval_method=sub_retrieval_method,
         plan_mode=args.plan_mode,
         facts_mode=args.facts_mode,
     )
@@ -345,8 +327,6 @@ def answer_single_question(
     slm=False,
     model=None,
     model_search=None,
-    reflection_mode="raw_memory",
-    do_field="do_raw",
     use_sub_ex=False,
 ):
     if slm:
@@ -385,15 +365,6 @@ def answer_single_question(
 
     akb_client = AKBClient()
     sub_akb_client = SubAKBClient()
-
-    sub_retrieval_method = None
-    if args.directive_injection == "eval_actions":
-        sub_retrieval_method = {
-            "hybrid": sub_akb_client.hybrid_search,
-            "text": sub_akb_client.text_search,
-            "semantic": sub_akb_client.semantic_search,
-        }[args.retrieval_type]
-
     agent = create_agent_hierarchy(
         model, model_search, args, debug, sub_retrieval_method=sub_retrieval_method
     )
@@ -575,7 +546,7 @@ def main():
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:1",
+            device_map="cuda:2",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -583,7 +554,7 @@ def main():
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:1",
+            device_map="cuda:2",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -623,7 +594,6 @@ def main():
                 args.slm,
                 model,
                 model_search,
-                args.reflection_mode,
                 args.do_field,
                 args.use_sub_ex,
             )
@@ -646,8 +616,6 @@ def main():
                     model_search,
                     args.planning_type,
                     args.planning_field,
-                    args.reflection_mode,
-                    args.use_summary,
                     args.do_field,
                     args.use_sub_ex,
                     args.augment_mode,

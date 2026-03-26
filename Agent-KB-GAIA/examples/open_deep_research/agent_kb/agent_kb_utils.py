@@ -58,7 +58,7 @@ def call_model(query, model_name, key, url, model, slm=False):
 
 
 class AKBClient:
-    def __init__(self, base_url="http://localhost:8000"):
+    def __init__(self, base_url="http://localhost:8005"):
         self.base_url = base_url
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
