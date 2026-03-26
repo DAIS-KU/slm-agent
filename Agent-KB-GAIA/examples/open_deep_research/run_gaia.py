@@ -283,7 +283,7 @@ os.makedirs(f"./{BROWSER_CONFIG['downloads_folder']}", exist_ok=True)
 
 
 def create_agent_hierarchy(
-    model: Model, model_search: Model, args, debug=False, sub_retrieval_method=None
+    model: Model, model_search: Model, args, debug=False,
 ):
     manager_agent = CodeAgent(
         model=model,
@@ -366,7 +366,7 @@ def answer_single_question(
     akb_client = AKBClient()
     sub_akb_client = SubAKBClient()
     agent = create_agent_hierarchy(
-        model, model_search, args, debug, sub_retrieval_method=sub_retrieval_method
+        model, model_search, args, debug,
     )
 
     model_name_retrieval = args.model_name_retrieval
@@ -375,13 +375,6 @@ def answer_single_question(
         "text": akb_client.text_search,
         "semantic": akb_client.semantic_search,
     }[args.retrieval_type]
-
-    sub_retrieval_method = {
-        "hybrid": sub_akb_client.hybrid_search,
-        "text": sub_akb_client.text_search,
-        "semantic": sub_akb_client.semantic_search,
-    }[args.retrieval_type]
-
     augmented_question = "Here is the task:" + example["question"]
 
     if example["file_name"]:
@@ -547,7 +540,7 @@ def main():
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:2",
+            device_map="cuda:1",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -555,7 +548,7 @@ def main():
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:2",
+            device_map="cuda:1",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -595,7 +588,6 @@ def main():
                 args.slm,
                 model,
                 model_search,
-                args.do_field,
                 args.use_sub_ex,
             )
     else:

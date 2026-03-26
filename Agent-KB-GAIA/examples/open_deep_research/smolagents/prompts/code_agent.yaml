@@ -478,13 +478,7 @@ planning:
     {{examples}}
     ```
 
-    Generate a list of plan steps to solve the task. Each step should be a concise, actionable description.
-    Format each step as:
-    - Step X: <step description> (where X is the step number)
-
-    Do not add superfluous steps. After the final step, write the '\n<end_plan>' tag and stop there.
-
-    Now write your plan steps below.
+    Now begin! Write your plan below.
   initial_plan_subtask_action_stage2: |-
     You are a world expert at making efficient plans to solve any task using a set of carefully crafted tools.
 
@@ -523,14 +517,7 @@ planning:
     {{examples}}
     ```
 
-    For each plan step, decompose it into subtasks.
-    Format each entry as:
-    ## Step X: <step description>
-    - Subtask X.Y: <subtask description>
-
-    Do not add superfluous steps. After the final entry, write the '\n<end_plan>' tag and stop there.
-
-    Now write your nested plan below.
+    Now begin! Write your plan below.
   update_facts_pre_messages: |-
     You are a world expert at gathering known and unknown facts based on a conversation.
     Below you will find a task, and a history of attempts made to solve the task. You will have to produce a list of these:
