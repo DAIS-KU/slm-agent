@@ -43,6 +43,27 @@ def build_plan_subtask_examples(
     return "\n\n".join(lines).strip()
 
 
+def build_plan_subtask_action_examples(
+    similars: List[Any], max_items: int = 3
+) -> str:
+    """Build examples showing step → subtask_action structure from plan_subtask_action."""
+    lines: List[str] = []
+    for i, d in enumerate(similars[:max_items], start=1):
+        task = d.get("task") or ""
+        items = d.get("plan_subtask_action") or []
+        if not items:
+            continue
+        block = [f"[Similar Task #{i}] {task}"]
+        for j, step_item in enumerate(items, start=1):
+            step = step_item.get("step", "")
+            block.append(f"  ## Step {j}: {step}")
+            for k, st in enumerate(step_item.get("subtasks", []), start=1):
+                subtask_action = st.get("subtask_action", "")
+                block.append(f"     - Subtask {j}.{k}: {subtask_action}")
+        lines.append("\n".join(block))
+    return "\n\n".join(lines).strip()
+
+
 
 def build_similar_task_direction_blocks(similars: List[Any], max_items: int = 3) -> str:
     lines: List[str] = []
@@ -218,6 +239,18 @@ def proposal_planning(
     else:
         # Default: retrieve by task text similarity only
         retrieval_results = retrieval_method(example["question"], top_k=top_k)
+    # ====== Log query task_type/domain and retrieved task_type/domain ====== #
+    if retrieval_option == "type_and_domain" and type_domain_retrieval_method is not None:
+        logger.info(f"[Retrieval Query] task_type={task_types}, domain={domains}")
+    else:
+        logger.info("[Retrieval Query] task_type=N/A (text-only retrieval), domain=N/A")
+
+    for i, r in enumerate(retrieval_results):
+        ta = r.get("task_analysis") or {}
+        r_types = ta.get("task_type", [])
+        r_domains = ta.get("domain", [])
+        logger.info(f"[Retrieved #{i+1}] task_id={r.get('task_id')}, task_type={r_types}, domain={r_domains}")
+
     knowledge_examples = build_similar_task_direction_blocks(similars=retrieval_results)
     plan_examples = build_similar_task_plan_blocks(similars=retrieval_results)
     logger.info(f"Retrieved knowledge examples:\n {knowledge_examples}")
@@ -250,13 +283,15 @@ def proposal_planning(
 
     examples = {
         "plan_subtask": build_plan_subtask_examples(retrieval_results),
+        "plan_subtask_action": build_plan_subtask_action_examples(retrieval_results),
     }
 
-    # ====== [4] Stage 4: generate subtasks from plan_str (subtask / plan_subtask modes) ====== #
-    if plan_mode in ("subtask", "plan_subtask") and planning_prompt_templates:
+    # ====== [4] Stage 4: generate subtasks from plan_str (subtask / plan_subtask / plan_subtask_action modes) ====== #
+    if plan_mode in ("subtask", "plan_subtask", "plan_subtask_action") and planning_prompt_templates:
         _tools = tools or {}
         _managed_agents = managed_agents or {}
 
+        example_key = "plan_subtask_action" if plan_mode == "plan_subtask_action" else "plan_subtask"
         stage2_prompt = populate_template(
             planning_prompt_templates["initial_plan_subtask_action_stage2"],
             variables={
@@ -264,7 +299,7 @@ def proposal_planning(
                 "tools": _tools,
                 "managed_agents": _managed_agents,
                 "plan_steps": plan_str,
-                "examples": examples["plan_subtask"],
+                "examples": examples[example_key],
             },
         )
         subtask_plan = call_model(
