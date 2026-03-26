@@ -488,8 +488,8 @@ planning:
   initial_plan_subtask_action_stage2: |-
     You are a world expert at making efficient plans to solve any task using a set of carefully crafted tools.
 
-    Plan steps have already been generated. Your job is to decompose each step into subtasks and
-    provide a concrete action for each subtask, producing a nested plan-subtask-action structure.
+    Plan steps have already been generated. Your job is to decompose each step into subtasks,
+    producing a nested plan-subtask structure.
 
     Here is your task:
 
@@ -518,16 +518,15 @@ planning:
     {{plan_steps}}
     ```
 
-    Similar task examples showing nested step → subtask → action structure:
+    Similar task examples showing nested step → subtask structure:
     ```
     {{examples}}
     ```
 
-    For each plan step, decompose it into subtasks and provide a concrete action per subtask.
+    For each plan step, decompose it into subtasks.
     Format each entry as:
     ## Step X: <step description>
     - Subtask X.Y: <subtask description>
-      Action: <which tool/code to use and how>
 
     Do not add superfluous steps. After the final entry, write the '\n<end_plan>' tag and stop there.
 

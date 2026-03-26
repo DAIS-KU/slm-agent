@@ -177,7 +177,7 @@ class PlanningStep(MemoryStep):
     model_input_messages: List[Message]
     model_output_message_facts: Optional[ChatMessage]
     facts: str
-    model_output_message_plan: ChatMessage
+    model_output_message_plan: Optional[ChatMessage]
     plan: str
 
     def to_messages(self, summary_mode: bool, **kwargs) -> List[Message]:

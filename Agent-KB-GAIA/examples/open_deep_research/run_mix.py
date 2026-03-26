@@ -221,9 +221,9 @@ def parse_args():
     parser.add_argument(
         "--plan_mode",
         type=str,
-        default=None,
-        choices=["action_augmented_plan", "plan_and_subtask", "plan_subtask_action"],
-        help="Plan generation mode when planner_fn is used",
+        default="plan",
+        choices=["None", "plan", "subtask", "plan_subtask"],
+        help="'None': original planning (no KB), 'plan': KB plan only, 'subtask': KB subtasks only, 'plan_subtask': KB plan+subtasks",
     )
     parser.add_argument(
         "--facts_mode",
@@ -371,11 +371,9 @@ def answer_single_question(
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # try:
-    if retrieval:
+    if retrieval and args.plan_mode != "None":
 
-        def planner_fn(
-            task: str, kb_docs: Optional[str], observations: Optional[str]
-        ) -> dict:
+        def planner_fn(task: str, tools, managed_agents) -> dict:
             return proposal_planning(
                 example=example,
                 augmented_question=augmented_question,
@@ -388,6 +386,10 @@ def answer_single_question(
                 top_k=3,
                 retrieval_option=args.retrieval_option,
                 type_domain_retrieval_method=akb_client.type_domain_text_search,
+                plan_mode=args.plan_mode,
+                tools=tools,
+                managed_agents=managed_agents,
+                planning_prompt_templates=agent.prompt_templates["planning"],
             )
 
         agent.planner_fn = planner_fn

@@ -26,129 +26,110 @@ DOMAIN_CONSTANTS: List[str] = [
 ]
 
 
-def build_action_augmented_plan_examples(
+
+def build_plan_subtask_examples(
     similars: List[Any], max_items: int = 3
 ) -> str:
-    """Build example blocks from the action_augmented_plan field (step + step_action)."""
+    """Build examples showing step → subtask structure from plan_subtask_action (no actions)."""
     lines: List[str] = []
     for i, d in enumerate(similars[:max_items], start=1):
-        task = d.get("task") or d.get("query") or d.get("question") or ""
-        items = d.get("action_augmented_plan") or []
-        if not items:
-            continue
-        steps = []
-        for j, item in enumerate(items, start=1):
-            step = item.get("step", "")
-            action = item.get("step_action", "")
-            steps.append(f"  Step {j}: {step}\n  Action: {action}")
-        if steps:
-            lines.append(f"[Similar Task #{i}] {task}\n" + "\n".join(steps))
-    return "\n\n".join(lines).strip()
-
-
-def build_plan_and_subtask_examples(
-    similars: List[Any], max_items: int = 3
-) -> str:
-    """Build example blocks from plan_only_steps (step) and subtasks_only_subtask (subtask)."""
-    lines: List[str] = []
-    for i, d in enumerate(similars[:max_items], start=1):
-        task = d.get("task") or d.get("query") or d.get("question") or ""
-        steps = d.get("plan_only_steps") or []
-        subtasks = d.get("subtasks_only_subtask") or []
-        if not steps and not subtasks:
-            continue
-        block = [f"[Similar Task #{i}] {task}"]
-        if steps:
-            step_strs = [s.get("step", s) if isinstance(s, dict) else s for s in steps]
-            block.append("Steps:\n" + "\n".join(f"  - {s}" for s in step_strs))
-        if subtasks:
-            sub_strs = [s.get("subtask", s) if isinstance(s, dict) else s for s in subtasks]
-            block.append("Subtasks:\n" + "\n".join(f"  - {s}" for s in sub_strs))
-        lines.append("\n".join(block))
-    return "\n\n".join(lines).strip()
-
-
-def build_action_augmented_subtask_examples(
-    similars: List[Any], max_items: int = 3
-) -> str:
-    """Build example blocks from action_augmented_subtask (subtask + subtask_action)."""
-    lines: List[str] = []
-    for i, d in enumerate(similars[:max_items], start=1):
-        task = d.get("task") or d.get("query") or d.get("question") or ""
-        items = d.get("action_augmented_subtask") or []
-        if not items:
-            continue
-        steps = []
-        for j, item in enumerate(items, start=1):
-            subtask = item.get("subtask", "")
-            action = item.get("subtask_action", "")
-            steps.append(f"  Subtask {j}: {subtask}\n  Action: {action}")
-        if steps:
-            lines.append(f"[Similar Task #{i}] {task}\n" + "\n".join(steps))
-    return "\n\n".join(lines).strip()
-
-
-def build_plan_subtask_action_examples(
-    similars: List[Any], max_items: int = 3
-) -> str:
-    """Build nested examples from the plan_subtask_action field.
-    Each entry has: step, step_action, subtasks: [{subtask, subtask_action}].
-    """
-    lines: List[str] = []
-    for i, d in enumerate(similars[:max_items], start=1):
-        task = d.get("task") or d.get("query") or d.get("question") or ""
+        task = d.get("task") or ""
         items = d.get("plan_subtask_action") or []
         if not items:
             continue
         block = [f"[Similar Task #{i}] {task}"]
         for j, step_item in enumerate(items, start=1):
             step = step_item.get("step", "")
-            step_action = step_item.get("step_action", "")
             block.append(f"  ## Step {j}: {step}")
-            if step_action:
-                block.append(f"     Step Action: {step_action}")
             for k, st in enumerate(step_item.get("subtasks", []), start=1):
                 subtask = st.get("subtask", "")
-                subtask_action = st.get("subtask_action", "")
                 block.append(f"     - Subtask {j}.{k}: {subtask}")
-                if subtask_action:
-                    block.append(f"       Action: {subtask_action}")
         lines.append("\n".join(block))
     return "\n\n".join(lines).strip()
 
-
-def build_similar_task_blocks(
-    similars: List[Any], mode, max_items: int = 5, use_summary=False
-) -> str:
-    lines: List[str] = []
-
-    for i, d in enumerate(similars[:max_items], start=1):
-        task = d.get("task") or d.get("query") or d.get("question") or ""
-        plan_only_steps = d.get("plan_only_steps") or []
-
-        parts: List[str] = []
-        if mode == "plan_steps_only":
-            parts.append(f"[Similar Task #{i}] {task}")
-            step_strs = [s.get("step", s) if isinstance(s, dict) else s for s in plan_only_steps]
-            parts.append("Plan:\n" + "\n".join(f"  - {s}" for s in step_strs) + "\n")
-        lines.append("\n".join(parts).strip())
-
-    return "\n\n".join(lines).strip()
 
 
 def build_similar_task_direction_blocks(similars: List[Any], max_items: int = 3) -> str:
     lines: List[str] = []
 
     for i, d in enumerate(similars[:max_items], start=1):
-        task = d.get("task") or d.get("query") or d.get("question") or ""
-        task_type = d.get("task_analysis").get("task_type")
-        domain = d.get("task_analysis").get("domain")
-        knowledge = d.get("task_analysis").get("knowledge")
-        approach = d.get("task_analysis").get("approach")
-        lines.append(
-            f"[Similar Task #{i}] {task}\nTaskType: {task_type}\nDomain: {domain}\nKnowledge: {knowledge}\nApproach: {approach}\n"
-        )
+        task = d.get("task") or ""
+        knowledge = (d.get("task_analysis") or {}).get("knowledge", "")
+        lines.append(f"[Similar Task #{i}] {task}\nKnowledge: {knowledge}\n")
     return "\n\n".join(lines).strip()
+
+
+def build_similar_task_plan_blocks(similars: List[Any], max_items: int = 3) -> str:
+    """Build example blocks showing only the plan steps from task_analysis."""
+    lines: List[str] = []
+
+    for i, d in enumerate(similars[:max_items], start=1):
+        task = d.get("task") or ""
+        plan_steps = (d.get("task_analysis") or {}).get("plan") or []
+        plan_str = "\n".join(f"  - {s}" for s in plan_steps) if plan_steps else ""
+        lines.append(f"[Similar Task #{i}] {task}\nPlan:\n{plan_str}\n")
+    return "\n\n".join(lines).strip()
+
+
+def generate_knowledge(
+    task: str,
+    examples: str,
+    planning_prompt_template: Dict[str, str],
+    model_name: str,
+    key: str,
+    url: str,
+    model: Any,
+    slm: bool,
+) -> str:
+    """Stage 1: Generate domain knowledge (declarative + procedural) for the given task."""
+    prompt = populate_template(
+        planning_prompt_template["knowledge_prompt"],
+        variables={"task": task, "examples": examples},
+    )
+    knowledge_str = call_model(
+        query=prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info("=" * 100)
+    logger.info(f"[Stage 1] Knowledge Prompt:\n{prompt}")
+    logger.info(f"[Stage 1] Generated Knowledge:\n{knowledge_str}")
+    logger.info("=" * 100)
+    return knowledge_str
+
+
+def generate_plan(
+    task: str,
+    knowledge: str,
+    examples: str,
+    planning_prompt_template: Dict[str, str],
+    model_name: str,
+    key: str,
+    url: str,
+    model: Any,
+    slm: bool,
+) -> str:
+    """Stage 2: Generate step-by-step plan from task and knowledge."""
+    prompt = populate_template(
+        planning_prompt_template["plan_prompt"],
+        variables={"task": task, "knowledge": knowledge, "examples": examples},
+    )
+    plan_str = call_model(
+        query=prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info("=" * 100)
+    logger.info(f"[Stage 2] Plan Prompt:\n{prompt}")
+    logger.info(f"[Stage 2] Generated Plan:\n{plan_str}")
+    logger.info("=" * 100)
+    return plan_str
 
 
 def classify_task_type_and_domain(
@@ -206,6 +187,10 @@ def proposal_planning(
     top_k,
     retrieval_option: Literal["task_text", "type_and_domain"] = "task_text",
     type_domain_retrieval_method=None,
+    plan_mode: Optional[str] = None,
+    tools=None,
+    managed_agents=None,
+    planning_prompt_templates=None,
 ):
     planning_prompt_template = load_prompts(
         path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
@@ -238,60 +223,75 @@ def proposal_planning(
     else:
         # Default: retrieve by task text similarity only
         retrieval_results = retrieval_method(example["question"], top_k=top_k)
-    examples = build_similar_task_direction_blocks(similars=retrieval_results)
-    logger.info(f"Retrieved examples:\n {examples}")
-    approach_prompt = populate_template(
-        planning_prompt_template["approach_prompt"],
-        variables={
-            "task": augmented_question,
-            "examples": examples,
-        },
-    )
-    approach_str = call_model(
-        query=approach_prompt,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-    )
-    logger.info("=" * 100)
-    logger.info(f"Generated Approach Prompt:\n{approach_prompt}")
-    logger.info(f"Generated Approach:\n{approach_str}")
-    logger.info("=" * 100)
+    knowledge_examples = build_similar_task_direction_blocks(similars=retrieval_results)
+    plan_examples = build_similar_task_plan_blocks(similars=retrieval_results)
+    logger.info(f"Retrieved knowledge examples:\n {knowledge_examples}")
+    logger.info(f"Retrieved plan examples:\n {plan_examples}")
 
-    # ====== [2] Generate plan ====== #
-    examples = build_similar_task_blocks(retrieval_results, mode="plan_steps_only")
-    approach_to_plan_prompt = populate_template(
-        planning_prompt_template["approach_to_plan_prompt"],
-        variables={
-            "task": augmented_question,
-            "approach": approach_str,
-            "examples": examples,
-        },
-    )
-    plan_str = call_model(
-        query=approach_to_plan_prompt,
+    # ====== [2] Stage 1: Generate knowledge ====== #
+    knowledge_text = generate_knowledge(
+        task=augmented_question,
+        examples=knowledge_examples,
+        planning_prompt_template=planning_prompt_template,
         model_name=model_name,
         key=key,
         url=url,
         model=model,
         slm=slm,
     )
-    logger.info("=" * 100)
-    logger.info(f"Generated Plan Prompt:\n{approach_to_plan_prompt}")
-    logger.info(f"Generated Plan:\n{plan_str}")
-    logger.info("=" * 100)
+
+    # ====== [3] Stage 2: Generate plan ====== #
+    plan_str = generate_plan(
+        task=augmented_question,
+        knowledge=knowledge_text,
+        examples=plan_examples,  # plan steps only
+        planning_prompt_template=planning_prompt_template,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
 
     examples = {
-        "action_augmented_plan": build_action_augmented_plan_examples(retrieval_results),
-        "plan_and_subtask": build_plan_and_subtask_examples(retrieval_results),
-        "action_augmented_subtask": build_action_augmented_subtask_examples(retrieval_results),
-        "plan_subtask_action": build_plan_subtask_action_examples(retrieval_results),
+        "plan_subtask": build_plan_subtask_examples(retrieval_results),
     }
+
+    # ====== [4] Stage 4: generate subtasks from plan_str (subtask / plan_subtask modes) ====== #
+    if plan_mode in ("subtask", "plan_subtask") and planning_prompt_templates:
+        _tools = tools or {}
+        _managed_agents = managed_agents or {}
+
+        stage2_prompt = populate_template(
+            planning_prompt_templates["initial_plan_subtask_action_stage2"],
+            variables={
+                "task": augmented_question,
+                "tools": _tools,
+                "managed_agents": _managed_agents,
+                "plan_steps": plan_str,
+                "examples": examples["plan_subtask"],
+            },
+        )
+        subtask_plan = call_model(
+            query=stage2_prompt,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+        )
+        logger.info("=" * 100)
+        logger.info(f"[Stage 4] Subtask Prompt:\n{stage2_prompt}")
+        logger.info(f"[Stage 4] Subtask Plan:\n{subtask_plan}")
+        logger.info("=" * 100)
+
+        final_plan = subtask_plan if plan_mode == "subtask" else f"Plan:\n{plan_str}\n\nSubtasks:\n{subtask_plan}"
+    else:
+        final_plan = plan_str
+
     return {
-        "plan": plan_str,
-        "approach": approach_str,
+        "plan": final_plan,
+        "knowledge": knowledge_text,
         "retrieval_results": retrieval_results,
         "examples": examples,
     }

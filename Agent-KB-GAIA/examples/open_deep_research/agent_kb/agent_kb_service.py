@@ -57,10 +57,6 @@ class TaskResponse(BaseModel):
     agent_planning: Optional[Any] = None
     agent_experience: Optional[Any] = None
     task_analysis: Optional[Any] = None
-    plan_only_steps: Optional[Any] = None
-    action_augmented_plan: Optional[Any] = None
-    subtasks_only_subtask: Optional[Any] = None
-    action_augmented_subtask: Optional[Any] = None
     plan_subtask_action: Optional[Any] = None
     total_score: Optional[float] = None
 
@@ -103,10 +99,6 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
         "agent_planning": item.get("agent_planning", None),
         "agent_experience": item.get("agent_experience", None),
         "task_analysis": item.get("task_analysis", None),
-        "plan_only_steps": item.get("plan_only_steps", None),
-        "action_augmented_plan": item.get("action_augmented_plan", None),
-        "subtasks_only_subtask": item.get("subtasks_only_subtask", None),
-        "action_augmented_subtask": item.get("action_augmented_subtask", None),
         "plan_subtask_action": item.get("plan_subtask_action", None),
     }
 
@@ -140,10 +132,6 @@ async def hybrid_search(request: SearchRequest):
                     agent_planning=core["agent_planning"],
                     agent_experience=core["agent_experience"],
                     task_analysis=core["task_analysis"],
-                    plan_only_steps=core["plan_only_steps"],
-                    action_augmented_plan=core["action_augmented_plan"],
-                    subtasks_only_subtask=core["subtasks_only_subtask"],
-                    action_augmented_subtask=core["action_augmented_subtask"],
                     plan_subtask_action=core["plan_subtask_action"],
                     total_score=item.get("total_score"),
                 )
@@ -183,10 +171,6 @@ async def text_search(request: SearchRequest):
                     agent_planning=core["agent_planning"],
                     agent_experience=core["agent_experience"],
                     task_analysis=core["task_analysis"],
-                    plan_only_steps=core["plan_only_steps"],
-                    action_augmented_plan=core["action_augmented_plan"],
-                    subtasks_only_subtask=core["subtasks_only_subtask"],
-                    action_augmented_subtask=core["action_augmented_subtask"],
                     plan_subtask_action=core["plan_subtask_action"],
                     total_score=item.get("score"),
                 )
@@ -224,10 +208,6 @@ async def semantic_search(request: SearchRequest):
                     agent_planning=core["agent_planning"],
                     agent_experience=core["agent_experience"],
                     task_analysis=core["task_analysis"],
-                    plan_only_steps=core["plan_only_steps"],
-                    action_augmented_plan=core["action_augmented_plan"],
-                    subtasks_only_subtask=core["subtasks_only_subtask"],
-                    action_augmented_subtask=core["action_augmented_subtask"],
                     plan_subtask_action=core["plan_subtask_action"],
                     total_score=item.get("score"),
                 )
@@ -269,10 +249,6 @@ async def type_domain_text_search(request: TypeDomainSearchRequest):
                     agent_planning=core["agent_planning"],
                     agent_experience=core["agent_experience"],
                     task_analysis=core["task_analysis"],
-                    plan_only_steps=core["plan_only_steps"],
-                    action_augmented_plan=core["action_augmented_plan"],
-                    subtasks_only_subtask=core["subtasks_only_subtask"],
-                    action_augmented_subtask=core["action_augmented_subtask"],
                     plan_subtask_action=core["plan_subtask_action"],
                     total_score=item.get("score"),
                 )

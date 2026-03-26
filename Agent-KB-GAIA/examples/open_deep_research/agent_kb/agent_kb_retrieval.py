@@ -23,10 +23,6 @@ class OriginalContext:
 @dataclass
 class AugmentedContext:
     task_analysis: Optional[Any] = None
-    plan_only_steps: Optional[Any] = None
-    action_augmented_plan: Optional[Any] = None
-    subtasks_only_subtask: Optional[Any] = None
-    action_augmented_subtask: Optional[Any] = None
     plan_subtask_action: Optional[Any] = None
 
 
@@ -94,10 +90,6 @@ class AgenticKnowledgeBase:
                     agent_experience = item.get("agent_experience", None)
 
                     task_analysis = item.get("task_analysis", None)
-                    plan_only_steps = item.get("plan_only_steps", None)
-                    action_augmented_plan = item.get("action_augmented_plan", None)
-                    subtasks_only_subtask = item.get("subtasks_only_subtask", None)
-                    action_augmented_subtask = item.get("action_augmented_subtask", None)
                     plan_subtask_action = item.get("plan_subtask_action", None)
 
                     instance = TaskInstance(
@@ -110,10 +102,6 @@ class AgenticKnowledgeBase:
                         ),
                         augmented=AugmentedContext(
                             task_analysis=task_analysis,
-                            plan_only_steps=plan_only_steps,
-                            action_augmented_plan=action_augmented_plan,
-                            subtasks_only_subtask=subtasks_only_subtask,
-                            action_augmented_subtask=action_augmented_subtask,
                             plan_subtask_action=plan_subtask_action,
                         ),
                     )
@@ -360,10 +348,6 @@ class AKB_Manager:
                     "agent_planning": task_obj.original.agent_planning,
                     "agent_experience": task_obj.original.agent_experience,
                     "task_analysis": task_obj.augmented.task_analysis,
-                    "plan_only_steps": task_obj.augmented.plan_only_steps,
-                    "action_augmented_plan": task_obj.augmented.action_augmented_plan,
-                    "subtasks_only_subtask": task_obj.augmented.subtasks_only_subtask,
-                    "action_augmented_subtask": task_obj.augmented.action_augmented_subtask,
                     "plan_subtask_action": task_obj.augmented.plan_subtask_action,
                 }
             )
@@ -392,10 +376,6 @@ class AKB_Manager:
                     "agent_planning": task_obj.original.agent_planning,
                     "agent_experience": task_obj.original.agent_experience,
                     "task_analysis": task_obj.augmented.task_analysis,
-                    "plan_only_steps": task_obj.augmented.plan_only_steps,
-                    "action_augmented_plan": task_obj.augmented.action_augmented_plan,
-                    "subtasks_only_subtask": task_obj.augmented.subtasks_only_subtask,
-                    "action_augmented_subtask": task_obj.augmented.action_augmented_subtask,
                     "plan_subtask_action": task_obj.augmented.plan_subtask_action,
                 }
             )
@@ -418,10 +398,7 @@ class AKB_Manager:
                         "agent_planning": task_obj.original.agent_planning,
                         "agent_experience": task_obj.original.agent_experience,
                         "task_analysis": task_obj.augmented.task_analysis,
-                        "plan_only_steps": task_obj.augmented.plan_only_steps,
-                        "action_augmented_plan": task_obj.augmented.action_augmented_plan,
-                        "subtasks_only_subtask": task_obj.augmented.subtasks_only_subtask,
-                        "action_augmented_subtask": task_obj.augmented.action_augmented_subtask,
+                    "plan_subtask_action": task_obj.augmented.plan_subtask_action,
                     },
                 }
             )
@@ -444,10 +421,7 @@ class AKB_Manager:
                         "agent_planning": task_obj.original.agent_planning,
                         "agent_experience": task_obj.original.agent_experience,
                         "task_analysis": task_obj.augmented.task_analysis,
-                        "plan_only_steps": task_obj.augmented.plan_only_steps,
-                        "action_augmented_plan": task_obj.augmented.action_augmented_plan,
-                        "subtasks_only_subtask": task_obj.augmented.subtasks_only_subtask,
-                        "action_augmented_subtask": task_obj.augmented.action_augmented_subtask,
+                    "plan_subtask_action": task_obj.augmented.plan_subtask_action,
                     },
                 }
             )

@@ -730,22 +730,22 @@ You have been provided with these additional arguments, that you can access usin
 
             # ---- facts generation ----
             if self.facts_mode == "kno_app" and self.planner_fn is not None:
-                # Call proposal_planning first; use its knowledge+approach as facts.
+                # Call proposal_planning first; use its knowledge as facts.
                 # Skips the LLM facts-extraction call entirely.
-                _proposal_result = self.planner_fn(task, None, None)
+                _proposal_result = self.planner_fn(task, self.tools, self.managed_agents)
                 if isinstance(_proposal_result, dict):
                     _proposal_plan = _proposal_result.get("plan", "")
-                    _proposal_approach = _proposal_result.get("approach", "")
+                    _proposal_knowledge = _proposal_result.get("knowledge", "")
                     _proposal_examples = _proposal_result.get("examples", {})
                 else:
                     _proposal_plan = _proposal_result
-                    _proposal_approach = ""
+                    _proposal_knowledge = ""
                     _proposal_examples = {}
-                answer_facts = _proposal_approach
+                answer_facts = _proposal_knowledge
                 chat_message_facts = None
                 _planner_result_cached = {
                     "plan": _proposal_plan,
-                    "approach": _proposal_approach,
+                    "knowledge": _proposal_knowledge,
                     "examples": _proposal_examples,
                 }
             else:
@@ -759,7 +759,7 @@ You have been provided with these additional arguments, that you can access usin
                 if _planner_result_cached is not None:
                     result = _planner_result_cached
                 else:
-                    result = self.planner_fn(task, None, None)
+                    result = self.planner_fn(task, self.tools, self.managed_agents)
                 if isinstance(result, dict):
                     proposal = result.get("plan", "")
                     kb_examples = result.get("examples", {})
@@ -779,77 +779,12 @@ You have been provided with these additional arguments, that you can access usin
                         "content": [{"type": "text", "text": text}],
                     }
 
-                if self.plan_mode == "action_augmented_plan":
-                    plan_prompt = populate_template(
-                        self.prompt_templates["planning"]["initial_plan_action_augmented_with_proposal"],
-                        variables={
-                            "task": task,
-                            "tools": self.tools,
-                            "managed_agents": self.managed_agents,
-                            "answer_facts": answer_facts,
-                            "proposal": proposal,
-                            "examples": kb_examples.get("action_augmented_plan", ""),
-                        },
-                    )
-                    chat_message_plan: ChatMessage = self.model(
-                        [_make_user_msg(plan_prompt)], stop_sequences=["<end_plan>"]
-                    )
-
-                elif self.plan_mode == "plan_and_subtask":
-                    plan_prompt = populate_template(
-                        self.prompt_templates["planning"]["initial_plan_and_subtask_with_proposal"],
-                        variables={
-                            "task": task,
-                            "tools": self.tools,
-                            "managed_agents": self.managed_agents,
-                            "answer_facts": answer_facts,
-                            "proposal": proposal,
-                            "examples": kb_examples.get("plan_subtask_action", ""),
-                        },
-                    )
-                    chat_message_plan: ChatMessage = self.model(
-                        [_make_user_msg(plan_prompt)], stop_sequences=["<end_plan>"]
-                    )
-
-                elif self.plan_mode == "plan_subtask_action":
-                    # Stage 1: generate plan steps using action_augmented_plan examples
-                    stage1_prompt = populate_template(
-                        self.prompt_templates["planning"]["initial_plan_subtask_action_stage1"],
-                        variables={
-                            "task": task,
-                            "tools": self.tools,
-                            "managed_agents": self.managed_agents,
-                            "answer_facts": answer_facts,
-                            "proposal": proposal,
-                            "examples": kb_examples.get("action_augmented_plan", ""),
-                        },
-                    )
-                    chat_message_steps: ChatMessage = self.model(
-                        [_make_user_msg(stage1_prompt)], stop_sequences=["<end_plan>"]
-                    )
-                    plan_steps = chat_message_steps.content
-                    self.logger.log(
-                        Rule("[bold]Plan steps", style="orange"),
-                        Text(plan_steps),
-                        level=LogLevel.INFO,
-                    )
-                    # Stage 2: for each step, generate subtasks with actions → nested plan
-                    stage2_prompt = populate_template(
-                        self.prompt_templates["planning"]["initial_plan_subtask_action_stage2"],
-                        variables={
-                            "task": task,
-                            "tools": self.tools,
-                            "managed_agents": self.managed_agents,
-                            "plan_steps": plan_steps,
-                            "examples": kb_examples.get("plan_subtask_action", ""),
-                        },
-                    )
-                    chat_message_plan: ChatMessage = self.model(
-                        [_make_user_msg(stage2_prompt)], stop_sequences=["<end_plan>"]
-                    )
-
+                if self.plan_mode in ("plan", "subtask", "plan_subtask"):
+                    # plan_mode output already prepared by proposal_planning; use directly
+                    answer_plan = proposal
+                    chat_message_plan = None
                 else:
-                    # Default: use proposal directly via advance-knowledge template
+                    # Default: use proposal as input to advance-knowledge template
                     plan_prompt = populate_template(
                         self.prompt_templates["planning"]["initial_plan_with_advance_knowledge"],
                         variables={
@@ -864,6 +799,7 @@ You have been provided with these additional arguments, that you can access usin
                     chat_message_plan: ChatMessage = self.model(
                         [_make_user_msg(plan_prompt)], stop_sequences=["<end_plan>"]
                     )
+                    answer_plan = chat_message_plan.content
 
             elif self.agent_kb and additional_knowledge != None:
                 knowledge_data_all = "Please strictly follow the suggestions below:\n"
@@ -904,7 +840,8 @@ You have been provided with these additional arguments, that you can access usin
                     stop_sequences=["<end_plan>"],
                 )
 
-            answer_plan = chat_message_plan.content
+            if "answer_plan" not in locals():
+                answer_plan = chat_message_plan.content
 
             final_plan_redaction = textwrap.dedent(
                 f"""Here is the plan of action that I will follow to solve the task:
