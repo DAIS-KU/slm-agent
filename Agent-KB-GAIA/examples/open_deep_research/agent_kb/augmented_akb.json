@@ -49,6 +49,13 @@
           "subtask": "Add the constant $10^{15}$ to the result obtained from the previous computation to finalize the expression's value.",
           "action": "Added the constant 10^{15} to \\frac{1}{2}, resulting in 10^{15} + 0.5."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "computation"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -172,6 +179,13 @@
           "subtask": "Conclude on the minimal number of generators needed for the fundamental group based on simply-connectedness.",
           "action": "Based on the simply-connected nature of the branched cover, the minimal number of generators for its fundamental group is 0, as the group is trivial."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -300,6 +314,13 @@
           "subtask": "Confirm and report the Turing Machine with the most steps and the exact number of steps taken.",
           "action": "Machine X halts after Y steps, providing the largest step count needed to achieve state 'H' as computationally verified."
         }
+      ],
+      "task_type_normalized": [
+        "computation",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "computer_science"
       ]
     },
     "plan_subtask_action": [
@@ -430,6 +451,14 @@
           "subtask": "Calculate $P_{m}$ as the fraction of valid (i, j) combinations over the total (i, j) combinations.",
           "action": "Calculate \\( P_{m} \\): \\( P_{m} \\) is hypothesized as \\( \\frac{m-1}{2(4m+1)} \\) based on symmetry and consistent difference requirements, though further exploration and verifications are needed for complete validation."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "mathematics",
+        "sequence_theory"
       ]
     },
     "plan_subtask_action": [
@@ -556,6 +585,15 @@
           "subtask": "Assess the jar's final location and conclude the wooden block’s position relative to the jar on Table 2.",
           "action": "After placing the jar back on Table 1 post-rotation, the wooden block remains at the bottom → Jar's final placement is on Table 1 with the block at the bottom."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "computation",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "physics",
+        "artificial_intelligence"
       ]
     },
     "plan_subtask_action": [
@@ -671,6 +709,13 @@
           "subtask": "Compare the computations to conclude that the last digit of A_k^{B_k} and B_k^{A_k} are the same.",
           "action": "Compared A_k^{B_k} and B_k^{A_k} having last digits 1 and 0 respectively, exposing a discrepancy, concluding A_k^{B_k} correctly ends in 1."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -791,6 +836,14 @@
           "subtask": "Apply established transformation rules to Input_C to identify the correct output.",
           "action": "Apply rules to Input_C: Start '0' to '2', '2's unique changes around context give: Output_C='200000,011100,111111'."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "computation"
+      ],
+      "domain_normalized": [
+        "computer_science",
+        "artificial_intelligence"
       ]
     },
     "plan_subtask_action": [
@@ -929,6 +982,13 @@
           "subtask": "Assess if there are forms in \\( \\mathcal{M} \\) that inherently require quantifiers to be expressed.",
           "action": "Asserted that owing to the intricate partitions by \\( V \\), certain definitions inherently require quantifiers."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "classification"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -1070,6 +1130,12 @@
           "subtask": "Compile a list of homology groups of X and homotopy groups of \\( SO(2k) \\) that are relevant in establishing a homotopy.",
           "action": ""
         }
+      ],
+      "task_type_normalized": [
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -1194,6 +1260,15 @@
           "subtask": "Verify if the degrees of freedom are zero, indicating the P value calculation is undefined.",
           "action": "Verified the degrees of freedom are not zero, meaning the P value calculation is defined and can be computed by the ANOVA function."
         }
+      ],
+      "task_type_normalized": [
+        "computation",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "statistics",
+        "biology",
+        "computer_science"
       ]
     },
     "plan_subtask_action": [
@@ -1306,6 +1381,14 @@
           "subtask": "Establish threshold criteria based on the probability and transformation patterns to decide the final classical output.",
           "action": "Given the 50% probability distribution and transformation pattern, the expected classical output fluctuates, averaging to 1/2 over many runs."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "computer_science",
+        "artificial_intelligence"
       ]
     },
     "plan_subtask_action": [
@@ -1432,6 +1515,13 @@
           "subtask": "Write \u000b\u000bthe expression for the vertical displacement in terms of the basal shear stress and identified boundary conditions to isolate the amplitude factor \u000b\u000b\u000b\u000b\u000b\u000bchi.",
           "action": "Described vertical displacement as $e_s = \\chi \\frac{S_0}{\\Delta \\rho g}$ and derived $\\chi = \\frac{2}{k \\Delta \\rho g}$. → Presented the derived amplitude factor for plate surface topography influenced by basal shear."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "computation"
+      ],
+      "domain_normalized": [
+        "physics"
       ]
     },
     "plan_subtask_action": [
@@ -1577,6 +1667,13 @@
           "subtask": "Compute the expression (1 - e^{-T})/π * S + 10^{15} using the calculated sum S.",
           "action": "Compute \\((1 - e^{-T})/\\pi * S + 10^{15}\\) using values; evaluated as approximately 1000014037959959 for the given sum \\(S\\)."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -1718,6 +1815,13 @@
           "subtask": "Establish a criterion for determining the most plausible non-disjunction event based on the X0 male phenotype.",
           "action": "The X0 phenotype implies non-disjunction in meiosis, where a gamete without X is fertilized. Meiosis I directly leads to this, whereas meiosis II is less plausibly the sole cause."
         }
+      ],
+      "task_type_normalized": [
+        "classification",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "biology"
       ]
     },
     "plan_subtask_action": [
@@ -1855,6 +1959,14 @@
           "subtask": "Translate the optimal path into a sequence of directional moves (U, D, L, R).",
           "action": "Translate the found path into directional moves as: LLDDLD, avoiding danger and accounting for benefits."
         }
+      ],
+      "task_type_normalized": [
+        "constraint_satisfaction",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "computer_science",
+        "artificial_intelligence"
       ]
     },
     "plan_subtask_action": [
@@ -1982,6 +2094,12 @@
           "subtask": "Substitute the general solution for \\( y \\) back into the original equation to verify the solution.",
           "action": "Substituted back \\( y(x) = vx \\) from the general solution obtained and verified if it satisfies the original equation."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -2107,6 +2225,14 @@
           "subtask": "Develop a criterion based on the observability and causal assumptions to identify when $E(Y^a | A,L)$ can be determined.",
           "action": "Developed a criterion to check if adjustments with observed \\(L\\) control confounding; if \\(do\\)-calculus removes \\(U\\)'s bias, \\(E(Y^a | A,L)\\) might be identified."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "statistics",
+        "artificial_intelligence"
       ]
     },
     "plan_subtask_action": [
@@ -2222,6 +2348,14 @@
           "subtask": "Compute the maximum number of bishops that can be placed on edge squares without attack conflicts and find the number of remaining empty edge squares.",
           "action": ""
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics",
+        "artificial_intelligence"
       ]
     },
     "plan_subtask_action": [
@@ -2339,6 +2473,13 @@
           "subtask": "Ensure that all possible integer solutions for $x$ have been tested and confirmed or discarded as non-perfect squares.",
           "action": "Confirm all integer $x$ have been appropriately calculated, with none resulting in $f(x)$ as a perfect square."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "computation"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -2472,6 +2613,14 @@
           "subtask": "Simplify the integral expression to find the Hopf charge.",
           "action": "Simplification involves symmetry arguments or numeric investigation, aiming to ascertain standard integer charges like ±1 reflecting mapping equivalent to Hopf fibrations."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics",
+        "physics"
       ]
     },
     "plan_subtask_action": [
@@ -2604,6 +2753,15 @@
           "subtask": "Compare the computed total sound level against typical real-world sound levels for verification.",
           "action": "Compared 75.11 dB against typical sound levels; similar to a train or busy urban area (70-80 dB)."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "computation",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "physics",
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -2730,6 +2888,14 @@
           "subtask": "Check if the combination of \\( \\alpha, \\beta \\) makes the spectrum eigenvalue fall within the permissible range.",
           "action": "Validated \u00120, \u00120 selection ensures permissible spectrum range retaining infrastructure for eigenvalue conditions."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics",
+        "classification"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -2849,6 +3015,13 @@
           "subtask": "Identify and record the first three digits after the decimal point from the computed tangent value.",
           "action": "Record the digits: \\( -2.9282 \\) → First three after the decimal: 928."
         }
+      ],
+      "task_type_normalized": [
+        "computation",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -2970,6 +3143,12 @@
           "subtask": "Round each scanning radius to the nearest 0.5m while ensuring containment and non-overlap.",
           "action": "Rounded all scanning radii to the nearest 0.5m to maintain pyramid coverage efficiency while ensuring non-overlap."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -3109,6 +3288,14 @@
           "subtask": "Formulate the rule for using 'жасыл' based on the confirmed and matching criteria from all previous analyses.",
           "action": "Formulated rule: 'Жасыл' describes human-made items, aligning with option K, 'көк' for natural references."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "classification",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "linguistics"
       ]
     },
     "plan_subtask_action": [
@@ -3242,6 +3429,14 @@
           "subtask": "Map the findings to provided answer choices to assess which best captures the experimental results regarding sgRNA roles and glucose effects on qNCS activation.",
           "action": "Mapped findings to answer choice F, reflecting experimental results where GLUT-4 downregulation enhances old mice qNCS activation, not glucose starvation."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "biology",
+        "statistics"
       ]
     },
     "plan_subtask_action": [
@@ -3442,6 +3637,15 @@
           "subtask": "Form the ordered set \\((E_1, E_2, E_3, E_4, E_5)\\) representing the number of moles in each energy level.",
           "action": "Formed the ordered set: \\((0.7957 \\, \\text{mol}, 1.205 \\, \\text{mol}, 0.989 \\, \\text{mol}, 9.49 \\times 10^{-3} \\, \\text{mol}, 1.623 \\times 10^{-28} \\, \\text{mol})\\)."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "analysis",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "physics",
+        "statistics"
       ]
     },
     "plan_subtask_action": [
@@ -3657,6 +3861,15 @@
           "subtask": "Confirm the command list leading to exact match and corresponding original symbols.",
           "action": "Verify which command list leads to an exact match with the final array and identify original symbols replaced by '0.'"
         }
+      ],
+      "task_type_normalized": [
+        "computation",
+        "classification"
+      ],
+      "domain_normalized": [
+        "mathematics",
+        "computer_science",
+        "artificial_intelligence"
       ]
     },
     "plan_subtask_action": [
@@ -3792,6 +4005,13 @@
           "subtask": "Calculate the total memory usage for storing inputs p, q, and output o and identify areas for memory reduction.",
           "action": "Calculated total minimized memory use as 1000D using 'int' variables for input and output storage."
         }
+      ],
+      "task_type_normalized": [
+        "computation",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "computer_science"
       ]
     },
     "plan_subtask_action": [
@@ -3928,6 +4148,13 @@
           "subtask": "Round the computed sum to three decimal places for final precision verification.",
           "action": ""
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "computation"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -4080,6 +4307,14 @@
           "subtask": "Verify the expression for x(2√3) is consistent with the equation's solutions and symmetries observed.",
           "action": "Confirmed that the expression for \u0003cx(2\\sqrt{3})\u0003e is consistent with derived solutions and observed symmetries."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "computation"
+      ],
+      "domain_normalized": [
+        "physics",
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -4214,6 +4449,13 @@
           "subtask": "Count the integer values of AC and verify each leads to two possible values for side AB.",
           "action": "Counted integer values of AC leading to two AB values: 49, based on example S = 100."
         }
+      ],
+      "task_type_normalized": [
+        "computation",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -4328,6 +4570,15 @@
           "subtask": "Verify that the expected value \\(\\mathbb{E}[T]\\) is fully expressed and determine its final form.",
           "action": "Verified the probability of \\(i \\leq m\\) considering uniform distribution properties, resulting in \\(\\mathbb{E}[T] = 1\\), acknowledging a decreased contribution from each \\(\\mathbb{E}[\\frac{Y_i}{3^i}]\\) term as \\(i\\) increases."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "analysis",
+        "computation"
+      ],
+      "domain_normalized": [
+        "mathematics",
+        "statistics"
       ]
     },
     "plan_subtask_action": [
@@ -4454,6 +4705,14 @@
           "subtask": "List the elements \\( a_{11}, a_{12}, a_{21}, a_{22} \\) from the evaluated Jacobian matrix.",
           "action": "Listed Jacobian matrix elements as \\( a_{11} = -1, a_{12} = 1, a_{21} = -1, a_{22} = -1 \\)."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "computation"
+      ],
+      "domain_normalized": [
+        "mathematics",
+        "physics"
       ]
     },
     "plan_subtask_action": [
@@ -4572,6 +4831,16 @@
           "subtask": "Match the identified key idea to a single, specific answer relevant to the task.",
           "action": "Matched the key idea to a concept related to historical or literary figures known for strategic or mythical power, like influential individuals."
         }
+      ],
+      "task_type_normalized": [
+        "computation",
+        "reasoning",
+        "analysis",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "engineering",
+        "computer_science"
       ]
     },
     "plan_subtask_action": [
@@ -4684,6 +4953,14 @@
           "subtask": "Quantify the difference in probabilities to explain how the choice impacts the likelihood of winning Yahtzee.",
           "action": "Subtracted probabilities: 0.0625 - 0.015625 → Differed by 0.046875, keeping '1' is a better choice."
         }
+      ],
+      "task_type_normalized": [
+        "analysis",
+        "reasoning"
+      ],
+      "domain_normalized": [
+        "mathematics",
+        "statistics"
       ]
     },
     "plan_subtask_action": [
@@ -4815,6 +5092,15 @@
           "subtask": "Confirm that the estimated lithiation time adheres to the assumptions of constant lithium concentration and 100% Coulomb efficiency.",
           "action": "Assumptions confirmed, including constant lithium concentration and 100% efficiency; calculations consistent with these."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "computation",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "chemistry",
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -4927,6 +5213,14 @@
           "subtask": "Assess if the final state of |000⟩ from step 4 matches the initial state, concluding the system returns to its original configuration.",
           "action": "Final state |110⟩ does not match the initial state |000⟩, indicating the system's state changed."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "computation"
+      ],
+      "domain_normalized": [
+        "computer_science",
+        "artificial_intelligence"
       ]
     },
     "plan_subtask_action": [
@@ -5059,6 +5353,14 @@
           "subtask": "Establish conditions under which PGS variance explained might equal or exceed SNP heritability.",
           "action": "Established that generally PGS variance does not exceed SNP heritability, but errors could artificially suggest otherwise."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "classification"
+      ],
+      "domain_normalized": [
+        "biology",
+        "statistics"
       ]
     },
     "plan_subtask_action": [
@@ -5206,6 +5508,15 @@
           "subtask": "Compare calculated J^2 and J_z eigenvalues with typical quantum mechanics eigenvalue patterns for consistency.",
           "action": "Compared calculated eigenvalues with standard patterns and found them consistent for both J^2 and J_z."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "analysis",
+        "computation"
+      ],
+      "domain_normalized": [
+        "physics",
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -5330,6 +5641,15 @@
           "subtask": "Round the angle to three decimal places.",
           "action": "Round the angle to three decimal places: The angle \\( \\theta \\) is rounded after calculation."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "analysis",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "physics",
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -5458,6 +5778,15 @@
           "subtask": "Compile the probability from the solution set and validate that it adheres to the given constraints of X, Y, and Z.",
           "action": "Compile the probability from the solution set and validate that it adheres to the given constraints of X, Y, and Z → Total outcomes determination aligns with condition scenarios for X, Y, Z, generating the numerator equivalent favorability assessment manually validated."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "analysis",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics",
+        "statistics"
       ]
     },
     "plan_subtask_action": [
@@ -5600,6 +5929,13 @@
           "subtask": "Ensure no configuration of child positions results in collinearity among the set of visible trees.",
           "action": "Child positions are maintained such that no alignment leads to collinearity with visible trees A, B, C, or D including positions P."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -5744,6 +6080,14 @@
           "subtask": "Verify that all divergences in \u0010\u0010\u0010R\u0010\u0010\u0010 cancel as \u0010\u0010\u0010\\epsilon \\to 0\u0010\u0010\u0010 and calculate the finite value of \u0010\u0010\u0010R\u0010\u0010.",
           "action": ""
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "physics",
+        "computer_science"
       ]
     },
     "plan_subtask_action": [
@@ -5896,6 +6240,14 @@
           "subtask": "Verify that the derived \\( K \\) ensures that \\( T_{\\theta\\theta} = a^2 \\sin^2 \\theta \\mathcal{T} + K \\) is consistent with the given conditions.",
           "action": "Verified derived \\( K \\) ensures consistency of \\( T_{\\theta \\theta} = a^2 \\sin^2 \\theta \\mathcal{T} + K \\)."
         }
+      ],
+      "task_type_normalized": [
+        "computation",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "physics",
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -6023,6 +6375,13 @@
           "subtask": "Confirm that each distinct partition of eigenvalues corresponds to a unique similarity class for diagonal matrices.",
           "action": "Established that each partition corresponds to a unique similarity class based on distinct eigenvalue multiplicities in diagonal matrices."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -6133,6 +6492,12 @@
           "subtask": "Determine the locants and configuration of the alkene using IUPAC rules.",
           "action": "The alkene's longest chain is numbered to give the lowest locants to the double bond and substituents, incorporating stereochemistry like (Z)-2-chloro-3,3-dimethylbut-2-ene."
         }
+      ],
+      "task_type_normalized": [
+        "analysis"
+      ],
+      "domain_normalized": [
+        "chemistry"
       ]
     },
     "plan_subtask_action": [
@@ -6256,6 +6621,16 @@
           "subtask": "Verify that the expression for x ensures the independence of equivalent capacitance from N.",
           "action": "Substitute \\( x = \\frac{c(1 + \\sqrt{3})}{2} \\) to verify \\( C_{\\infty} \\) is constant, confirming it is independent of N."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics",
+        "computation"
+      ],
+      "domain_normalized": [
+        "physics",
+        "engineering",
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -6380,6 +6755,13 @@
           "subtask": "Verify that the calculated volume at 4:04 am provides exactly 8 mCi dose when compounded into the syringe.",
           "action": "Realized that a volume of 18.26 mL exceeds the available 10 mL, prompting a reevaluation of the calculation."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "biology"
       ]
     },
     "plan_subtask_action": [
@@ -6504,6 +6886,12 @@
           "subtask": "Assess the compatibility of adding gabapentin alongside the patient's current use of ibuprofen.",
           "action": "Determined adding Gabapentin is compatible with current ibuprofen use as there are no significant interactions."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning"
+      ],
+      "domain_normalized": [
+        "biology"
       ]
     },
     "plan_subtask_action": [
@@ -6629,6 +7017,14 @@
           "subtask": "Verify that the values of X_1 and X_2 are correctly derived for massless neutrinos from Standard Model predictions for vector and axial-vector couplings.",
           "action": "Verify that the values of X_1 and X_2 are correctly derived for massless neutrinos → Confirm that derived X_1 and X_2 are consistent with theoretical predictions for neutrino decays."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "computation"
+      ],
+      "domain_normalized": [
+        "physics",
+        "computer_science"
       ]
     },
     "plan_subtask_action": [
@@ -6761,6 +7157,12 @@
           "subtask": "Compute Euclidean distance between the nodes with the maximum and minimum numbers.",
           "action": "Computed Euclidean distance: \\( d = \\sqrt{(X_2 - X_1)^2 + (Y_2 - Y_1)^2} \\) → Resulting distance between max and min number nodes."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -6900,6 +7302,13 @@
           "subtask": "Determine that length limitations are governed by metric properties with a maximum of 1.",
           "action": "Determine maximum length by metric properties → Max segment length is 2."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "reasoning"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -7031,6 +7440,16 @@
           "subtask": "Integrate the time required to switch baskets with the fishing and feeding activities to prevent depletion of rod usage time due to basket capacity constraints.",
           "action": ""
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "computation",
+        "constraint_satisfaction"
+      ],
+      "domain_normalized": [
+        "mathematics",
+        "artificial_intelligence",
+        "computer_science"
       ]
     },
     "plan_subtask_action": [
@@ -7160,6 +7579,13 @@
           "subtask": "Evaluate the expression \\( \\frac{a_i a_{i+1} \\sin \\phi}{b_i} \\) for each i and identify the maximal value to determine the largest Hausdorff distance.",
           "action": "Evaluate \\( \\frac{a_i a_{i+1} \\sin \\phi}{b_i} \\) for each \\( i \\) to estimate the maximal Hausdorff distance, representing the deepest indentation of \\( B \\) towards \\( A \\)."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "analysis"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -7317,6 +7743,13 @@
           "subtask": "Ensure the coefficients satisfy all conditions of tree-like walks without further manipulation.",
           "action": "Confirmed all coefficients satisfy tree-like walk conditions, each subgraph type contributing proportionately."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics",
+        "computation"
+      ],
+      "domain_normalized": [
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -7482,6 +7915,13 @@
           "subtask": "Identify which statement contradicts the predicted outcomes of sugar metabolism and enzyme activity upon host transfer.",
           "action": "Statement D is not true: \"Upon transfer, CA biotypes showed decreased galactosidase activity, owing to higher glucose levels,\" attributing the change to the wrong factor."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "classification"
+      ],
+      "domain_normalized": [
+        "biology"
       ]
     },
     "plan_subtask_action": [
@@ -7621,6 +8061,15 @@
           "subtask": "Substitute L = 2 into the formulated relationships to determine the minimum number of vertices.",
           "action": "Solve for vertices: Substituting L = 2 gives V_3 + 2V_4=2, leading to configurations V_3=2, V_4=0 or V_3=0, V_4=1 with minimum 2 vertices."
         }
+      ],
+      "task_type_normalized": [
+        "reasoning",
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "physics",
+        "computer_science",
+        "mathematics"
       ]
     },
     "plan_subtask_action": [
@@ -7761,6 +8210,13 @@
           "subtask": "Compute the ratio of the lowest satisfaction scores from core-satisfying and EJR-satisfying committees.",
           "action": "Compute satisfaction ratio: Derive the ratio \\(s(N,W_1)/s(N,W_2)\\) between core and EJR lowest scores."
         }
+      ],
+      "task_type_normalized": [
+        "mathematics"
+      ],
+      "domain_normalized": [
+        "mathematics",
+        "social_science"
       ]
     },
     "plan_subtask_action": [

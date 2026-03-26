@@ -17,14 +17,9 @@ logger = logging.getLogger(__name__)
 # These map to task_analysis.task_type and task_analysis.domain in the KB.
 # Modify as needed.
 # ---------------------------------------------------------------------------
-TASK_TYPE_CONSTANTS: List[str] = [
-'algebra', 'algorithm_design', 'analysis', 'arithmetic', 'calculus', 'causal_inference', 'chemical_analysis', 'circuit_analysis', 'classification', 'clinical_evaluation', 'code_analysis', 'combinatorial_analysis', 'computation_geometry', 'data_transformation', 'decision_making', 'decomposition', 'definition', 'document_analysis', 'estimation', 'formalization', 'game_analysis', 'graph_theory', 'group_theory', 'inequality_proof', 'legal_analysis', 'mapping', 'mathematical_reasoning', 'model_theory', 'networking', 'quantum_computation', 'statistical_analysis'
-]
+TASK_TYPE_CONSTANTS: List[str] = ['analysis', 'computation', 'constraint_satisfaction', 'mathematics', 'reasoning']
 
-DOMAIN_CONSTANTS: List[str] = [
-'acoustics', 'algebra', 'algorithm_design', 'analysis', 'biology', 'business', 'chemistry', 'computer_science', 'cryptography', 'education', 'engineering', 'ethics', 'experiment_design', 'games', 'healthcare', 'law', 'mathematics', 'medicine', 'music', 'networking', 'physics', 'political_science', 'protein_engineering', 'puzzles', 'representation_theory', 'robotics', 'sports', 'statistical_mechanics'
-]
-
+DOMAIN_CONSTANTS: List[str] = ['artificial_intelligence', 'biology', 'chemistry', 'computer_science', 'engineering', 'linguistics', 'mathematics', 'physics', 'social_science', 'statistics']
 
 
 def build_plan_subtask_examples(
