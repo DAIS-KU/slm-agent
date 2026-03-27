@@ -17,10 +17,9 @@ logger = logging.getLogger(__name__)
 # These map to task_analysis.task_type and task_analysis.domain in the KB.
 # Modify as needed.
 # ---------------------------------------------------------------------------
-TASK_TYPE_CONSTANTS: List[str] = ['analysis', 'computation', 'constraint_satisfaction', 'mathematics', 'reasoning']
+TASK_TYPE_CONSTANTS: List[str] = ['algebra', 'algorithm', 'analysis', 'approximation', 'calculation', 'computation', 'decision_support', 'engineering', 'geometry', 'simulations']
 
-DOMAIN_CONSTANTS: List[str] = ['artificial_intelligence', 'biology', 'chemistry', 'computer_science', 'engineering', 'linguistics', 'mathematics', 'physics', 'social_science', 'statistics']
-
+DOMAIN_CONSTANTS: List[str] = ['arts_humanities', 'business', 'computer_science', 'engineering', 'law', 'mathematics', 'medicine', 'science', 'social_sciences', 'technology']
 
 def build_plan_subtask_examples(
     similars: List[Any], max_items: int = 3
