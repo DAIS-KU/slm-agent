@@ -50,6 +50,7 @@ from scripts.automodel import (
 )
 
 from agent_kb.agent_kb_utils import AKBClient, call_model, SubAKBClient
+from agent_kb.agent_kb_utils_ts import AKBClientTS, build_additional_knowledge
 
 from planner_kb import (
     proposal_planning,
@@ -226,11 +227,11 @@ def parse_args():
         help="'None': original planning (no KB), 'plan': KB plan only, 'subtask': KB subtasks only, 'plan_subtask': KB plan+subtasks",
     )
     parser.add_argument(
-        "--facts_mode",
+        "--kb_type",
         type=str,
-        default=None,
-        choices=["facts", "kno_app"],
-        help="Facts source: 'facts' (LLM-extracted, default) or 'kno_app' (knowledge+approach from proposal_planning)",
+        default="proposal",
+        choices=["proposal", "original"],
+        help="KB mode: 'proposal' uses proposal_planning+agent_kb_utils (default), 'original' uses agent_kb_utils_ts retrieval as additional_knowledge with plan_mode=None",
     )
     return parser.parse_args()
 
@@ -258,7 +259,6 @@ def create_agent_hierarchy(
         top_k=args.top_k,
         retrieval_type=args.retrieval_type,
         plan_mode=args.plan_mode,
-        facts_mode=args.facts_mode,
     )
     return manager_agent
 
@@ -364,28 +364,39 @@ def answer_single_question(
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # try:
-    if retrieval and args.plan_mode != "None":
+    if retrieval:
+        if args.kb_type == "original":
+            akb_ts_client = AKBClientTS()
+            ts_retrieval_fn = {
+                "hybrid": akb_ts_client.hybrid_search,
+                "text": akb_ts_client.text_search,
+                "semantic": akb_ts_client.semantic_search,
+            }[args.retrieval_type]
+            ts_results = ts_retrieval_fn(example["question"], top_k=args.top_k)
+            additional_knowledge = build_additional_knowledge(ts_results)
+            if additional_knowledge:
+                augmented_question = additional_knowledge + "\n\n" + augmented_question
+        elif args.plan_mode != "None":
+            def planner_fn(task: str, tools, managed_agents) -> dict:
+                return proposal_planning(
+                    example=example,
+                    augmented_question=augmented_question,
+                    model_name=model_name,
+                    key=key,
+                    url=url,
+                    model=model,
+                    slm=slm,
+                    retrieval_method=retrieval_method,
+                    top_k=3,
+                    retrieval_option=args.retrieval_option,
+                    type_domain_retrieval_method=akb_client.type_domain_text_search,
+                    plan_mode=args.plan_mode,
+                    tools=tools,
+                    managed_agents=managed_agents,
+                    planning_prompt_templates=agent.prompt_templates["planning"],
+                )
 
-        def planner_fn(task: str, tools, managed_agents) -> dict:
-            return proposal_planning(
-                example=example,
-                augmented_question=augmented_question,
-                model_name=model_name,
-                key=key,
-                url=url,
-                model=model,
-                slm=slm,
-                retrieval_method=retrieval_method,
-                top_k=3,
-                retrieval_option=args.retrieval_option,
-                type_domain_retrieval_method=akb_client.type_domain_text_search,
-                plan_mode=args.plan_mode,
-                tools=tools,
-                managed_agents=managed_agents,
-                planning_prompt_templates=agent.prompt_templates["planning"],
-            )
-
-        agent.planner_fn = planner_fn
+            agent.planner_fn = planner_fn
     final_result = agent.run(augmented_question)
     agent_memory = agent.write_memory_to_messages(summary_mode=True)
     final_result = prepare_response(
@@ -409,6 +420,8 @@ def answer_single_question(
             step_dict["step_type"] = "planning"
             step_dict.pop("model_output_message_facts", None)
             step_dict.pop("model_output_message_plan", None)
+            logger.info(f"[PlanningStep] Facts:\n{memory_step.facts}")
+            logger.info(f"[PlanningStep] Plan:\n{memory_step.plan}")
         else:
             step_dict["step_type"] = "unknown"
         intermediate_steps.append(step_dict)

@@ -33,18 +33,20 @@ knowledge_prompt: |
 
 
 plan_prompt: |
-    Develop a step-by-step plan to solve the given task based on the knowledge provided.
-    The plan must:
-        (c) apply the knowledge step-by-step to derive the decision criterion (an intermediate, task-specific quantity or structure used to select the final answer)
-        (d) make the final answer directly obtainable once the decision criterion is satisfied
-    Do NOT include the direct answer in the plan. Do NOT reason to a conclusion.
+    Develop a high-level plan of no more than 10 steps to solve the given task based only on the provided knowledge and similar tasks.
+    The plan must not include the final answer and the final conclusion.
+    
+    Requirements:
+    - Use the knowledge explicitly and progressively in each step.
+    - Derive a decision criterion: an intermediate, task-specific quantity, rule, or structure that can be used to select the answer.
+
     Strict Output Format:
-        - <step>
-        - <step>
-        ...
+    - <step>
+    - <step>
+    - ...
 
     TASK:
-    {{task}}}
+    {{task}}
 
     KNOWLEDGE:
     {{knowledge}}

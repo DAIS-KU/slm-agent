@@ -114,6 +114,7 @@ class AKBClient:
         task_types: List[str],
         domains: List[str],
         top_k: int = 3,
+        weights: Dict[str, float] = None,
     ) -> List[Dict]:
         endpoint = f"{self.base_url}/search/type_domain_text"
         payload = {
@@ -121,6 +122,7 @@ class AKBClient:
             "task_types": task_types,
             "domains": domains,
             "top_k": top_k,
+            "weights": weights,
         }
 
         try:

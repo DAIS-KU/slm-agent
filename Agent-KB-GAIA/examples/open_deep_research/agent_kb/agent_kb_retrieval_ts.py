@@ -1,4 +1,17 @@
+from collections import defaultdict
 from typing import Any, Dict, Optional, Sequence
+
+from agent_kb_retrieval import AgenticKnowledgeBase
+
+
+def to_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (list, tuple)):
+        return " ".join(str(v) for v in value)
+    return str(value)
 
 
 def _is_effectively_empty(v: Any) -> bool:
@@ -43,7 +56,9 @@ class AKB_Manager:
             "approach": "task_spec.approach",
         }
 
-        all_fields = list(self.knowledge_base.INDEX_FIELDS.keys())
+        all_fields = list(
+            getattr(self.knowledge_base, "INDEX_FIELDS", self.knowledge_base.field_components).keys()
+        )
 
         # ✅ task_spec로부터 사용할 필드 자동 선택
         use_fields: Sequence[str]
@@ -94,16 +109,17 @@ class AKB_Manager:
             t = self.knowledge_base.tasks.get(task_id)
             if not t:
                 continue
+            task_spec = getattr(t, "task_spec", None)
             detailed.append(
                 {
                     "task_id": t.task_id,
                     "total_score": float(total_score),
                     "task": to_text(t.task),
                     "task_spec": {
-                        "problem_type": to_text(t.task_spec.problem_type),
-                        "domain": to_text(t.task_spec.domain),
-                        "what_to_derive": to_text(t.task_spec.what_to_derive),
-                        "approach": to_text(t.task_spec.approach),
+                        "problem_type": to_text(getattr(task_spec, "problem_type", None)),
+                        "domain": to_text(getattr(task_spec, "domain", None)),
+                        "what_to_derive": to_text(getattr(task_spec, "what_to_derive", None)),
+                        "approach": to_text(getattr(task_spec, "approach", None)),
                     },
                 }
             )

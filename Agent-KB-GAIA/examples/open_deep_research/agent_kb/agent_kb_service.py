@@ -48,6 +48,10 @@ class TypeDomainSearchRequest(BaseModel):
     task_types: List[str]
     domains: List[str]
     top_k: int = 3
+    weights: Optional[Dict[str, float]] = Field(
+        default=None,
+        description="Weighted sum coefficients: {'type': 0.3, 'domain': 0.3, 'text': 0.4}",
+    )
 
 
 class TaskResponse(BaseModel):
@@ -224,7 +228,7 @@ async def semantic_search(request: SearchRequest):
 @app.post("/search/type_domain_text", response_model=List[TaskResponse])
 async def type_domain_text_search(request: TypeDomainSearchRequest):
     start_time = time.time()
-    cache_key = f"type_domain_{request.query}_{request.task_types}_{request.domains}_{request.top_k}"
+    cache_key = f"type_domain_{request.query}_{request.task_types}_{request.domains}_{request.top_k}_{request.weights}"
 
     try:
         cached = _get_cached(cache_key)
@@ -236,6 +240,7 @@ async def type_domain_text_search(request: TypeDomainSearchRequest):
             task_types=request.task_types,
             domains=request.domains,
             top_k=request.top_k,
+            weights=request.weights,
         )
 
         response_data: List[TaskResponse] = []

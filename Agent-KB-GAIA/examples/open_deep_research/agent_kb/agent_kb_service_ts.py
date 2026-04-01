@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
-from agent_kb_retrieval import AKB_Manager
+from agent_kb_retrieval_ts import AKB_Manager
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 import time
@@ -21,7 +21,10 @@ app.add_middleware(
 
 # 변환 후 엔티티 DB를 로드한다고 가정
 # unified_database.json 내부 각 레코드는 task_id/task/subtasks를 포함해야 함
-manager = AKB_Manager(json_file_paths=["./augmented_ab.json"])
+manager = AKB_Manager(json_file_paths=[
+    "./unified_database_ab900.json",
+    "./unified_database_akb900.json",
+])
 
 performance_stats = {
     "total_requests": 0,
@@ -98,22 +101,22 @@ def _set_cached(cache_key: str, data: Any):
 
 def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
     return {
-        "task_id": str(item["task_id"]),
-        "task": item["task"],
-        "agent_planning": item["agent_planning"],
-        "domain": item["domain"],
-        "skills": item["skills"],
-        "objective": item["objective"],
-        "knowledge": item["knowledge"],
-        "constraints": item["constraints"],
-        "instructions": item["instructions"],
-        "approach": item["approach"],
-        "plan": item.get("plan", None),
-        "knowledge_summary": item["knowledge_summary"],
-        "constraints_summary": item["constraints_summary"],
-        "instructions_summary": item["instructions_summary"],
-        "approach_summary": item["approach_summary"],
-        "plan_summary": item.get("plan_summary", None),
+        "task_id": str(item.get("task_id", "")),
+        "task": item.get("task", ""),
+        "agent_planning": item.get("agent_planning"),
+        "domain": item.get("domain"),
+        "skills": item.get("skills"),
+        "objective": item.get("objective"),
+        "knowledge": item.get("knowledge"),
+        "constraints": item.get("constraints"),
+        "instructions": item.get("instructions"),
+        "approach": item.get("approach"),
+        "plan": item.get("plan"),
+        "knowledge_summary": item.get("knowledge_summary"),
+        "constraints_summary": item.get("constraints_summary"),
+        "instructions_summary": item.get("instructions_summary"),
+        "approach_summary": item.get("approach_summary"),
+        "plan_summary": item.get("plan_summary"),
     }
 
 

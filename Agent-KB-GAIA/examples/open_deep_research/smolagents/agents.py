@@ -297,7 +297,6 @@ class MultiStepAgent:
         top_k: Optional[int] = 3,
         retrieval_type: Optional[str] = "hybrid",
         plan_mode: Optional[str] = None,
-        facts_mode: Optional[str] = None,
     ):
         if tool_parser is None:
             tool_parser = parse_json_tool_call
@@ -364,7 +363,6 @@ class MultiStepAgent:
         self.top_k = top_k
         self.retrieval_type = retrieval_type
         self.plan_mode = plan_mode
-        self.facts_mode = facts_mode
         self.planner_fn = None
 
     @property
@@ -728,38 +726,14 @@ You have been provided with these additional arguments, that you can access usin
                 },
             ]
 
-            # ---- facts generation ----
-            if self.facts_mode == "kno_app" and self.planner_fn is not None:
-                # Call proposal_planning first; use its knowledge as facts.
-                # Skips the LLM facts-extraction call entirely.
-                _proposal_result = self.planner_fn(task, self.tools, self.managed_agents)
-                if isinstance(_proposal_result, dict):
-                    _proposal_plan = _proposal_result.get("plan", "")
-                    _proposal_knowledge = _proposal_result.get("knowledge", "")
-                    _proposal_examples = _proposal_result.get("examples", {})
-                else:
-                    _proposal_plan = _proposal_result
-                    _proposal_knowledge = ""
-                    _proposal_examples = {}
-                answer_facts = _proposal_knowledge
-                chat_message_facts = None
-                _planner_result_cached = {
-                    "plan": _proposal_plan,
-                    "knowledge": _proposal_knowledge,
-                    "examples": _proposal_examples,
-                }
-            else:
-                chat_message_facts: ChatMessage = self.model(input_messages)
-                answer_facts = chat_message_facts.content
-                _planner_result_cached = None
+            # ---- facts generation (always via LLM prompt) ----
+            chat_message_facts: ChatMessage = self.model(input_messages)
+            answer_facts = chat_message_facts.content
+            _planner_result_cached = None
 
             if self.planner_fn is not None:
                 # --- proposal_planning branch ---
-                # Reuse cached result if planner_fn was already called for kno_app facts.
-                if _planner_result_cached is not None:
-                    result = _planner_result_cached
-                else:
-                    result = self.planner_fn(task, self.tools, self.managed_agents)
+                result = self.planner_fn(task, self.tools, self.managed_agents)
                 if isinstance(result, dict):
                     proposal = result.get("plan", "")
                     kb_examples = result.get("examples", {})
@@ -1634,7 +1608,6 @@ class CodeAgent(MultiStepAgent):
         top_k: Optional[int] = 1,
         retrieval_type: Optional[str] = "hybrid",
         plan_mode: Optional[str] = None,
-        facts_mode: Optional[str] = None,
         **kwargs,
     ):
         self.additional_authorized_imports = (
@@ -1663,7 +1636,6 @@ class CodeAgent(MultiStepAgent):
             top_k=top_k,
             retrieval_type=retrieval_type,
             plan_mode=plan_mode,
-            facts_mode=facts_mode,
             **kwargs,
         )
         if "*" in self.additional_authorized_imports:
