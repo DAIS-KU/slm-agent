@@ -779,7 +779,7 @@ You have been provided with these additional arguments, that you can access usin
                         "content": [{"type": "text", "text": text}],
                     }
 
-                if self.plan_mode in ("plan", "subtask", "plan_subtask"):
+                if self.plan_mode in ("plan", "subtask", "plan_subtask", "plan_subtask_action"):
                     # plan_mode output already prepared by proposal_planning; use directly
                     answer_plan = proposal
                     chat_message_plan = None

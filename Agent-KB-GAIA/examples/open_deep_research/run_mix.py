@@ -222,7 +222,7 @@ def parse_args():
         "--plan_mode",
         type=str,
         default="plan",
-        choices=["None", "plan", "subtask", "plan_subtask"],
+        choices=["None", "plan", "subtask", "plan_subtask", "plan_subtask_action"],
         help="'None': original planning (no KB), 'plan': KB plan only, 'subtask': KB subtasks only, 'plan_subtask': KB plan+subtasks",
     )
     parser.add_argument(
@@ -243,7 +243,7 @@ custom_role_conversions = {"tool-call": "assistant", "tool-response": "user"}
 
 
 def create_agent_hierarchy(
-    model: Model, model_search: Model, args, debug=False, sub_retrieval_method=None
+    model: Model, model_search: Model, args, debug=False,
 ):
     manager_agent = CodeAgent(
         model=model,
@@ -257,7 +257,6 @@ def create_agent_hierarchy(
         agent_kb=args.agent_kb,
         top_k=args.top_k,
         retrieval_type=args.retrieval_type,
-        sub_retrieval_method=sub_retrieval_method,
         plan_mode=args.plan_mode,
         facts_mode=args.facts_mode,
     )
@@ -328,7 +327,7 @@ def answer_single_question(
     akb_client = AKBClient()
     sub_akb_client = SubAKBClient()
     agent = create_agent_hierarchy(
-        model, model_search, args, debug, sub_retrieval_method=sub_retrieval_method
+        model, model_search, args, debug,
     )
 
     model_name_retrieval = args.model_name_retrieval
@@ -336,12 +335,6 @@ def answer_single_question(
         "hybrid": akb_client.hybrid_search,
         "text": akb_client.text_search,
         "semantic": akb_client.semantic_search,
-    }[args.retrieval_type]
-
-    sub_retrieval_method = {
-        "hybrid": sub_akb_client.hybrid_search,
-        "text": sub_akb_client.text_search,
-        "semantic": sub_akb_client.semantic_search,
     }[args.retrieval_type]
 
     augmented_question = "Here is the task:" + example["question"]
@@ -509,13 +502,13 @@ def main():
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:3",
+            device_map="cuda:1",
             torch_dtype=str(dtype).replace("torch.", ""),
             temperature=0.7,
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:3",
+            device_map="cuda:1",
             torch_dtype=str(dtype).replace("torch.", ""),
             temperature=0.7,
         )

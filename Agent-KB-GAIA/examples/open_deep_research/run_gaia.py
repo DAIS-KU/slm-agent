@@ -228,7 +228,7 @@ def parse_args():
         "--plan_mode",
         type=str,
         default="plan",
-        choices=["None", "plan", "subtask", "plan_subtask"],
+        choices=["None", "plan", "subtask", "plan_subtask", "plan_subtask_action"],
         help="'None': original planning (no KB), 'plan': KB plan only, 'subtask': KB subtasks only, 'plan_subtask': KB plan+subtasks",
     )
     parser.add_argument(
@@ -540,7 +540,7 @@ def main():
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:1",
+            device_map="cuda:3",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
@@ -548,7 +548,7 @@ def main():
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:1",
+            device_map="cuda:3",
             # trust_remote_code=True,
             torch_dtype=str(dtype).replace("torch.", ""),
             # max_new_tokens=2048,
