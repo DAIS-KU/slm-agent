@@ -1,27 +1,122 @@
+import json
+import os
 from collections import defaultdict
-from typing import Any, Dict, Optional, Sequence
+from typing import Dict, List, Optional
 
-from agent_kb_retrieval import AgenticKnowledgeBase
-
-
-def to_text(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        return value
-    if isinstance(value, (list, tuple)):
-        return " ".join(str(v) for v in value)
-    return str(value)
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
 
 
-def _is_effectively_empty(v: Any) -> bool:
-    if v is None:
-        return True
-    if isinstance(v, str) and not v.strip():
-        return True
-    if isinstance(v, (list, tuple, dict)) and len(v) == 0:
-        return True
-    return False
+class AgenticKnowledgeBase:
+    def __init__(self, json_file_paths=None):
+        # raw JSON dict 그대로 보존 (task_id -> dict)
+        self.tasks: Dict[str, dict] = {}
+
+        self.embedding_model = SentenceTransformer(
+            "sentence-transformers/all-MiniLM-L6-v2"
+        )
+
+        self.tfidf_vectorizer = TfidfVectorizer(stop_words="english")
+        self.tfidf_matrix = None
+        self.task_ids: List[str] = []
+        self.task_embeddings: Optional[np.ndarray] = None
+
+        if json_file_paths:
+            self.load_initial_data(json_file_paths)
+            self.finalize_index()
+
+    def load_initial_data(self, json_file_paths: List[str]):
+        for json_path in json_file_paths:
+            if not os.path.exists(json_path):
+                raise FileNotFoundError(f"JSON file not found: {json_path}")
+            self.parse_json_file(json_path)
+
+    def parse_json_file(self, json_file_path: str):
+        try:
+            with open(json_file_path, "r", encoding="utf-8") as f:
+                if json_file_path.endswith(".jsonl"):
+                    data = [json.loads(line) for line in f if line.strip()]
+                else:
+                    data = json.load(f)
+
+            if isinstance(data, dict):
+                data = [data]
+
+            base_name = os.path.basename(json_file_path)
+            for idx, item in enumerate(data):
+                try:
+                    task_id = item.get("task_id") or f"{base_name}_{idx}"
+                    self.tasks[task_id] = item
+                except Exception as e:
+                    print(f"Skipping invalid item: {e}")
+                    continue
+
+        except Exception as e:
+            print(f"Error parsing file: {e}")
+
+    def finalize_index(self):
+        print("Building search indices...")
+        self._build_tfidf_index()
+        self._build_embeddings()
+
+    def _build_tfidf_index(self):
+        self.task_ids = list(self.tasks.keys())
+        texts = [
+            self.tasks[tid].get("task") or self.tasks[tid].get("question", "")
+            for tid in self.task_ids
+        ]
+        if not texts:
+            return
+        self.tfidf_matrix = self.tfidf_vectorizer.fit_transform(texts)
+
+    def _build_embeddings(self):
+        print("Generating embeddings...")
+        if not self.task_ids:
+            return
+        texts = [
+            self.tasks[tid].get("task") or self.tasks[tid].get("question", "")
+            for tid in self.task_ids
+        ]
+        self.task_embeddings = self.embedding_model.encode(
+            texts,
+            batch_size=32,
+            show_progress_bar=True,
+            convert_to_numpy=True,
+        )
+
+    def field_text_search(self, query: str, top_k: int = 3) -> List[dict]:
+        if self.tfidf_matrix is None or not self.task_ids:
+            return []
+        query_vec = self.tfidf_vectorizer.transform([query])
+        similarities = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
+        top_indices = similarities.argsort()[-top_k:][::-1]
+        return [
+            {"task_id": self.task_ids[idx], "score": float(similarities[idx])}
+            for idx in top_indices
+        ]
+
+    def field_semantic_search(self, query: str, top_k: int = 3) -> List[dict]:
+        if self.task_embeddings is None or not self.task_ids:
+            return []
+        query_embedding = self.embedding_model.encode(query, convert_to_numpy=True)
+        similarities = cosine_similarity([query_embedding], self.task_embeddings)[0]
+        top_indices = similarities.argsort()[-top_k:][::-1]
+        return [
+            {"task_id": self.task_ids[idx], "score": float(similarities[idx])}
+            for idx in top_indices
+        ]
+
+
+def _build_result(task_id: str, item: dict, score: float, score_key: str = "total_score") -> dict:
+    return {
+        "task_id": task_id,
+        score_key: score,
+        "question": item.get("task") or item.get("question", ""),
+        "agent_planning": item.get("agent_planning"),
+        "agent_experience": item.get("agent_experience"),
+    }
 
 
 class AKB_Manager:
@@ -29,98 +124,36 @@ class AKB_Manager:
         self.knowledge_base = AgenticKnowledgeBase(json_file_paths=json_file_paths)
 
     def hybrid_search(
-        self,
-        query: str,
-        top_k: int = 5,
-        weights: Optional[Dict[str, float]] = None,
-        task_spec: Optional[
-            Any
-        ] = None,  # ✅ 여기로 들어온 task_spec 기반으로 필드 결정
-        field_weights: Optional[Dict[str, float]] = None,
-        per_field_candidate_k: Optional[int] = None,
-    ) -> list[dict]:
-        """
-        - task_spec이 주어지면: 값이 있는 task_spec 필드만 검색 대상
-        - task_spec이 없거나(또는 전부 비었으면): 전체 필드 검색
-        """
-
+        self, query: str, top_k: int = 5, weights: Dict[str, float] = None
+    ) -> List[dict]:
         weights = weights or {"text": 0.5, "semantic": 0.5}
-        field_weights = field_weights or {}
-        cand_k = per_field_candidate_k or (top_k * 4)
-
-        # ✅ task_spec 필드 -> 인덱스 필드명 매핑
-        spec_to_index_field = {
-            "problem_type": "task_spec.problem_type",
-            "domain": "task_spec.domain",
-            "what_to_derive": "task_spec.what_to_derive",
-            "approach": "task_spec.approach",
-        }
-
-        all_fields = list(
-            getattr(self.knowledge_base, "INDEX_FIELDS", self.knowledge_base.field_components).keys()
-        )
-
-        # ✅ task_spec로부터 사용할 필드 자동 선택
-        use_fields: Sequence[str]
-        if task_spec is None:
-            use_fields = all_fields
-        else:
-            # dataclass(TaskSpec)든 dict든 처리
-            if isinstance(task_spec, dict):
-                spec_dict = task_spec
-            else:
-                # dataclass / pydantic-like object
-                spec_dict = {
-                    k: getattr(task_spec, k, None) for k in spec_to_index_field.keys()
-                }
-
-            selected = []
-            for spec_key, index_field in spec_to_index_field.items():
-                if not _is_effectively_empty(spec_dict.get(spec_key)):
-                    selected.append(index_field)
-
-            # task_spec에 유효한 값이 하나도 없으면 전체로 fallback
-            use_fields = selected if selected else all_fields
-
-        # 방어: 실제 인덱싱 가능한 필드만
-        use_fields = [f for f in use_fields if f in self.knowledge_base.INDEX_FIELDS]
-        if not use_fields:
-            use_fields = all_fields
+        cand_k = top_k * 4
 
         score_board = defaultdict(float)
 
-        for field in use_fields:
-            fw = float(field_weights.get(field, 1.0))
+        for r in self.knowledge_base.field_text_search(query, cand_k):
+            score_board[r["task_id"]] += weights["text"] * r["score"]
 
-            # text
-            for r in self.knowledge_base.field_text_search(query, field, cand_k):
-                score_board[r["task_id"]] += weights["text"] * fw * r["score"]
+        for r in self.knowledge_base.field_semantic_search(query, cand_k):
+            score_board[r["task_id"]] += weights["semantic"] * r["score"]
 
-            # semantic
-            for r in self.knowledge_base.field_semantic_search(query, field, cand_k):
-                score_board[r["task_id"]] += weights["semantic"] * fw * r["score"]
+        sorted_results = sorted(score_board.items(), key=lambda x: x[1], reverse=True)[:top_k]
 
-        sorted_results = sorted(score_board.items(), key=lambda x: x[1], reverse=True)[
-            :top_k
+        return [
+            _build_result(task_id, self.knowledge_base.tasks.get(task_id, {}), total_score)
+            for task_id, total_score in sorted_results
         ]
 
-        detailed = []
-        for task_id, total_score in sorted_results:
-            t = self.knowledge_base.tasks.get(task_id)
-            if not t:
-                continue
-            task_spec = getattr(t, "task_spec", None)
-            detailed.append(
-                {
-                    "task_id": t.task_id,
-                    "total_score": float(total_score),
-                    "task": to_text(t.task),
-                    "task_spec": {
-                        "problem_type": to_text(getattr(task_spec, "problem_type", None)),
-                        "domain": to_text(getattr(task_spec, "domain", None)),
-                        "what_to_derive": to_text(getattr(task_spec, "what_to_derive", None)),
-                        "approach": to_text(getattr(task_spec, "approach", None)),
-                    },
-                }
-            )
-        return detailed
+    def search_by_text(self, query: str, field: str = "task", top_k: int = 3) -> List[dict]:
+        results = [
+            _build_result(r["task_id"], self.knowledge_base.tasks.get(r["task_id"], {}), r["score"], "score")
+            for r in self.knowledge_base.field_text_search(query, top_k)
+        ]
+        return sorted(results, key=lambda x: x["score"], reverse=True)[:top_k]
+
+    def search_by_semantic(self, query: str, field: str = "task", top_k: int = 3) -> List[dict]:
+        results = [
+            _build_result(r["task_id"], self.knowledge_base.tasks.get(r["task_id"], {}), r["score"], "score")
+            for r in self.knowledge_base.field_semantic_search(query, top_k)
+        ]
+        return sorted(results, key=lambda x: x["score"], reverse=True)[:top_k]
