@@ -509,13 +509,13 @@ def main():
         dtype = torch.bfloat16 if (torch.cuda.is_bf16_supported()) else torch.float16
         model = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:1",
+            device_map="cuda:2",
             torch_dtype=str(dtype).replace("torch.", ""),
             temperature=0.7,
         )
         model_search = TransformersModel(
             model_id="/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507",
-            device_map="cuda:1",
+            device_map="cuda:2",
             torch_dtype=str(dtype).replace("torch.", ""),
             temperature=0.7,
         )

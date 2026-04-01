@@ -6,7 +6,7 @@ import requests
 class AKBClientTS:
     """HTTP client for agent_kb_service_ts (unified_database KB)."""
 
-    def __init__(self, base_url="http://localhost:8006"):
+    def __init__(self, base_url="http://localhost:8000"):
         self.base_url = base_url
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
