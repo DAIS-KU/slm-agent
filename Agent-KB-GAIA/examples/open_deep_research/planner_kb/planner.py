@@ -190,6 +190,69 @@ def classify_task_type_and_domain(
     return {"task_type_normalized": task_types, "domain_normalized": domains}
 
 
+def plan_mode_planning(
+    example: dict,
+    retrieval_method,
+    top_k: int,
+    plan_mode: str,
+) -> str:
+    """
+    Simple static injection using KB-retrieved similar tasks.
+
+    Retrieves similar tasks and builds an additional_knowledge string
+    incorporating knowledge + plan/subtask/action levels based on plan_mode.
+    No LLM call is made — raw KB data is directly injected as a prefix.
+
+    plan_mode values:
+      - "plan"                : knowledge + plan steps
+      - "subtask"             : knowledge + subtasks
+      - "plan_subtask"        : knowledge + plan steps + subtasks
+      - "plan_subtask_action" : knowledge + plan steps + subtask actions
+    """
+    results = retrieval_method(example["question"], top_k=top_k)
+    if not results:
+        return ""
+
+    blocks = []
+    for i, item in enumerate(results, 1):
+        task = item.get("task", "")
+        ta = item.get("task_analysis") or {}
+        block_lines = [f"[Similar Task #{i}] {task}"]
+
+        # Always include knowledge
+        knowledge = ta.get("knowledge", "")
+        if knowledge:
+            block_lines.append(f"Knowledge: {knowledge}")
+
+        # Include plan steps
+        if plan_mode in ("plan", "plan_subtask", "plan_subtask_action"):
+            plan_steps = ta.get("plan") or []
+            if plan_steps:
+                plan_str = "\n".join(f"  - {s}" for s in plan_steps)
+                block_lines.append(f"Plan:\n{plan_str}")
+
+        # Include subtasks or subtask-actions
+        if plan_mode in ("subtask", "plan_subtask", "plan_subtask_action"):
+            psa_items = item.get("plan_subtask_action") or []
+            if psa_items:
+                detail_lines = []
+                for j, step_item in enumerate(psa_items, 1):
+                    step = step_item.get("step", "")
+                    detail_lines.append(f"  ## Step {j}: {step}")
+                    for k, st in enumerate(step_item.get("subtasks", []), 1):
+                        if plan_mode == "plan_subtask_action":
+                            text = st.get("subtask_action", "") or st.get("subtask", "")
+                        else:
+                            text = st.get("subtask", "")
+                        detail_lines.append(f"     - {j}.{k}: {text}")
+                label = "Subtask Actions" if plan_mode == "plan_subtask_action" else "Subtasks"
+                block_lines.append(f"{label}:\n" + "\n".join(detail_lines))
+
+        blocks.append("\n".join(block_lines))
+
+    return "Here are similar task examples for reference:\n\n" + "\n\n".join(blocks)
+
+
 def proposal_planning(
     example,
     augmented_question,

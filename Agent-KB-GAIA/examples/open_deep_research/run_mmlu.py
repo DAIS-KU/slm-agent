@@ -54,6 +54,7 @@ from agent_kb.agent_kb_utils_ts import AKBClientTS, build_additional_knowledge
 
 from planner_kb import (
     proposal_planning,
+    plan_mode_planning,
 )
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
@@ -231,8 +232,8 @@ def parse_args():
         "--kb_type",
         type=str,
         default="proposal",
-        choices=["proposal", "original"],
-        help="KB mode: 'proposal' uses proposal_planning+agent_kb_utils (default), 'original' uses agent_kb_utils_ts retrieval as additional_knowledge with plan_mode=None",
+        choices=["proposal", "original", "plan_mode"],
+        help="KB mode: 'proposal' uses proposal_planning+agent_kb_utils (default), 'original' uses agent_kb_utils_ts simple injection, 'plan_mode' uses agent_kb_utils static injection with knowledge+plan/subtask/action levels",
     )
     return parser.parse_args()
 
@@ -370,7 +371,16 @@ def answer_single_question(
             additional_knowledge = build_additional_knowledge(ts_results)
             if additional_knowledge:
                 augmented_question = additional_knowledge + "\n\n" + augmented_question
-        elif args.plan_mode != "None":
+        elif args.kb_type == "plan_mode" and args.plan_mode != "None":
+            additional_knowledge = plan_mode_planning(
+                example=example,
+                retrieval_method=retrieval_method,
+                top_k=args.top_k,
+                plan_mode=args.plan_mode,
+            )
+            if additional_knowledge:
+                augmented_question = additional_knowledge + "\n\n" + augmented_question
+        elif args.kb_type == "proposal" and args.plan_mode != "None":
             def planner_fn(task: str, tools, managed_agents) -> dict:
                 return proposal_planning(
                     example=example,
@@ -557,11 +567,8 @@ def main():
                     args.slm,
                     model,
                     model_search,
-                    args.planning_type,
-                    args.planning_field,
                     args.do_field,
                     args.use_sub_ex,
-                    args.augment_mode,
                 )
                 for example in tasks_to_run
             ]
