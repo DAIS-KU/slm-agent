@@ -49,12 +49,13 @@ from scripts.automodel import (
     prepare_model_kwargs,
 )
 
-from agent_kb.agent_kb_utils import AKBClient, call_model, SubAKBClient
+from agent_kb.agent_kb_utils import AKBClient, call_model, SubAKBClient, BUAKBClient
 from agent_kb.agent_kb_utils_ts import AKBClientTS, build_additional_knowledge
 
 from planner_kb import (
     proposal_planning,
     plan_mode_planning,
+    bu_dynamic_proposal_planning,
 )
 
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
@@ -231,8 +232,20 @@ def parse_args():
         "--kb_type",
         type=str,
         default="proposal",
-        choices=["proposal", "original", "plan_mode"],
-        help="KB mode: 'proposal' uses proposal_planning+agent_kb_utils (default), 'original' uses agent_kb_utils_ts simple injection, 'plan_mode' uses agent_kb_utils static injection with knowledge+plan/subtask/action levels",
+        choices=["proposal", "original", "plan_mode", "bu"],
+        help=(
+            "KB mode: 'proposal' uses proposal_planning (default), "
+            "'original' uses agent_kb_utils_ts simple injection, "
+            "'plan_mode' uses static KB injection, "
+            "'bu' uses bu-taxonomy filtered hybrid search + dynamic proposal (port 8006)"
+        ),
+    )
+    parser.add_argument(
+        "--bu_depth",
+        type=str,
+        default=None,
+        choices=["plan_only", "plan_subtask", "full"],
+        help="bu kb_type 전용: depth 고정 (None이면 mapping table 동적 결정)",
     )
     return parser.parse_args()
 
@@ -383,6 +396,19 @@ def answer_single_question(
                 retrieval_method=retrieval_method,
                 top_k=args.top_k,
                 plan_mode=args.plan_mode,
+            )
+            if additional_knowledge:
+                augmented_question = additional_knowledge + "\n\n" + augmented_question
+        elif args.kb_type == "bu":
+            additional_knowledge = bu_dynamic_proposal_planning(
+                example     = example,
+                top_k       = args.top_k,
+                model_name  = model_name,
+                key         = key,
+                url         = url,
+                model       = model,
+                slm         = slm,
+                force_depth = args.bu_depth,
             )
             if additional_knowledge:
                 augmented_question = additional_knowledge + "\n\n" + augmented_question

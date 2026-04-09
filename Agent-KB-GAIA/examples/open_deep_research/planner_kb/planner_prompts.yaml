@@ -18,6 +18,28 @@ task_classification_prompt: |
     {{task}}}
 
 
+task_classification_path_prompt: |
+    Classify the given task into a 3-level hierarchical type_task path and domain path.
+    Each path has exactly 3 levels separated by "/" going from general to specific.
+
+    type_task path level-1 options: problem_solving, information_retrieval, analysis, decision_making, engineering
+    type_task path level-2 examples (under problem_solving): mathematical, logical, scientific, conceptual
+    type_task path level-3 examples: computation, proof, geometry, classification, reasoning, biology, chemistry, physics
+
+    domain path level-1 options: science, technology, humanities, business, medicine, arts
+    domain path level-2 examples: mathematics, physics, chemistry, biology, statistics, computer_science, social_sciences, history, law, economics
+    domain path level-3 examples: algebra, analysis, geometry, general, algorithms, logic, education, finance
+
+    Return STRICT JSON (no extra keys, no prose outside the JSON):
+    {
+        "type_task_path": "<level1>/<level2>/<level3>",
+        "domain_path": "<level1>/<level2>/<level3>"
+    }
+
+    TASK:
+    {{task}}
+
+
 knowledge_prompt: |
     Extract the domain knowledge required to understand and solve the given task.
     Provide both:

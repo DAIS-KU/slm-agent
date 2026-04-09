@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import os
 
 from smolagents.agents import populate_template
-from agent_kb.agent_kb_utils import call_model
+from agent_kb.agent_kb_utils import call_model, BUAKBClient
 from typing import Any, Dict, List, Literal, Optional
 
 from .mece_utils import load_prompts
+
+# planner_prompts.yaml 의 상대경로 (절대경로 하드코딩 제거)
+_PROMPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "planner_prompts.yaml")
 
 import logging
 
@@ -271,7 +275,7 @@ def proposal_planning(
     planning_prompt_templates=None,
 ):
     planning_prompt_template = load_prompts(
-        path="/home/huijeong/slm-agent/Agent-KB-GAIA/examples/open_deep_research/planner_kb/planner_prompts.yaml"
+        path=_PROMPT_PATH
     )
 
     # ====== [1] Retrieve similar tasks ====== #
@@ -387,3 +391,482 @@ def proposal_planning(
         "retrieval_results": retrieval_results,
         "examples": examples,
     }
+
+
+# ---------------------------------------------------------------------------
+# Dynamic proposal planning (retrieval_mode=td, plan_mode=dynamic)
+# ---------------------------------------------------------------------------
+
+_MAPPING_CACHE: Optional[Dict] = None
+_MAPPING_PATH_DEFAULT = os.path.join(
+    os.path.dirname(__file__), "..", "agent_kb", "mapping.json"
+)
+
+
+def _load_mapping(mapping_path: Optional[str] = None) -> Dict:
+    global _MAPPING_CACHE
+    if _MAPPING_CACHE is None:
+        path = mapping_path or _MAPPING_PATH_DEFAULT
+        try:
+            with open(os.path.abspath(path), "r", encoding="utf-8") as f:
+                data = json.load(f)
+            _MAPPING_CACHE = data.get("entries", data)
+        except Exception as e:
+            logger.warning(f"Failed to load mapping.json from {path}: {e}")
+            _MAPPING_CACHE = {}
+    return _MAPPING_CACHE
+
+
+def _lookup_mapping(
+    type_task_path: str,
+    domain_path: str,
+    mapping: Dict,
+) -> Dict[str, Any]:
+    """Look up mapping config for (type_task_path, domain_path).
+
+    Fallback order:
+      1. exact "{type_task_path}|{domain_path}"
+      2. "{type_task_path}" (type only, full path)
+      3. "{domain_path}" (domain only, full path)
+      4. parent of type_task_path (level1/level2)
+      5. parent of domain_path (level1/level2)
+      6. level1 of type_task_path
+      7. level1 of domain_path
+      8. "default"
+    """
+    type_levels = [p for p in type_task_path.split("/") if p]
+    domain_levels = [p for p in domain_path.split("/") if p]
+
+    candidates = [
+        f"{type_task_path}|{domain_path}",
+        type_task_path,
+        domain_path,
+    ]
+    # type parent paths (level1/level2, level1)
+    for n in range(len(type_levels) - 1, 0, -1):
+        candidates.append("/".join(type_levels[:n]))
+    # domain parent paths (level1/level2, level1)
+    for n in range(len(domain_levels) - 1, 0, -1):
+        candidates.append("/".join(domain_levels[:n]))
+    candidates.append("default")
+
+    for key in candidates:
+        if key in mapping:
+            logger.info(f"[Mapping] matched key='{key}' for type='{type_task_path}', domain='{domain_path}'")
+            return mapping[key]
+
+    return {"fields": ["knowledge", "plan"], "depth": "plan_subtask"}
+
+
+def classify_task_type_domain_path(
+    task: str,
+    planning_prompt_template: Dict[str, str],
+    model_name: str,
+    key: str,
+    url: str,
+    model: Any,
+    slm: bool,
+) -> Dict[str, str]:
+    """Classify task into 3-level type_task_path and domain_path using LLM."""
+    prompt = populate_template(
+        planning_prompt_template["task_classification_path_prompt"],
+        variables={"task": task},
+    )
+    raw = call_model(
+        query=prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    try:
+        text = raw.strip()
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+        result = json.loads(text.strip())
+        type_task_path = result.get("type_task_path", "problem_solving/general/general")
+        domain_path = result.get("domain_path", "science/general/general")
+    except Exception as e:
+        logger.warning(f"Path classification parsing failed: {e}. Raw: {raw}")
+        type_task_path = "problem_solving/general/general"
+        domain_path = "science/general/general"
+
+    logger.info(f"[Path Classification] type_task_path={type_task_path}, domain_path={domain_path}")
+    return {"type_task_path": type_task_path, "domain_path": domain_path}
+
+
+def build_dynamic_reference_blocks(
+    similars: List[Any],
+    fields: List[str],
+    depth: str,
+    max_items: int = 3,
+) -> str:
+    """Build reference document blocks from similar tasks using mapping-specified fields and depth.
+
+    fields: subset of ["knowledge", "plan", "agent_experience", "subtask_action"]
+    depth:  "plan" | "plan_subtask" | "plan_subtask_action"
+    """
+    lines: List[str] = []
+
+    for i, d in enumerate(similars[:max_items], start=1):
+        task = d.get("task") or ""
+        ta = d.get("task_analysis") or {}
+        block_lines = [f"[Similar Task #{i}] {task}"]
+
+        if "knowledge" in fields:
+            knowledge = ta.get("knowledge", "")
+            if knowledge:
+                block_lines.append(f"Knowledge: {knowledge}")
+
+        if "agent_experience" in fields:
+            exp = d.get("agent_experience", "")
+            if exp:
+                block_lines.append(f"Experience: {exp}")
+
+        if "plan" in fields or depth in ("plan", "plan_subtask", "plan_subtask_action"):
+            plan_steps = ta.get("plan") or []
+            if plan_steps:
+                plan_str = "\n".join(f"  - {s}" for s in plan_steps)
+                block_lines.append(f"Plan:\n{plan_str}")
+
+        if depth in ("plan_subtask", "plan_subtask_action"):
+            psa_items = d.get("plan_subtask_action") or []
+            if psa_items:
+                detail_lines = []
+                for j, step_item in enumerate(psa_items, 1):
+                    step = step_item.get("step", "")
+                    detail_lines.append(f"  ## Step {j}: {step}")
+                    for k, st in enumerate(step_item.get("subtasks", []), 1):
+                        if depth == "plan_subtask_action":
+                            text = st.get("subtask_action", "") or st.get("subtask", "")
+                        else:
+                            text = st.get("subtask", "")
+                        detail_lines.append(f"     - {j}.{k}: {text}")
+                label = "Subtask Actions" if depth == "plan_subtask_action" else "Subtasks"
+                block_lines.append(f"{label}:\n" + "\n".join(detail_lines))
+
+        lines.append("\n".join(block_lines))
+
+    return "\n\n".join(lines).strip()
+
+
+def dynamic_proposal_planning(
+    example: dict,
+    augmented_question: str,
+    model_name: str,
+    key: str,
+    url: str,
+    model: Any,
+    slm: bool,
+    td_retrieval_method,
+    retrieval_method,
+    top_k: int,
+    mapping_path: Optional[str] = None,
+    tools=None,
+    managed_agents=None,
+    planning_prompt_templates=None,
+):
+    """Dynamic variant of proposal_planning driven by mapping.json.
+
+    Steps:
+      1. Classify task into type_task_path / domain_path (3-level paths).
+      2. Retrieve similar tasks via td_retrieval_method (retrieval_mode=td).
+         Falls back to retrieval_method if td returns nothing.
+      3. Look up mapping.json for (type_task_path, domain_path) to get fields + depth.
+      4. Build reference doc blocks using the mapped fields and depth.
+      5. Stage 1 — generate knowledge (same as proposal_planning).
+      6. Stage 2 — generate plan using mapping-depth reference examples.
+      7. Optionally generate subtask breakdown (plan_mode=dynamic maps depth to stage4).
+    """
+    planning_prompt_template = load_prompts(
+        path=_PROMPT_PATH
+    )
+
+    # ====== [1] Classify task → 3-level paths ====== #
+    classification = classify_task_type_domain_path(
+        task=augmented_question,
+        planning_prompt_template=planning_prompt_template,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    type_task_path = classification["type_task_path"]
+    domain_path = classification["domain_path"]
+
+    # ====== [2] Retrieve with td (path-filtered hybrid) ====== #
+    retrieval_results = td_retrieval_method(
+        example["question"],
+        type_task_path=type_task_path,
+        domain_path=domain_path,
+        top_k=top_k,
+    )
+    if not retrieval_results:
+        logger.warning("td_hybrid_search returned no results; falling back to hybrid retrieval.")
+        retrieval_results = retrieval_method(example["question"], top_k=top_k)
+
+    for i, r in enumerate(retrieval_results):
+        ta = r.get("task_analysis") or {}
+        logger.info(
+            f"[Retrieved #{i+1}] task_id={r.get('task_id')}, "
+            f"type={ta.get('task_type_normalized')}, domain={ta.get('domain_normalized')}, "
+            f"score={r.get('score', 0):.4f}"
+        )
+
+    # ====== [3] Load mapping.json → fields + depth ====== #
+    mapping = _load_mapping(mapping_path)
+    config = _lookup_mapping(type_task_path, domain_path, mapping)
+    fields = config.get("fields", ["knowledge", "plan"])
+    depth = config.get("depth", "plan_subtask")
+    logger.info(f"[Mapping Config] fields={fields}, depth={depth}")
+
+    # ====== [4] Build reference blocks ====== #
+    knowledge_examples = build_dynamic_reference_blocks(
+        similars=retrieval_results,
+        fields=[f for f in fields if f in ("knowledge", "agent_experience")],
+        depth="plan",  # knowledge stage only needs plan structure at most
+        max_items=3,
+    )
+    plan_examples = build_dynamic_reference_blocks(
+        similars=retrieval_results,
+        fields=fields,
+        depth=depth,
+        max_items=3,
+    )
+    logger.info(f"[Dynamic] Knowledge examples:\n{knowledge_examples}")
+    logger.info(f"[Dynamic] Plan examples:\n{plan_examples}")
+
+    # ====== [5] Stage 1: Generate knowledge ====== #
+    knowledge_text = generate_knowledge(
+        task=augmented_question,
+        examples=knowledge_examples,
+        planning_prompt_template=planning_prompt_template,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+
+    # ====== [6] Stage 2: Generate plan ====== #
+    plan_str = generate_plan(
+        task=augmented_question,
+        knowledge=knowledge_text,
+        examples=plan_examples,
+        planning_prompt_template=planning_prompt_template,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+
+    # ====== [7] Stage 4 (optional): Generate subtasks based on depth ====== #
+    if depth in ("plan_subtask", "plan_subtask_action") and planning_prompt_templates:
+        _tools = tools or {}
+        _managed_agents = managed_agents or {}
+
+        example_key = "plan_subtask_action" if depth == "plan_subtask_action" else "plan_subtask"
+        subtask_examples = {
+            "plan_subtask": build_plan_subtask_examples(retrieval_results),
+            "plan_subtask_action": build_plan_subtask_action_examples(retrieval_results),
+        }
+        stage2_prompt = populate_template(
+            planning_prompt_templates["initial_plan_subtask_action_stage2"],
+            variables={
+                "task": augmented_question,
+                "tools": _tools,
+                "managed_agents": _managed_agents,
+                "plan_steps": plan_str,
+                "examples": subtask_examples[example_key],
+            },
+        )
+        subtask_plan = call_model(
+            query=stage2_prompt,
+            model_name=model_name,
+            key=key,
+            url=url,
+            model=model,
+            slm=slm,
+        )
+        logger.info("=" * 100)
+        logger.info(f"[Dynamic Stage 4] Subtask Plan:\n{subtask_plan}")
+        logger.info("=" * 100)
+
+        final_plan = subtask_plan if depth == "plan_subtask" else f"Plan:\n{plan_str}\n\nSubtasks:\n{subtask_plan}"
+    else:
+        final_plan = plan_str
+
+    return {
+        "plan": final_plan,
+        "knowledge": knowledge_text,
+        "retrieval_results": retrieval_results,
+        "type_task_path": type_task_path,
+        "domain_path": domain_path,
+        "mapping_config": config,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Bu-taxonomy dynamic proposal planning
+# ---------------------------------------------------------------------------
+
+def _format_bu_taxonomy_results(results: List[Dict], max_items: int = 3) -> str:
+    """Bu-taxonomy 검색 결과의 dynamic_proposal을 additional_knowledge 문자열로 변환."""
+    blocks: List[str] = []
+    for i, item in enumerate(results[:max_items], start=1):
+        task    = item.get("task", "")
+        proposal = item.get("dynamic_proposal") or {}
+        lines   = [f"[Similar Task #{i}] {task}"]
+
+        knowledge = proposal.get("knowledge")
+        if knowledge:
+            lines.append(f"Knowledge: {knowledge}")
+
+        plan = proposal.get("plan")
+        if plan:
+            if isinstance(plan, list):
+                plan_str = "\n".join(f"  - {s}" for s in plan)
+            else:
+                plan_str = str(plan)
+            lines.append(f"Plan:\n{plan_str}")
+
+        subtasks = proposal.get("subtasks")
+        if subtasks:
+            lines.append("Subtasks:")
+            for s in subtasks:
+                lines.append(f"  - {s}")
+
+        actions = proposal.get("actions")
+        if actions:
+            detail: List[str] = []
+            for j, step_item in enumerate(actions, 1):
+                step = step_item.get("step", "")
+                detail.append(f"  ## Step {j}: {step}")
+                for k, st in enumerate(step_item.get("subtasks", []), 1):
+                    text = st.get("subtask_action", "") or st.get("subtask", "")
+                    detail.append(f"     - {j}.{k}: {text}")
+            lines.append("Subtask Actions:\n" + "\n".join(detail))
+
+        blocks.append("\n".join(lines))
+
+    if not blocks:
+        return ""
+    return "Here are similar task examples for reference (bu-taxonomy):\n\n" + "\n\n".join(blocks)
+
+
+def bu_dynamic_proposal_planning(
+    example: dict,
+    top_k: int = 3,
+    min_pool_size: int = 20,
+    hybrid_weights: Optional[Dict[str, float]] = None,
+    bu_client: Optional[Any] = None,
+    model_name: Optional[str] = None,
+    key: Optional[str] = None,
+    url: Optional[str] = None,
+    model: Optional[Any] = None,
+    slm: bool = False,
+    force_depth: Optional[str] = None,
+) -> str:
+    """Bu-taxonomy KB 기반 dynamic proposal planning (2-stage generation).
+
+    Steps:
+      1. BUAKBClient.taxonomy_search() — LLM 계층 분류 + 필터링 + hybrid 리랭킹 + dynamic_proposal
+      2. mapping table 기반 config 확인:
+         - recommended_knowledge=True → Stage 1: LLM으로 knowledge 생성
+         - recommended_depth 에 따라 → Stage 2: LLM으로 plan 생성
+
+    model_name/key/url/model/slm: LLM generation 에 사용 (None이면 formatted raw 결과 반환)
+    """
+    client   = bu_client or BUAKBClient()
+    question = example.get("question") or example.get("task", "")
+
+    results = client.taxonomy_search(
+        query            = question,
+        top_k            = top_k,
+        min_pool_size    = min_pool_size,
+        hybrid_weights   = hybrid_weights or {"text": 0.5, "semantic": 0.5},
+        include_proposal = True,
+    )
+
+    if not results:
+        logger.warning("[bu_dynamic_proposal_planning] taxonomy_search returned no results.")
+        return ""
+
+    # ── 로그: 조회 결과 ──────────────────────────────────────────────────
+    for i, r in enumerate(results):
+        bp           = r.get("bu_taxonomy_path") or {}
+        tt           = (bp.get("task_type") or {}).get("minor_label", "N/A")
+        dm           = (bp.get("domain")    or {}).get("minor_label", "N/A")
+        proposal_cfg = (r.get("dynamic_proposal") or {}).get("_config", {})
+        logger.info(
+            f"[BU Retrieved #{i+1}] task_id={r.get('task_id')}, "
+            f"task_type={tt}, domain={dm}, "
+            f"depth={proposal_cfg.get('recommended_depth')}, "
+            f"confidence={proposal_cfg.get('confidence')}, "
+            f"score={r.get('total_score', 0):.4f}"
+        )
+
+    # ── generation 불가능하면 raw 포맷 반환 ──────────────────────────────
+    if not model_name and not slm:
+        additional_knowledge = _format_bu_taxonomy_results(results)
+        logger.info(f"[bu_dynamic_proposal_planning] raw format:\n{additional_knowledge}")
+        return additional_knowledge
+
+    # ── config 추출 (첫 번째 결과 기준) ─────────────────────────────────
+    first_cfg      = (results[0].get("dynamic_proposal") or {}).get("_config", {})
+    need_knowledge = first_cfg.get("recommended_knowledge", True)
+    depth          = force_depth or first_cfg.get("recommended_depth", "plan_subtask")
+    logger.info(f"[bu_dynamic_proposal_planning] depth={depth} (force={force_depth!r})")
+
+    planning_prompt_template = load_prompts(path=_PROMPT_PATH)
+
+    # ── Stage 1: knowledge 생성 (조건부) ─────────────────────────────────
+    knowledge_text = ""
+    if need_knowledge:
+        knowledge_examples = build_similar_task_direction_blocks(similars=results)
+        knowledge_text = generate_knowledge(
+            task                     = question,
+            examples                 = knowledge_examples,
+            planning_prompt_template = planning_prompt_template,
+            model_name               = model_name,
+            key                      = key,
+            url                      = url,
+            model                    = model,
+            slm                      = slm,
+        )
+
+    # ── Stage 2: plan 생성 (depth 기반 예시 선택) ────────────────────────
+    if depth == "full":
+        plan_examples = build_plan_subtask_action_examples(similars=results)
+    elif depth == "plan_subtask":
+        plan_examples = build_plan_subtask_examples(similars=results)
+    else:  # plan_only
+        plan_examples = build_similar_task_plan_blocks(similars=results)
+
+    plan_text = generate_plan(
+        task                     = question,
+        knowledge                = knowledge_text,
+        examples                 = plan_examples,
+        planning_prompt_template = planning_prompt_template,
+        model_name               = model_name,
+        key                      = key,
+        url                      = url,
+        model                    = model,
+        slm                      = slm,
+    )
+
+    # ── 최종 포맷 ─────────────────────────────────────────────────────────
+    parts: List[str] = ["[BU-KB Guidance for Current Task]"]
+    if knowledge_text:
+        parts.append(f"Knowledge:\n{knowledge_text}")
+    if plan_text:
+        parts.append(f"Plan:\n{plan_text}")
+
+    additional_knowledge = "\n\n".join(parts)
+    logger.info(f"[bu_dynamic_proposal_planning] generated:\n{additional_knowledge}")
+    return additional_knowledge
