@@ -19,6 +19,9 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
