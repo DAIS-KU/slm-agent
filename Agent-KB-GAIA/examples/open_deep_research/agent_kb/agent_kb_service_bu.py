@@ -82,16 +82,49 @@ _cli_args, _ = _parser.parse_known_args()
 _slm_model = None
 if _cli_args.slm:
     import torch
-    from smolagents import TransformersModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    class _SLMWrapper:
+        """Lightweight wrapper matching the call convention of call_model(slm=True).
+
+        call_model expects: message = model(messages) -> message.content (str)
+        """
+
+        def __init__(self, model_id: str, device_map: str, torch_dtype):
+            self.tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_id,
+                device_map=device_map,
+                torch_dtype=torch_dtype,
+                trust_remote_code=True,
+            )
+            self.model.eval()
+            self.model_id = model_id
+
+        def __call__(self, messages):
+            text = self.tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True,
+            )
+            inputs = self.tokenizer(text, return_tensors="pt").to(self.model.device)
+            with torch.no_grad():
+                outputs = self.model.generate(
+                    **inputs, max_new_tokens=512, temperature=0.7, do_sample=True,
+                )
+            new_tokens = outputs[0][inputs["input_ids"].shape[-1]:]
+            decoded = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
+
+            class _Resp:
+                content = decoded
+            return _Resp()
+
     _slm_model_id = _cli_args.model_id or os.getenv(
         "SLM_MODEL_ID", "/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507"
     )
     _dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-    _slm_model = TransformersModel(
+    _slm_model = _SLMWrapper(
         model_id=_slm_model_id,
         device_map=_cli_args.device_map,
-        torch_dtype=str(_dtype).replace("torch.", ""),
-        temperature=0.7,
+        torch_dtype=_dtype,
     )
     print(f"[BU-KB Service] SLM mode enabled: {_slm_model_id} on {_cli_args.device_map}")
 
