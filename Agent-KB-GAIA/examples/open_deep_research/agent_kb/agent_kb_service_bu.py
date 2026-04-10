@@ -14,6 +14,7 @@ Bu-taxonomy 기반 KB 검색 서비스 (port 8006).
   python agent_kb_service_bu.py
 """
 
+import argparse
 import json
 import os
 import time
@@ -71,11 +72,36 @@ _classifier_model_name = os.getenv("RETRIEVAL_MODEL_NAME", "gpt-4.1")
 _classifier_key        = os.getenv("OPENAI_API_KEY", "")
 _classifier_url        = os.getenv("OPENAI_BASE_URL", None)
 
+# SLM support: parse CLI args before building classifier
+_parser = argparse.ArgumentParser(description="BU-taxonomy KB service")
+_parser.add_argument("--slm", action="store_true", help="Use local SLM instead of OpenAI API")
+_parser.add_argument("--model_id", type=str, default=None, help="Path to local SLM model")
+_parser.add_argument("--device_map", type=str, default="auto", help="Device map for SLM (e.g. cuda:0)")
+_cli_args, _ = _parser.parse_known_args()
+
+_slm_model = None
+if _cli_args.slm:
+    import torch
+    from smolagents import TransformersModel
+    _slm_model_id = _cli_args.model_id or os.getenv(
+        "SLM_MODEL_ID", "/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507"
+    )
+    _dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    _slm_model = TransformersModel(
+        model_id=_slm_model_id,
+        device_map=_cli_args.device_map,
+        torch_dtype=str(_dtype).replace("torch.", ""),
+        temperature=0.7,
+    )
+    print(f"[BU-KB Service] SLM mode enabled: {_slm_model_id} on {_cli_args.device_map}")
+
 taxonomy_classifier = HierarchicalTaxonomyClassifier(
     taxonomy_tree = _taxonomy_tree,
     model_name    = _classifier_model_name,
     key           = _classifier_key,
     url           = _classifier_url,
+    model         = _slm_model,
+    slm           = _cli_args.slm,
 )
 proposal_planner = DynamicProposalPlanner(_mapping_table)
 
