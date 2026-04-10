@@ -377,6 +377,7 @@ def answer_single_question(
         augmented_question += prompt_use_files
 
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    _additional_knowledge_for_planning = None
     # try:
     if retrieval:
         if args.kb_type == "original":
@@ -387,31 +388,29 @@ def answer_single_question(
                 "semantic": akb_ts_client.semantic_search,
             }[args.retrieval_type]
             ts_results = ts_retrieval_fn(example["question"], top_k=args.top_k)
-            additional_knowledge = build_additional_knowledge(ts_results)
-            if additional_knowledge:
-                augmented_question = additional_knowledge + "\n\n" + augmented_question
+            _additional_knowledge_for_planning = build_additional_knowledge(ts_results)
         elif args.kb_type == "plan_mode" and args.plan_mode != "None":
-            additional_knowledge = plan_mode_planning(
+            _additional_knowledge_for_planning = plan_mode_planning(
                 example=example,
                 retrieval_method=retrieval_method,
                 top_k=args.top_k,
                 plan_mode=args.plan_mode,
             )
-            if additional_knowledge:
-                augmented_question = additional_knowledge + "\n\n" + augmented_question
         elif args.kb_type == "bu":
-            additional_knowledge = bu_dynamic_proposal_planning(
-                example     = example,
-                top_k       = args.top_k,
-                model_name  = model_name,
-                key         = key,
-                url         = url,
-                model       = model,
-                slm         = slm,
-                force_depth = args.bu_depth,
-            )
-            if additional_knowledge:
-                augmented_question = additional_knowledge + "\n\n" + augmented_question
+            def planner_fn(task: str, tools, managed_agents) -> dict:
+                bu_plan = bu_dynamic_proposal_planning(
+                    example     = example,
+                    top_k       = args.top_k,
+                    model_name  = model_name,
+                    key         = key,
+                    url         = url,
+                    model       = model,
+                    slm         = slm,
+                    force_depth = args.bu_depth,
+                )
+                return {"plan": bu_plan or "", "examples": {}}
+
+            agent.planner_fn = planner_fn
         elif args.kb_type == "proposal" and args.plan_mode != "None":
             def planner_fn(task: str, tools, managed_agents) -> dict:
                 return proposal_planning(
@@ -433,7 +432,7 @@ def answer_single_question(
                 )
 
             agent.planner_fn = planner_fn
-    final_result = agent.run(augmented_question)
+    final_result = agent.run(augmented_question, additional_knowledge=_additional_knowledge_for_planning)
     agent_memory = agent.write_memory_to_messages(summary_mode=True)
     final_result = prepare_response(
         augmented_question, agent_memory, reformulation_model=model
