@@ -84,9 +84,62 @@ def build_similar_task_plan_blocks(similars: List[Any], max_items: int = 3) -> s
 
     for i, d in enumerate(similars[:max_items], start=1):
         task = d.get("task") or ""
-        plan_steps = (d.get("task_analysis") or {}).get("plan") or []
-        plan_str = "\n".join(f"  - {s}" for s in plan_steps) if plan_steps else ""
+        plan_raw = (d.get("task_analysis") or {}).get("plan") or []
+        if isinstance(plan_raw, list):
+            plan_str = "\n".join(f"  - {s}" for s in plan_raw)
+        else:
+            plan_str = str(plan_raw)
         lines.append(f"[Similar Task #{i}] {task}\nPlan:\n{plan_str}\n")
+    return "\n\n".join(lines).strip()
+
+
+def build_instance_examples(similars: List[Any], max_items: int = 3) -> str:
+    """Build example blocks showing concrete execution instances."""
+    lines: List[str] = []
+    for i, d in enumerate(similars[:max_items], start=1):
+        task = d.get("task") or ""
+        instance = d.get("instance") or (d.get("task_analysis") or {}).get("instance") or ""
+        if instance:
+            lines.append(f"[Similar Task #{i}] {task}\nInstance:\n{instance}\n")
+    return "\n\n".join(lines).strip()
+
+
+def build_decision_guide_blocks(similars: List[Any], level: Optional[str] = None, max_items: int = 3) -> str:
+    """Build Decision Guide (G/S) blocks from signals_summary of retrieved tasks.
+
+    Each guide entry has: level, failures/failure, causes/cause, corrections/correction
+    level filter: 'knowledge' | 'plan' | 'instance' | None (all levels)
+    """
+    lines: List[str] = []
+    count = 0
+    for d in similars:
+        if count >= max_items:
+            break
+        task = d.get("task") or ""
+        guides = d.get("decision_guide") or []
+        if not guides:
+            continue
+        task_lines = [f"[From Task: {task[:80]}]"]
+        for g in guides:
+            g_level = g.get("level", "")
+            if level and g_level != level:
+                continue
+            failures = g.get("failures") or ([g.get("failure")] if g.get("failure") else [])
+            causes = g.get("causes") or ([g.get("cause")] if g.get("cause") else [])
+            corrections = g.get("corrections") or ([g.get("correction")] if g.get("correction") else [])
+            for fail, cause, corr in zip(
+                failures or ["(unknown)"],
+                causes or ["(unknown)"],
+                corrections or ["(unknown)"],
+            ):
+                task_lines.append(
+                    f"  [{g_level.upper()}] Failure: {fail}\n"
+                    f"           Cause: {cause}\n"
+                    f"           Correction: {corr}"
+                )
+        if len(task_lines) > 1:
+            lines.append("\n".join(task_lines))
+            count += 1
     return "\n\n".join(lines).strip()
 
 
@@ -99,11 +152,12 @@ def generate_knowledge(
     url: str,
     model: Any,
     slm: bool,
+    decision_guide: str = "",
 ) -> str:
     """Stage 1: Generate domain knowledge (declarative + procedural) for the given task."""
     prompt = populate_template(
         planning_prompt_template["knowledge_prompt"],
-        variables={"task": task, "examples": examples},
+        variables={"task": task, "examples": examples, "decision_guide": decision_guide},
     )
     knowledge_str = call_model(
         query=prompt,
@@ -130,11 +184,12 @@ def generate_plan(
     url: str,
     model: Any,
     slm: bool,
+    decision_guide: str = "",
 ) -> str:
     """Stage 2: Generate step-by-step plan from task and knowledge."""
     prompt = populate_template(
         planning_prompt_template["plan_prompt"],
-        variables={"task": task, "knowledge": knowledge, "examples": examples},
+        variables={"task": task, "knowledge": knowledge, "examples": examples, "decision_guide": decision_guide},
     )
     plan_str = call_model(
         query=prompt,
@@ -149,6 +204,45 @@ def generate_plan(
     logger.info(f"[Stage 2] Generated Plan:\n{plan_str}")
     logger.info("=" * 100)
     return plan_str
+
+
+def generate_instance(
+    task: str,
+    knowledge: str,
+    plan: str,
+    examples: str,
+    planning_prompt_template: Dict[str, str],
+    model_name: str,
+    key: str,
+    url: str,
+    model: Any,
+    slm: bool,
+    decision_guide: str = "",
+) -> str:
+    """Stage 3: Generate a concrete execution instance grounding the plan."""
+    prompt = populate_template(
+        planning_prompt_template["instance_prompt"],
+        variables={
+            "task": task,
+            "knowledge": knowledge,
+            "plan": plan,
+            "examples": examples,
+            "decision_guide": decision_guide,
+        },
+    )
+    instance_str = call_model(
+        query=prompt,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+    )
+    logger.info("=" * 100)
+    logger.info(f"[Stage 3] Instance Prompt:\n{prompt}")
+    logger.info(f"[Stage 3] Generated Instance:\n{instance_str}")
+    logger.info("=" * 100)
+    return instance_str
 
 
 def classify_task_type_and_domain(
@@ -230,12 +324,37 @@ def plan_mode_planning(
 
         # Include plan steps
         if plan_mode in ("plan", "plan_subtask", "plan_subtask_action"):
-            plan_steps = ta.get("plan") or []
-            if plan_steps:
-                plan_str = "\n".join(f"  - {s}" for s in plan_steps)
+            plan_raw = ta.get("plan") or []
+            if plan_raw:
+                plan_str = (
+                    "\n".join(f"  - {s}" for s in plan_raw)
+                    if isinstance(plan_raw, list)
+                    else str(plan_raw)
+                )
                 block_lines.append(f"Plan:\n{plan_str}")
 
-        # Include subtasks or subtask-actions
+        # Include instance (grounded execution example)
+        instance = item.get("instance") or ta.get("instance") or ""
+        if instance:
+            block_lines.append(f"Instance:\n{instance}")
+
+        # Include decision guide signals
+        guides = item.get("decision_guide") or []
+        if guides:
+            guide_lines = ["Decision Guide:"]
+            for g in guides:
+                failures = g.get("failures") or ([g.get("failure")] if g.get("failure") else [])
+                causes = g.get("causes") or ([g.get("cause")] if g.get("cause") else [])
+                corrections = g.get("corrections") or ([g.get("correction")] if g.get("correction") else [])
+                for fail, cause, corr in zip(
+                    failures or [""], causes or [""], corrections or [""]
+                ):
+                    guide_lines.append(
+                        f"  [{g.get('level','').upper()}] Failure: {fail} | Cause: {cause} | Correction: {corr}"
+                    )
+            block_lines.append("\n".join(guide_lines))
+
+        # Include subtasks or subtask-actions (legacy)
         if plan_mode in ("subtask", "plan_subtask", "plan_subtask_action"):
             psa_items = item.get("plan_subtask_action") or []
             if psa_items:
@@ -319,8 +438,13 @@ def proposal_planning(
 
     knowledge_examples = build_similar_task_direction_blocks(similars=retrieval_results)
     plan_examples = build_similar_task_plan_blocks(similars=retrieval_results)
+    instance_examples = build_instance_examples(similars=retrieval_results)
+    guide_knowledge = build_decision_guide_blocks(retrieval_results, level="knowledge")
+    guide_plan = build_decision_guide_blocks(retrieval_results, level="plan")
+    guide_instance = build_decision_guide_blocks(retrieval_results, level="instance")
     logger.info(f"Retrieved knowledge examples:\n {knowledge_examples}")
     logger.info(f"Retrieved plan examples:\n {plan_examples}")
+    logger.info(f"Retrieved instance examples:\n {instance_examples}")
 
     # ====== [2] Stage 1: Generate knowledge ====== #
     knowledge_text = generate_knowledge(
@@ -332,27 +456,44 @@ def proposal_planning(
         url=url,
         model=model,
         slm=slm,
+        decision_guide=guide_knowledge,
     )
 
     # ====== [3] Stage 2: Generate plan ====== #
     plan_str = generate_plan(
         task=augmented_question,
         knowledge=knowledge_text,
-        examples=plan_examples,  # plan steps only
+        examples=plan_examples,
         planning_prompt_template=planning_prompt_template,
         model_name=model_name,
         key=key,
         url=url,
         model=model,
         slm=slm,
+        decision_guide=guide_plan,
     )
 
-    examples = {
+    # ====== [4] Stage 3: Generate instance (concrete execution grounding) ====== #
+    instance_str = generate_instance(
+        task=augmented_question,
+        knowledge=knowledge_text,
+        plan=plan_str,
+        examples=instance_examples,
+        planning_prompt_template=planning_prompt_template,
+        model_name=model_name,
+        key=key,
+        url=url,
+        model=model,
+        slm=slm,
+        decision_guide=guide_instance,
+    )
+
+    subtask_examples = {
         "plan_subtask": build_plan_subtask_examples(retrieval_results),
         "plan_subtask_action": build_plan_subtask_action_examples(retrieval_results),
     }
 
-    # ====== [4] Stage 4: generate subtasks from plan_str (subtask / plan_subtask / plan_subtask_action modes) ====== #
+    # ====== [5] Stage 4: generate subtasks (subtask / plan_subtask / plan_subtask_action modes) ====== #
     if plan_mode in ("subtask", "plan_subtask", "plan_subtask_action") and planning_prompt_templates:
         _tools = tools or {}
         _managed_agents = managed_agents or {}
@@ -365,7 +506,7 @@ def proposal_planning(
                 "tools": _tools,
                 "managed_agents": _managed_agents,
                 "plan_steps": plan_str,
-                "examples": examples[example_key],
+                "examples": subtask_examples[example_key],
             },
         )
         subtask_plan = call_model(
@@ -377,19 +518,24 @@ def proposal_planning(
             slm=slm,
         )
         logger.info("=" * 100)
-        logger.info(f"[Stage 4] Subtask Prompt:\n{stage2_prompt}")
-        logger.info(f"[Stage 4] Subtask Plan:\n{subtask_plan}")
+        logger.info(f"[Stage 5] Subtask Prompt:\n{stage2_prompt}")
+        logger.info(f"[Stage 5] Subtask Plan:\n{subtask_plan}")
         logger.info("=" * 100)
 
-        final_plan = subtask_plan if plan_mode == "subtask" else f"Plan:\n{plan_str}\n\nSubtasks:\n{subtask_plan}"
+        if plan_mode == "subtask":
+            final_plan = subtask_plan
+        else:
+            final_plan = f"Knowledge:\n{knowledge_text}\n\nPlan:\n{plan_str}\n\nInstance:\n{instance_str}\n\nSubtasks:\n{subtask_plan}"
     else:
-        final_plan = plan_str
+        final_plan = f"Knowledge:\n{knowledge_text}\n\nPlan:\n{plan_str}\n\nInstance:\n{instance_str}"
 
     return {
         "plan": final_plan,
         "knowledge": knowledge_text,
+        "plan_steps": plan_str,
+        "instance": instance_str,
         "retrieval_results": retrieval_results,
-        "examples": examples,
+        "examples": subtask_examples,
     }
 
 

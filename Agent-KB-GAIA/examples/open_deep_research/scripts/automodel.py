@@ -5,6 +5,9 @@ from smolagents.models import (
     FakeToolCallOpenAIServerModel,
 )
 
+TOGETHER_BASE_URL = "https://api.together.xyz/v1"
+TOGETHER_MODEL_ID = "DAIS/Qwen/Qwen3-4B-Instruct-2507-ea0511ad"
+
 
 def process_selected_tasks_param(tasks_param):
 
@@ -55,3 +58,11 @@ def get_api_model(model_id):
     url = os.getenv("OPENAI_BASE_URL")
 
     return model_id, key, url, model_wrapper
+
+
+def get_together_model(model_id=None):
+    """Return (model_id, api_key, base_url, model_wrapper) for TogetherAI."""
+    mid = model_id or os.getenv("TOGETHER_MODEL_ID", TOGETHER_MODEL_ID)
+    key = os.getenv("TOGETHER_API_KEY", "")
+    url = os.getenv("TOGETHER_BASE_URL", TOGETHER_BASE_URL)
+    return mid, key, url, OpenAIServerModel

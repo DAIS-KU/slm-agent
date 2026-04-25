@@ -48,16 +48,21 @@ knowledge_prompt: |
     Return only the knowledge as plain text. Do NOT include the direct answer.
 
     TASK:
-    {{task}}}
+    {{task}}
 
     SIMILAR TASKS:
     {{examples}}
+
+    {% if decision_guide %}
+    DECISION GUIDE (avoid these knowledge-level failure patterns):
+    {{decision_guide}}
+    {% endif %}
 
 
 plan_prompt: |
     Develop a high-level plan of no more than 10 steps to solve the given task based only on the provided knowledge and similar tasks.
     The plan must not include the final answer and the final conclusion.
-    
+
     Requirements:
     - Use the knowledge explicitly and progressively in each step.
     - Derive a decision criterion: an intermediate, task-specific quantity, rule, or structure that can be used to select the answer.
@@ -74,4 +79,63 @@ plan_prompt: |
     {{knowledge}}
 
     SIMILAR TASKS:
+    {{examples}}
+
+    {% if decision_guide %}
+    DECISION GUIDE (avoid these failure patterns):
+    {{decision_guide}}
+    {% endif %}
+
+
+instance_prompt: |
+    Generate a concrete execution instance that grounds the given plan into specific, actionable steps with actual values and reasoning.
+    The instance should demonstrate exactly how to apply the plan to THIS task, showing intermediate computations and logical deductions.
+
+    Requirements:
+    - Walk through each plan step with concrete values from the task.
+    - Show actual computations, lookups, or reasoning steps.
+    - Do NOT reveal or guess the final answer — stop just before the conclusion.
+
+    TASK:
+    {{task}}
+
+    KNOWLEDGE:
+    {{knowledge}}
+
+    PLAN:
+    {{plan}}
+
+    SIMILAR INSTANCES:
+    {{examples}}
+
+    {% if decision_guide %}
+    DECISION GUIDE (common failure patterns to avoid):
+    {{decision_guide}}
+    {% endif %}
+
+
+decision_guide_prompt: |
+    Based on the retrieved similar tasks and their known failure patterns, generate a Decision Guide for solving the given task.
+    The guide should identify the most likely failure modes and how to avoid them.
+
+    For each potential failure, provide:
+    - Failure: a specific failure phenomenon that could occur
+    - Cause: the root cause (misunderstanding, wrong strategy, poor execution, etc.)
+    - Correction: concrete guidance to avoid or fix the failure
+
+    Return STRICT JSON array (no prose outside JSON):
+    [
+        {
+            "level": "knowledge" | "plan" | "instance",
+            "failure": "<failure description>",
+            "cause": "<root cause>",
+            "correction": "<how to correct it>"
+        },
+        ...
+    ]
+
+    TASK:
+    {{task}}
+
+    SIMILAR TASK GUIDES:
     {{examples}}

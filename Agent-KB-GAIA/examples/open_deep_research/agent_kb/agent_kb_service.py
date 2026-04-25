@@ -21,7 +21,7 @@ app.add_middleware(
 
 # 변환 후 엔티티 DB를 로드한다고 가정
 # unified_database.json 내부 각 레코드는 task_id/task/subtasks를 포함해야 함
-manager = AKB_Manager(json_file_paths=["./unified_database.json"])
+manager = AKB_Manager(json_file_paths=["./odyseuss_db.jsonl"])
 
 performance_stats = {
     "total_requests": 0,
@@ -62,6 +62,8 @@ class TaskResponse(BaseModel):
     agent_experience: Optional[Any] = None
     task_analysis: Optional[Any] = None
     plan_subtask_action: Optional[Any] = None
+    instance: Optional[str] = None
+    decision_guide: Optional[Any] = None
     total_score: Optional[float] = None
 
 
@@ -104,6 +106,8 @@ def _extract_task_fields(item: Dict[str, Any]) -> Dict[str, Any]:
         "agent_experience": item.get("agent_experience", None),
         "task_analysis": item.get("task_analysis", None),
         "plan_subtask_action": item.get("plan_subtask_action", None),
+        "instance": item.get("instance", None),
+        "decision_guide": item.get("decision_guide", None),
     }
 
 
@@ -137,6 +141,8 @@ async def hybrid_search(request: SearchRequest):
                     agent_experience=core["agent_experience"],
                     task_analysis=core["task_analysis"],
                     plan_subtask_action=core["plan_subtask_action"],
+                    instance=core["instance"],
+                    decision_guide=core["decision_guide"],
                     total_score=item.get("total_score"),
                 )
             )

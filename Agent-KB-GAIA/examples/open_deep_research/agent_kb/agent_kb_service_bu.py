@@ -59,7 +59,7 @@ app.add_middleware(
 # 기동 시 자원 로드
 # ─────────────────────────────────────────────────────────────────────────────
 manager = BUAKB_Manager(
-    json_file_paths=[os.path.join(_DIR, "kb_bu_augmented.json")]
+    json_file_paths=[os.path.join(_DIR, "odyseuss_db.jsonl")]
 )
 
 with open(os.path.join(_DIR, "taxonomy_bu_tree.json"), "r", encoding="utf-8") as _f:
@@ -72,61 +72,50 @@ _classifier_model_name = os.getenv("RETRIEVAL_MODEL_NAME", "gpt-4.1")
 _classifier_key        = os.getenv("OPENAI_API_KEY", "")
 _classifier_url        = os.getenv("OPENAI_BASE_URL", None)
 
-# SLM support: parse CLI args before building classifier
+# SLM support via TogetherAI API
 _parser = argparse.ArgumentParser(description="BU-taxonomy KB service")
-_parser.add_argument("--slm", action="store_true", help="Use local SLM instead of OpenAI API")
-_parser.add_argument("--model_id", type=str, default=None, help="Path to local SLM model")
-_parser.add_argument("--device_map", type=str, default="auto", help="Device map for SLM (e.g. cuda:0)")
+_parser.add_argument("--slm", action="store_true", help="Use TogetherAI SLM instead of OpenAI API")
+_parser.add_argument("--model_id", type=str, default=None, help="TogetherAI model ID override")
 _cli_args, _ = _parser.parse_known_args()
 
 _slm_model = None
 if _cli_args.slm:
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from openai import OpenAI as _OpenAI
+
+    _together_model_id = _cli_args.model_id or os.getenv(
+        "TOGETHER_MODEL_ID", "DAIS/Qwen/Qwen3-4B-Instruct-2507-ea0511ad"
+    )
+    _together_key = os.getenv("TOGETHER_API_KEY", "")
+    _together_url = os.getenv("TOGETHER_BASE_URL", "https://api.together.xyz/v1")
+    _classifier_model_name = _together_model_id
+    _classifier_key        = _together_key
+    _classifier_url        = _together_url
 
     class _SLMWrapper:
-        """Lightweight wrapper matching the call convention of call_model(slm=True).
+        """OpenAI-compatible wrapper for TogetherAI, matching call_model(slm=True) convention."""
 
-        call_model expects: message = model(messages) -> message.content (str)
-        """
-
-        def __init__(self, model_id: str, device_map: str, torch_dtype):
-            self.tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_id,
-                device_map=device_map,
-                torch_dtype=torch_dtype,
-                trust_remote_code=True,
-            )
-            self.model.eval()
+        def __init__(self, model_id: str, api_key: str, base_url: str):
+            self._client = _OpenAI(api_key=api_key, base_url=base_url)
             self.model_id = model_id
 
         def __call__(self, messages):
-            text = self.tokenizer.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True,
+            resp = self._client.chat.completions.create(
+                model=self.model_id,
+                messages=messages,
+                max_tokens=512,
+                temperature=0.7,
             )
-            inputs = self.tokenizer(text, return_tensors="pt").to(self.model.device)
-            with torch.no_grad():
-                outputs = self.model.generate(
-                    **inputs, max_new_tokens=512, temperature=0.7, do_sample=True,
-                )
-            new_tokens = outputs[0][inputs["input_ids"].shape[-1]:]
-            decoded = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
 
             class _Resp:
-                content = decoded
+                content = resp.choices[0].message.content
             return _Resp()
 
-    _slm_model_id = _cli_args.model_id or os.getenv(
-        "SLM_MODEL_ID", "/home/huijeong/slm-agent/Qwen3-4B-Instruct-2507"
-    )
-    _dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
     _slm_model = _SLMWrapper(
-        model_id=_slm_model_id,
-        device_map=_cli_args.device_map,
-        torch_dtype=_dtype,
+        model_id=_together_model_id,
+        api_key=_together_key,
+        base_url=_together_url,
     )
-    print(f"[BU-KB Service] SLM mode enabled: {_slm_model_id} on {_cli_args.device_map}")
+    print(f"[BU-KB Service] SLM mode enabled via TogetherAI: {_together_model_id}")
 
 taxonomy_classifier = HierarchicalTaxonomyClassifier(
     taxonomy_tree = _taxonomy_tree,

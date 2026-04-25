@@ -24,6 +24,8 @@ class OriginalContext:
 class AugmentedContext:
     task_analysis: Optional[Any] = None
     plan_subtask_action: Optional[Any] = None
+    instance: Optional[str] = None        # decision_augmentation.final_reference.instance
+    decision_guide: Optional[Any] = None  # decision_augmentation.signals_summary
 
 
 @dataclass
@@ -97,6 +99,35 @@ class AgenticKnowledgeBase:
 
                     task_analysis = item.get("task_analysis", None)
                     plan_subtask_action = item.get("plan_subtask_action", None)
+                    da = item.get("decision_augmentation") or {}
+                    fr = da.get("final_reference") or {}
+                    instance_text = fr.get("instance") or None
+                    decision_guide = da.get("signals_summary") or None
+
+                    # Normalize odyseuss_db.jsonl format
+                    if task_analysis is not None:
+                        ta_type = task_analysis.get("task_type")
+                        ta_domain = task_analysis.get("domain")
+                        # odyseuss_db: {"raw": "...", "normalized": "..."} → list
+                        if isinstance(ta_type, dict):
+                            task_analysis["task_type"] = [
+                                v for v in [ta_type.get("raw"), ta_type.get("normalized")] if v
+                            ]
+                        if isinstance(ta_domain, dict):
+                            task_analysis["domain"] = [
+                                v for v in [ta_domain.get("raw"), ta_domain.get("normalized")] if v
+                            ]
+                        # Inject knowledge/plan/instance from final_reference if missing
+                        if not task_analysis.get("knowledge") and fr.get("knowledge"):
+                            task_analysis["knowledge"] = fr["knowledge"]
+                        if not task_analysis.get("plan") and fr.get("plan"):
+                            task_analysis["plan"] = fr["plan"]
+                        elif not task_analysis.get("plan") and agent_planning:
+                            task_analysis["plan"] = [
+                                ln.strip().lstrip("- ").lstrip("* ")
+                                for ln in agent_planning.split("\n")
+                                if ln.strip()
+                            ]
 
                     instance = TaskInstance(
                         task_id=task_id,
@@ -109,6 +140,8 @@ class AgenticKnowledgeBase:
                         augmented=AugmentedContext(
                             task_analysis=task_analysis,
                             plan_subtask_action=plan_subtask_action,
+                            instance=instance_text,
+                            decision_guide=decision_guide,
                         ),
                     )
                     batch.append(instance)
@@ -351,6 +384,8 @@ class AKB_Manager:
                     "agent_experience": task_obj.original.agent_experience,
                     "task_analysis": task_obj.augmented.task_analysis,
                     "plan_subtask_action": task_obj.augmented.plan_subtask_action,
+                    "instance": task_obj.augmented.instance,
+                    "decision_guide": task_obj.augmented.decision_guide,
                 }
             )
 
@@ -380,9 +415,25 @@ class AKB_Manager:
                     "agent_experience": task_obj.original.agent_experience,
                     "task_analysis": task_obj.augmented.task_analysis,
                     "plan_subtask_action": task_obj.augmented.plan_subtask_action,
+                    "instance": task_obj.augmented.instance,
+                    "decision_guide": task_obj.augmented.decision_guide,
                 }
             )
         return results
+
+    def _task_to_dict(self, task_obj, score: float) -> dict:
+        return {
+            "task_id": task_obj.task_id,
+            "task": task_obj.task,
+            "true_answer": task_obj.true_answer,
+            "agent_planning": task_obj.original.agent_planning,
+            "agent_experience": task_obj.original.agent_experience,
+            "task_analysis": task_obj.augmented.task_analysis,
+            "plan_subtask_action": task_obj.augmented.plan_subtask_action,
+            "instance": task_obj.augmented.instance,
+            "decision_guide": task_obj.augmented.decision_guide,
+            "score": score,
+        }
 
     def search_by_text(
         self, query: str, field: str = "task", top_k: int = 3
@@ -390,21 +441,8 @@ class AKB_Manager:
         results = []
         for result in self.knowledge_base.field_text_search(query, field, top_k):
             task_obj = self.get_task_details(result["task_id"])
-            results.append(
-                {
-                    "task_id": result["task_id"],
-                    "score": result["score"],
-                    "content": {
-                        "task_id": task_obj.task_id,
-                        "task": task_obj.task,
-                        "true_answer": task_obj.true_answer,
-                        "agent_planning": task_obj.original.agent_planning,
-                        "agent_experience": task_obj.original.agent_experience,
-                        "task_analysis": task_obj.augmented.task_analysis,
-                    "plan_subtask_action": task_obj.augmented.plan_subtask_action,
-                    },
-                }
-            )
+            entry = self._task_to_dict(task_obj, result["score"])
+            results.append({"task_id": result["task_id"], "score": result["score"], "content": entry})
         return sorted(results, key=lambda x: x["score"], reverse=True)[:top_k]
 
     def search_by_semantic(
@@ -413,21 +451,8 @@ class AKB_Manager:
         results = []
         for result in self.knowledge_base.field_semantic_search(query, field, top_k):
             task_obj = self.get_task_details(result["task_id"])
-            results.append(
-                {
-                    "task_id": result["task_id"],
-                    "score": result["score"],
-                    "content": {
-                        "task_id": task_obj.task_id,
-                        "task": task_obj.task,
-                        "true_answer": task_obj.true_answer,
-                        "agent_planning": task_obj.original.agent_planning,
-                        "agent_experience": task_obj.original.agent_experience,
-                        "task_analysis": task_obj.augmented.task_analysis,
-                    "plan_subtask_action": task_obj.augmented.plan_subtask_action,
-                    },
-                }
-            )
+            entry = self._task_to_dict(task_obj, result["score"])
+            results.append({"task_id": result["task_id"], "score": result["score"], "content": entry})
         return sorted(results, key=lambda x: x["score"], reverse=True)[:top_k]
 
     def get_task_details(self, task_id: str) -> Optional[TaskInstance]:

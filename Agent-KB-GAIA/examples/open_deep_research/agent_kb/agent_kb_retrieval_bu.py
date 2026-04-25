@@ -417,11 +417,42 @@ class BUAgenticKnowledgeBase:
                     task_text           = item.get("task") or item.get("question", "")
                     true_answer         = item.get("true_answer", "")
                     source              = item.get("source", "")
-                    task_analysis       = item.get("task_analysis") or {}
+                    task_analysis       = dict(item.get("task_analysis") or {})
                     plan_subtask_action = item.get("plan_subtask_action") or []
 
-                    bp            = task_analysis.get("bu_taxonomy_path") or {}
+                    # odyseuss_db.jsonl: bu_taxonomy_path is top-level, not inside task_analysis
+                    bp = (
+                        task_analysis.get("bu_taxonomy_path")
+                        or item.get("bu_taxonomy_path")
+                        or {}
+                    )
                     taxonomy_path = BUTaxonomyPath.from_dict(bp) if bp else None
+
+                    # Normalize odyseuss_db task_analysis: task_type/domain are dicts
+                    ta_type = task_analysis.get("task_type")
+                    ta_domain = task_analysis.get("domain")
+                    if isinstance(ta_type, dict):
+                        task_analysis["task_type"] = [
+                            v for v in [ta_type.get("raw"), ta_type.get("normalized")] if v
+                        ]
+                    if isinstance(ta_domain, dict):
+                        task_analysis["domain"] = [
+                            v for v in [ta_domain.get("raw"), ta_domain.get("normalized")] if v
+                        ]
+                    # Inject knowledge from decision_augmentation if missing
+                    if not task_analysis.get("knowledge"):
+                        da = item.get("decision_augmentation") or {}
+                        fr = da.get("final_reference") or {}
+                        if fr.get("knowledge"):
+                            task_analysis["knowledge"] = fr["knowledge"]
+                    # Inject plan from agent_planning if missing
+                    agent_planning = item.get("agent_planning") or ""
+                    if not task_analysis.get("plan") and agent_planning:
+                        task_analysis["plan"] = [
+                            ln.strip().lstrip("- ").lstrip("* ")
+                            for ln in agent_planning.split("\n")
+                            if ln.strip()
+                        ]
 
                     self.tasks[task_id] = BUTaskInstance(
                         task_id             = task_id,
