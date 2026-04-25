@@ -152,26 +152,48 @@ def generate_knowledge(
     url: str,
     model: Any,
     slm: bool,
-    decision_guide: str = "",
 ) -> str:
-    """Stage 1: Generate domain knowledge (declarative + procedural) for the given task."""
+    """Stage 1a: Generate domain knowledge (declarative + procedural) for the given task."""
     prompt = populate_template(
         planning_prompt_template["knowledge_prompt"],
-        variables={"task": task, "examples": examples, "decision_guide": decision_guide},
+        variables={"task": task, "examples": examples},
     )
     knowledge_str = call_model(
-        query=prompt,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
+        query=prompt, model_name=model_name, key=key, url=url, model=model, slm=slm,
     )
     logger.info("=" * 100)
-    logger.info(f"[Stage 1] Knowledge Prompt:\n{prompt}")
-    logger.info(f"[Stage 1] Generated Knowledge:\n{knowledge_str}")
+    logger.info(f"[Stage 1a] Knowledge Prompt:\n{prompt}")
+    logger.info(f"[Stage 1a] Generated Knowledge:\n{knowledge_str}")
     logger.info("=" * 100)
     return knowledge_str
+
+
+def refine_knowledge(
+    task: str,
+    draft: str,
+    decision_guide: str,
+    planning_prompt_template: Dict[str, str],
+    model_name: str,
+    key: str,
+    url: str,
+    model: Any,
+    slm: bool,
+) -> str:
+    """Stage 1b: Refine knowledge using Decision Guide signals."""
+    if not decision_guide:
+        return draft
+    prompt = populate_template(
+        planning_prompt_template["refine_knowledge_prompt"],
+        variables={"task": task, "draft": draft, "decision_guide": decision_guide},
+    )
+    refined = call_model(
+        query=prompt, model_name=model_name, key=key, url=url, model=model, slm=slm,
+    )
+    logger.info("=" * 100)
+    logger.info(f"[Stage 1b] Refine Knowledge Prompt:\n{prompt}")
+    logger.info(f"[Stage 1b] Refined Knowledge:\n{refined}")
+    logger.info("=" * 100)
+    return refined
 
 
 def generate_plan(
@@ -184,26 +206,49 @@ def generate_plan(
     url: str,
     model: Any,
     slm: bool,
-    decision_guide: str = "",
 ) -> str:
-    """Stage 2: Generate step-by-step plan from task and knowledge."""
+    """Stage 2a: Generate step-by-step plan from task and knowledge."""
     prompt = populate_template(
         planning_prompt_template["plan_prompt"],
-        variables={"task": task, "knowledge": knowledge, "examples": examples, "decision_guide": decision_guide},
+        variables={"task": task, "knowledge": knowledge, "examples": examples},
     )
     plan_str = call_model(
-        query=prompt,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
+        query=prompt, model_name=model_name, key=key, url=url, model=model, slm=slm,
     )
     logger.info("=" * 100)
-    logger.info(f"[Stage 2] Plan Prompt:\n{prompt}")
-    logger.info(f"[Stage 2] Generated Plan:\n{plan_str}")
+    logger.info(f"[Stage 2a] Plan Prompt:\n{prompt}")
+    logger.info(f"[Stage 2a] Generated Plan:\n{plan_str}")
     logger.info("=" * 100)
     return plan_str
+
+
+def refine_plan(
+    task: str,
+    knowledge: str,
+    draft: str,
+    decision_guide: str,
+    planning_prompt_template: Dict[str, str],
+    model_name: str,
+    key: str,
+    url: str,
+    model: Any,
+    slm: bool,
+) -> str:
+    """Stage 2b: Refine plan using Decision Guide signals."""
+    if not decision_guide:
+        return draft
+    prompt = populate_template(
+        planning_prompt_template["refine_plan_prompt"],
+        variables={"task": task, "knowledge": knowledge, "draft": draft, "decision_guide": decision_guide},
+    )
+    refined = call_model(
+        query=prompt, model_name=model_name, key=key, url=url, model=model, slm=slm,
+    )
+    logger.info("=" * 100)
+    logger.info(f"[Stage 2b] Refine Plan Prompt:\n{prompt}")
+    logger.info(f"[Stage 2b] Refined Plan:\n{refined}")
+    logger.info("=" * 100)
+    return refined
 
 
 def generate_instance(
@@ -217,32 +262,56 @@ def generate_instance(
     url: str,
     model: Any,
     slm: bool,
-    decision_guide: str = "",
 ) -> str:
-    """Stage 3: Generate a concrete execution instance grounding the plan."""
+    """Stage 3a: Generate a concrete execution instance grounding the plan."""
     prompt = populate_template(
         planning_prompt_template["instance_prompt"],
+        variables={"task": task, "knowledge": knowledge, "plan": plan, "examples": examples},
+    )
+    instance_str = call_model(
+        query=prompt, model_name=model_name, key=key, url=url, model=model, slm=slm,
+    )
+    logger.info("=" * 100)
+    logger.info(f"[Stage 3a] Instance Prompt:\n{prompt}")
+    logger.info(f"[Stage 3a] Generated Instance:\n{instance_str}")
+    logger.info("=" * 100)
+    return instance_str
+
+
+def refine_instance(
+    task: str,
+    knowledge: str,
+    plan: str,
+    draft: str,
+    decision_guide: str,
+    planning_prompt_template: Dict[str, str],
+    model_name: str,
+    key: str,
+    url: str,
+    model: Any,
+    slm: bool,
+) -> str:
+    """Stage 3b: Refine instance using Decision Guide signals."""
+    if not decision_guide:
+        return draft
+    prompt = populate_template(
+        planning_prompt_template["refine_instance_prompt"],
         variables={
             "task": task,
             "knowledge": knowledge,
             "plan": plan,
-            "examples": examples,
+            "draft": draft,
             "decision_guide": decision_guide,
         },
     )
-    instance_str = call_model(
-        query=prompt,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
+    refined = call_model(
+        query=prompt, model_name=model_name, key=key, url=url, model=model, slm=slm,
     )
     logger.info("=" * 100)
-    logger.info(f"[Stage 3] Instance Prompt:\n{prompt}")
-    logger.info(f"[Stage 3] Generated Instance:\n{instance_str}")
+    logger.info(f"[Stage 3b] Refine Instance Prompt:\n{prompt}")
+    logger.info(f"[Stage 3b] Refined Instance:\n{refined}")
     logger.info("=" * 100)
-    return instance_str
+    return refined
 
 
 def classify_task_type_and_domain(
@@ -446,46 +515,42 @@ def proposal_planning(
     logger.info(f"Retrieved plan examples:\n {plan_examples}")
     logger.info(f"Retrieved instance examples:\n {instance_examples}")
 
-    # ====== [2] Stage 1: Generate knowledge ====== #
-    knowledge_text = generate_knowledge(
-        task=augmented_question,
-        examples=knowledge_examples,
+    common = dict(
+        model_name=model_name, key=key, url=url, model=model, slm=slm,
         planning_prompt_template=planning_prompt_template,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-        decision_guide=guide_knowledge,
     )
 
-    # ====== [3] Stage 2: Generate plan ====== #
-    plan_str = generate_plan(
-        task=augmented_question,
-        knowledge=knowledge_text,
-        examples=plan_examples,
-        planning_prompt_template=planning_prompt_template,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-        decision_guide=guide_plan,
+    # ====== [2] Stage 1a: Generate knowledge ====== #
+    knowledge_draft = generate_knowledge(
+        task=augmented_question, examples=knowledge_examples, **common,
+    )
+    # ====== [3] Stage 1b: Refine knowledge with Decision Guide ====== #
+    knowledge_text = refine_knowledge(
+        task=augmented_question, draft=knowledge_draft,
+        decision_guide=guide_knowledge, **common,
     )
 
-    # ====== [4] Stage 3: Generate instance (concrete execution grounding) ====== #
-    instance_str = generate_instance(
-        task=augmented_question,
-        knowledge=knowledge_text,
-        plan=plan_str,
-        examples=instance_examples,
-        planning_prompt_template=planning_prompt_template,
-        model_name=model_name,
-        key=key,
-        url=url,
-        model=model,
-        slm=slm,
-        decision_guide=guide_instance,
+    # ====== [4] Stage 2a: Generate plan ====== #
+    plan_draft = generate_plan(
+        task=augmented_question, knowledge=knowledge_text,
+        examples=plan_examples, **common,
+    )
+    # ====== [5] Stage 2b: Refine plan with Decision Guide ====== #
+    plan_str = refine_plan(
+        task=augmented_question, knowledge=knowledge_text,
+        draft=plan_draft, decision_guide=guide_plan, **common,
+    )
+
+    # ====== [6] Stage 3a: Generate instance ====== #
+    instance_draft = generate_instance(
+        task=augmented_question, knowledge=knowledge_text,
+        plan=plan_str, examples=instance_examples, **common,
+    )
+    # ====== [7] Stage 3b: Refine instance with Decision Guide ====== #
+    instance_str = refine_instance(
+        task=augmented_question, knowledge=knowledge_text,
+        plan=plan_str, draft=instance_draft,
+        decision_guide=guide_instance, **common,
     )
 
     subtask_examples = {

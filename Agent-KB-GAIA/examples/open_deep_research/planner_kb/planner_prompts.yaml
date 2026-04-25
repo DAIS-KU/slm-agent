@@ -53,11 +53,6 @@ knowledge_prompt: |
     SIMILAR TASKS:
     {{examples}}
 
-    {% if decision_guide %}
-    DECISION GUIDE (avoid these knowledge-level failure patterns):
-    {{decision_guide}}
-    {% endif %}
-
 
 plan_prompt: |
     Develop a high-level plan of no more than 10 steps to solve the given task based only on the provided knowledge and similar tasks.
@@ -81,11 +76,6 @@ plan_prompt: |
     SIMILAR TASKS:
     {{examples}}
 
-    {% if decision_guide %}
-    DECISION GUIDE (avoid these failure patterns):
-    {{decision_guide}}
-    {% endif %}
-
 
 instance_prompt: |
     Generate a concrete execution instance that grounds the given plan into specific, actionable steps with actual values and reasoning.
@@ -108,10 +98,59 @@ instance_prompt: |
     SIMILAR INSTANCES:
     {{examples}}
 
-    {% if decision_guide %}
-    DECISION GUIDE (common failure patterns to avoid):
+
+refine_knowledge_prompt: |
+    You generated domain knowledge for a task. A Decision Guide identifies failure patterns observed in similar tasks.
+    Refine the generated knowledge to address the failures. Only modify what the guide says is insufficient or wrong.
+    Preserve all correct parts. Return the full refined knowledge as plain text.
+
+    TASK:
+    {{task}}
+
+    GENERATED KNOWLEDGE:
+    {{draft}}
+
+    DECISION GUIDE:
     {{decision_guide}}
-    {% endif %}
+
+
+refine_plan_prompt: |
+    You generated a solution plan for a task. A Decision Guide identifies failure patterns observed in similar tasks.
+    Refine the generated plan to address the failures. Only modify steps that the guide says are wrong or missing.
+    Preserve all correct steps. Return the full refined plan as a bullet list.
+
+    TASK:
+    {{task}}
+
+    KNOWLEDGE:
+    {{knowledge}}
+
+    GENERATED PLAN:
+    {{draft}}
+
+    DECISION GUIDE:
+    {{decision_guide}}
+
+
+refine_instance_prompt: |
+    You generated a concrete execution instance for a task. A Decision Guide identifies failure patterns observed in similar tasks.
+    Refine the instance to fix the failures identified in the guide. Only modify what is incorrect or incomplete.
+    Preserve all correct parts. Return the full refined execution instance.
+
+    TASK:
+    {{task}}
+
+    KNOWLEDGE:
+    {{knowledge}}
+
+    PLAN:
+    {{plan}}
+
+    GENERATED INSTANCE:
+    {{draft}}
+
+    DECISION GUIDE:
+    {{decision_guide}}
 
 
 decision_guide_prompt: |
