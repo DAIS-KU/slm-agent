@@ -345,8 +345,8 @@ def answer_single_question(
     use_sub_ex=False,
 ):
     if slm:
-        model_name, key, url, _ = get_together_model(model_id)
-        model_name, key_search, url_search, _ = get_together_model(model_id_search)
+        model_name, key, url, _ = get_together_model(None)
+        model_name, key_search, url_search, _ = get_together_model(None)
     else:
         model_name, key, url, model_wrapper = get_api_model(model_id)
         model_name_search, key_search, url_search, model_wrapper_search = get_api_model(
@@ -586,7 +586,7 @@ def main():
     )
 
     if args.slm:
-        together_id, together_key, together_url, together_wrapper = get_together_model(args.model_id)
+        together_id, together_key, together_url, together_wrapper = get_together_model(None)
         model = together_wrapper(
             together_id,
             custom_role_conversions=custom_role_conversions,

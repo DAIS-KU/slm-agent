@@ -1106,7 +1106,7 @@ class OpenAIServerModel(Model):
 
                 sys_fp = response.system_fingerprint
                 logger.info(f"Response fingerprint:{sys_fp}")
-                if sys_fp.strip().lower() in ["fp_ee1d74bde0", "fp_3dfb47c1f3"]:
+                if sys_fp and sys_fp.strip().lower() in ["fp_ee1d74bde0", "fp_3dfb47c1f3"]:
                     logger.warning(
                         "Warning! The response might be sent from Azure backend."
                     )
