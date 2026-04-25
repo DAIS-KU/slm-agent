@@ -54,6 +54,13 @@ class TypeDomainSearchRequest(BaseModel):
     )
 
 
+class BucketSearchRequest(BaseModel):
+    query: str
+    task_types: List[str]   # normalized task_type values
+    domains: List[str]      # normalized domain values
+    top_k: int = 3
+
+
 class TaskResponse(BaseModel):
     task_id: str
     task: str
@@ -271,6 +278,54 @@ async def type_domain_text_search(request: TypeDomainSearchRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Type-domain text search failed: {str(e)}")
+
+
+@app.post("/search/bucket", response_model=List[TaskResponse])
+async def bucket_search(request: BucketSearchRequest):
+    """Two-stage retrieval:
+    Stage 1 — collect candidates from normalized (task_type × domain) buckets.
+    Stage 2 — rank by TF-IDF text similarity within candidates, return top_k.
+    Falls back to hybrid search when no bucket match.
+    """
+    start_time = time.time()
+    cache_key = f"bucket_{request.query}_{request.task_types}_{request.domains}_{request.top_k}"
+
+    try:
+        cached = _get_cached(cache_key)
+        if cached is not None:
+            return cached
+
+        results = manager.bucket_rank_search(
+            query=request.query,
+            task_types=request.task_types,
+            domains=request.domains,
+            top_k=request.top_k,
+        )
+
+        response_data: List[TaskResponse] = []
+        for item in results:
+            core = _extract_task_fields(item)
+            response_data.append(
+                TaskResponse(
+                    task_id=str(core["task_id"]),
+                    task=core["task"],
+                    true_answer=core["true_answer"],
+                    agent_planning=core["agent_planning"],
+                    agent_experience=core["agent_experience"],
+                    task_analysis=core["task_analysis"],
+                    plan_subtask_action=core["plan_subtask_action"],
+                    instance=core["instance"],
+                    decision_guide=core["decision_guide"],
+                    total_score=item.get("score"),
+                )
+            )
+
+        _set_cached(cache_key, response_data)
+        update_performance_stats(time.time() - start_time)
+        return response_data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Bucket search failed: {str(e)}")
 
 
 @app.get("/performance", response_model=PerformanceStats)

@@ -113,10 +113,20 @@ class AgenticKnowledgeBase:
                             task_analysis["task_type"] = [
                                 v for v in [ta_type.get("raw"), ta_type.get("normalized")] if v
                             ]
+                            task_analysis["task_type_normalized"] = (
+                                [ta_type["normalized"]] if ta_type.get("normalized") else []
+                            )
+                        else:
+                            task_analysis["task_type_normalized"] = list(ta_type or [])
                         if isinstance(ta_domain, dict):
                             task_analysis["domain"] = [
                                 v for v in [ta_domain.get("raw"), ta_domain.get("normalized")] if v
                             ]
+                            task_analysis["domain_normalized"] = (
+                                [ta_domain["normalized"]] if ta_domain.get("normalized") else []
+                            )
+                        else:
+                            task_analysis["domain_normalized"] = list(ta_domain or [])
                         # Inject knowledge/plan/instance from final_reference if missing
                         if not task_analysis.get("knowledge") and fr.get("knowledge"):
                             task_analysis["knowledge"] = fr["knowledge"]
@@ -163,6 +173,7 @@ class AgenticKnowledgeBase:
         print("Building search indices...")
         self.build_tfidf_indices()
         self.build_embeddings()
+        self.build_bucket_index()
 
     # -----------------------------
     # Build indices
@@ -199,6 +210,73 @@ class AgenticKnowledgeBase:
 
         for i, task in enumerate(tasks):
             task.task_embedding = embeddings[i]
+
+    def build_bucket_index(self):
+        """Inverted index: normalized_task_type → normalized_domain → [task_ids].
+        Used for Stage-1 candidate retrieval before text ranking.
+        """
+        self.bucket_index: Dict[str, Dict[str, List[str]]] = defaultdict(lambda: defaultdict(list))
+        for task_id, task_obj in self.tasks.items():
+            ta = task_obj.augmented.task_analysis or {}
+            for tt in (ta.get("task_type_normalized") or []):
+                for dom in (ta.get("domain_normalized") or []):
+                    self.bucket_index[tt][dom].append(task_id)
+        total = sum(
+            len(ids)
+            for dom_map in self.bucket_index.values()
+            for ids in dom_map.values()
+        )
+        print(f"Bucket index built: {len(self.bucket_index)} task_types, {total} (type,domain) entries")
+
+    def bucket_text_search(
+        self,
+        query: str,
+        task_types: List[str],
+        domains: List[str],
+        top_k: int = 3,
+    ) -> List[dict]:
+        """Two-stage retrieval:
+        Stage 1 — collect candidates from normalized (task_type, domain) buckets.
+                   Every matching bucket contributes all its documents.
+        Stage 2 — rank candidates by TF-IDF cosine similarity, return top_k.
+        """
+        # Stage 1: bucket lookup
+        candidate_ids: List[str] = []
+        seen: set = set()
+        for tt in task_types:
+            for dom in domains:
+                for tid in self.bucket_index.get(tt, {}).get(dom, []):
+                    if tid not in seen:
+                        seen.add(tid)
+                        candidate_ids.append(tid)
+
+        if not candidate_ids:
+            return []
+
+        # Stage 2: TF-IDF text ranking within candidates
+        component = self.field_components["task"]
+        if component["matrix"] is None or not component["task_ids"]:
+            # No TF-IDF index — return candidates in insertion order up to top_k
+            return [
+                {"task_id": tid, "score": 0.0, "field": "task"}
+                for tid in candidate_ids[:top_k]
+            ]
+
+        id_to_pos = {tid: pos for pos, tid in enumerate(component["task_ids"])}
+        query_vec = component["vectorizer"].transform([query])
+
+        scored: List[tuple] = []
+        for tid in candidate_ids:
+            pos = id_to_pos.get(tid)
+            if pos is not None:
+                score = float((query_vec * component["matrix"][pos].T).toarray()[0][0])
+                scored.append((score, tid))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [
+            {"task_id": tid, "score": score, "field": "task"}
+            for score, tid in scored[:top_k]
+        ]
 
     # -----------------------------
     # Search (Text / Semantic)
@@ -454,6 +532,27 @@ class AKB_Manager:
             entry = self._task_to_dict(task_obj, result["score"])
             results.append({"task_id": result["task_id"], "score": result["score"], "content": entry})
         return sorted(results, key=lambda x: x["score"], reverse=True)[:top_k]
+
+    def bucket_rank_search(
+        self,
+        query: str,
+        task_types: List[str],
+        domains: List[str],
+        top_k: int = 3,
+    ) -> List[dict]:
+        """Two-stage retrieval:
+        Stage 1 — collect candidates from normalized (task_type × domain) buckets.
+        Stage 2 — rank by TF-IDF text similarity, return top_k.
+        Falls back to hybrid_search when no bucket candidates found.
+        """
+        results = self.knowledge_base.bucket_text_search(query, task_types, domains, top_k)
+        if not results:
+            return self.hybrid_search(query, top_k=top_k)
+        detailed = []
+        for r in results:
+            task_obj = self.get_task_details(r["task_id"])
+            detailed.append(self._task_to_dict(task_obj, r["score"]))
+        return detailed
 
     def get_task_details(self, task_id: str) -> Optional[TaskInstance]:
         return self.knowledge_base.tasks.get(task_id)
