@@ -16,111 +16,58 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
     font-family: 'NanumGothic', 'Apple SD Gothic Neo', sans-serif;
-    font-size: 10pt;
+    font-size: 9.5pt;
     line-height: 1.7;
     color: #222;
-    padding: 15mm 18mm;
+    padding: 14mm 18mm;
     word-break: keep-all;
 }
 h1 {
-    font-size: 17pt;
-    font-weight: bold;
-    margin-top: 0;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-    border-bottom: 2px solid #2c5282;
-    color: #1a365d;
+    font-size: 16pt; font-weight: bold;
+    margin-bottom: 10px; padding-bottom: 6px;
+    border-bottom: 2px solid #2c5282; color: #1a365d;
 }
 h2 {
-    font-size: 13pt;
-    font-weight: bold;
-    margin-top: 22px;
-    margin-bottom: 8px;
-    padding-bottom: 3px;
-    border-bottom: 1px solid #bee3f8;
-    color: #2c5282;
+    font-size: 12.5pt; font-weight: bold;
+    margin-top: 20px; margin-bottom: 7px; padding-bottom: 3px;
+    border-bottom: 1px solid #bee3f8; color: #2c5282;
 }
 h3 {
-    font-size: 11pt;
-    font-weight: bold;
-    margin-top: 16px;
-    margin-bottom: 6px;
-    color: #2b6cb0;
+    font-size: 10.5pt; font-weight: bold;
+    margin-top: 14px; margin-bottom: 5px; color: #2b6cb0;
 }
-p {
-    margin-bottom: 8px;
-}
-ul, ol {
-    margin-left: 20px;
-    margin-bottom: 8px;
-}
-li {
-    margin-bottom: 3px;
-}
+p { margin-bottom: 7px; }
+ul, ol { margin-left: 18px; margin-bottom: 7px; }
+li { margin-bottom: 2px; }
 pre {
-    background: #f7f9fc;
-    border: 1px solid #dbe9f7;
-    border-radius: 4px;
-    padding: 10px 12px;
-    margin: 8px 0 12px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 8.5pt;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-all;
+    background: #f7f9fc; border: 1px solid #dbe9f7; border-radius: 4px;
+    padding: 9px 11px; margin: 7px 0 10px;
+    font-family: 'Courier New', monospace; font-size: 8pt; line-height: 1.45;
+    white-space: pre-wrap; word-break: break-all;
 }
 code {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 8.5pt;
-    background: #eef4fb;
-    padding: 1px 4px;
-    border-radius: 3px;
+    font-family: 'Courier New', monospace; font-size: 8pt;
+    background: #eef4fb; padding: 1px 3px; border-radius: 2px;
 }
-pre code {
-    background: none;
-    padding: 0;
-    border-radius: 0;
-}
+pre code { background: none; padding: 0; }
 table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 8px 0 12px;
-    font-size: 9.5pt;
+    border-collapse: collapse; width: 100%; margin: 7px 0 10px; font-size: 9pt;
 }
 th {
-    background: #2c5282;
-    color: white;
-    padding: 6px 10px;
-    text-align: left;
-    font-weight: bold;
+    background: #2c5282; color: white; padding: 5px 9px;
+    text-align: left; font-weight: bold;
 }
-td {
-    border: 1px solid #bee3f8;
-    padding: 5px 10px;
-    vertical-align: top;
-}
-tr:nth-child(even) td {
-    background: #f0f7ff;
-}
+td { border: 1px solid #bee3f8; padding: 4px 9px; vertical-align: top; }
+tr:nth-child(even) td { background: #f0f7ff; }
 blockquote {
-    border-left: 3px solid #90cdf4;
-    padding-left: 12px;
-    color: #555;
-    margin: 8px 0;
+    border-left: 3px solid #90cdf4; padding-left: 10px; color: #555; margin: 7px 0;
 }
-hr {
-    border: none;
-    border-top: 1px solid #ddd;
-    margin: 16px 0;
-}
+hr { border: none; border-top: 1px solid #ddd; margin: 14px 0; }
 @page {
-    size: A4;
-    margin: 15mm 18mm;
+    size: A4; margin: 14mm 18mm;
     @bottom-right {
         content: counter(page);
-        font-family: 'NanumGothic', sans-serif;
-        font-size: 9pt;
-        color: #888;
+        font-family: 'NanumGothic', sans-serif; font-size: 8.5pt; color: #888;
     }
 }
 </style>
@@ -129,35 +76,44 @@ hr {
 <h1>추론 파이프라인: proposal_planning → CodeAgent → 최종 답변</h1>
 <blockquote>
 <p><strong>작성일</strong>: 2026-04-25<br />
+<strong>최종 수정</strong>: 2026-04-25 (버킷 검색 추가, answer_plan 흐름 명확화)<br />
 <strong>대상 코드</strong>: <code>examples/open_deep_research/</code><br />
-<strong>사용 언어</strong>: Python 3 / smolagents / sentence-transformers</p>
+<strong>사용 언어</strong>: Python 3 / smolagents / sentence-transformers / TogetherAI</p>
 </blockquote>
 <hr />
 <h2>1. 전체 흐름 개요</h2>
-<p>아래 흐름도는 GAIA 태스크 하나를 처리하는 전체 파이프라인입니다.</p>
-<div class="codehilite"><pre><span></span><code><span class="nx">run_gaia</span><span class="p">.</span><span class="nx">py</span><span class="w">  </span><span class="err">→</span><span class="w">  </span><span class="nx">answer_single_question</span><span class="p">()</span>
-<span class="err">│</span>
-<span class="err">├─</span><span class="w"> </span><span class="p">[</span><span class="nx">입력</span><span class="p">]</span><span class="w"> </span><span class="nx">example</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">question</span><span class="p">,</span><span class="w"> </span><span class="nx">file_name</span><span class="p">,</span><span class="w"> </span><span class="nx">true_answer</span><span class="p">,</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span>
-<span class="err">│</span>
-<span class="err">├─</span><span class="w"> </span><span class="p">[</span><span class="nx">KB</span><span class="w"> </span><span class="nx">조회</span><span class="p">]</span><span class="w"> </span><span class="nx">AKBClient</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">odyseuss_db</span><span class="p">.</span><span class="nx">jsonl</span>
-<span class="err">│</span><span class="w">   </span><span class="nx">retrieval_type</span><span class="p">:</span><span class="w"> </span><span class="nx">hybrid</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">text</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">semantic</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">type_and_domain</span>
-<span class="err">│</span>
-<span class="err">├─</span><span class="w"> </span><span class="p">[</span><span class="nx">proposal_planning</span><span class="p">()]</span><span class="w">  </span><span class="nx">planner_kb</span><span class="o">/</span><span class="nx">planner</span><span class="p">.</span><span class="nx">py</span>
-<span class="err">│</span><span class="w">   </span><span class="nx">Stage</span><span class="w"> </span><span class="mi">1</span><span class="nx">a</span><span class="w">  </span><span class="nx">generate_knowledge</span><span class="w">   </span><span class="err">→</span><span class="w">  </span><span class="nx">knowledge_draft</span>
-<span class="err">│</span><span class="w">   </span><span class="nx">Stage</span><span class="w"> </span><span class="mi">1</span><span class="nx">b</span><span class="w">  </span><span class="nx">refine_knowledge</span><span class="w">     </span><span class="err">→</span><span class="w">  </span><span class="nx">knowledge_text</span><span class="w">      </span><span class="p">(</span><span class="nx">가이드</span><span class="w"> </span><span class="nx">있을</span><span class="w"> </span><span class="nx">때만</span><span class="p">)</span>
-<span class="err">│</span><span class="w">   </span><span class="nx">Stage</span><span class="w"> </span><span class="mi">2</span><span class="nx">a</span><span class="w">  </span><span class="nx">generate_plan</span><span class="w">        </span><span class="err">→</span><span class="w">  </span><span class="nx">plan_draft</span>
-<span class="err">│</span><span class="w">   </span><span class="nx">Stage</span><span class="w"> </span><span class="mi">2</span><span class="nx">b</span><span class="w">  </span><span class="nx">refine_plan</span><span class="w">          </span><span class="err">→</span><span class="w">  </span><span class="nx">plan_str</span><span class="w">            </span><span class="p">(</span><span class="nx">가이드</span><span class="w"> </span><span class="nx">있을</span><span class="w"> </span><span class="nx">때만</span><span class="p">)</span>
-<span class="err">│</span><span class="w">   </span><span class="nx">Stage</span><span class="w"> </span><span class="mi">3</span><span class="nx">a</span><span class="w">  </span><span class="nx">generate_instance</span><span class="w">    </span><span class="err">→</span><span class="w">  </span><span class="nx">instance_draft</span>
-<span class="err">│</span><span class="w">   </span><span class="nx">Stage</span><span class="w"> </span><span class="mi">3</span><span class="nx">b</span><span class="w">  </span><span class="nx">refine_instance</span><span class="w">      </span><span class="err">→</span><span class="w">  </span><span class="nx">instance_str</span><span class="w">        </span><span class="p">(</span><span class="nx">가이드</span><span class="w"> </span><span class="nx">있을</span><span class="w"> </span><span class="nx">때만</span><span class="p">)</span>
-<span class="err">│</span>
-<span class="err">├─</span><span class="w"> </span><span class="p">[</span><span class="nx">CodeAgent</span><span class="p">.</span><span class="nx">run</span><span class="p">()]</span><span class="w">  </span><span class="nx">smolagents</span>
-<span class="err">│</span><span class="w">   </span><span class="nx">additional_knowledge</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;Knowledge:\n...\n\nPlan:\n...\n\nInstance:\n...&quot;</span>
-<span class="err">│</span><span class="w">   </span><span class="nx">PlanningStep</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">ReAct</span><span class="w"> </span><span class="nx">Loop</span><span class="w"> </span><span class="p">(</span><span class="nx">Thought</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">Code</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">Observation</span><span class="p">)</span>
-<span class="err">│</span>
-<span class="err">└─</span><span class="w"> </span><span class="p">[</span><span class="nx">prepare_response</span><span class="p">()]</span><span class="w">  </span><span class="nx">scripts</span><span class="o">/</span><span class="nx">reformulator</span><span class="p">.</span><span class="nx">py</span>
-<span class="w">    </span><span class="nx">agent</span><span class="w"> </span><span class="nx">메모리</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">단답형</span><span class="w"> </span><span class="nx">최종</span><span class="w"> </span><span class="nx">답변</span>
-</code></pre></div>
-
+<pre><code>run_gaia.py  →  answer_single_question()
+│
+├─ [입력] example = { question, file_name, true_answer, ... }
+│
+├─ [KB 조회]  AKBClient → odyseuss_db.jsonl
+│   retrieval_type: hybrid / text / semantic / bucket
+│              ↑
+│   bucket 검색 (신규):
+│     Stage 1 — normalized task_type × domain 버킷 후보 수집
+│     Stage 2 — 후보 내 TF-IDF 텍스트 랭킹 → top_k 선정
+│
+├─ [proposal_planning()]  planner_kb/planner.py
+│   Stage 1a  generate_knowledge   →  knowledge_draft
+│   Stage 1b  refine_knowledge     →  knowledge_text      (Decision Guide 있을 때만)
+│   Stage 2a  generate_plan        →  plan_draft
+│   Stage 2b  refine_plan          →  plan_str            (Decision Guide 있을 때만)
+│   Stage 3a  generate_instance    →  instance_draft
+│   Stage 3b  refine_instance      →  instance_str        (Decision Guide 있을 때만)
+│   반환: { &quot;plan&quot;: &quot;Knowledge:\n...\n\nPlan:\n...\n\nInstance:\n...&quot; }
+│
+├─ [CodeAgent.planning_step()]  smolagents/agents.py
+│   planner_fn(task, tools, managed_agents) 호출
+│   → result[&quot;plan&quot;] 을 answer_plan 으로 직접 사용
+│   → PlanningStep 메모리에 기록
+│
+├─ [CodeAgent ReAct Loop]
+│   Thought → Code → Observation  (max_steps 회 반복)
+│   Tools: Search, Crawl, TextInspect, AudioInspect, VisualInspect
+│
+└─ [prepare_response()]  scripts/reformulator.py
+    agent 메모리 → 단답형 최종 답변
+</code></pre>
 <h3>주요 모듈</h3>
 <table>
 <thead>
@@ -173,7 +129,11 @@ hr {
 </tr>
 <tr>
 <td><code>agent_kb/agent_kb_retrieval.py</code></td>
-<td>KB 인덱싱 및 검색 (<code>AKB_Manager</code>)</td>
+<td>KB 인덱싱 및 검색 (<code>AgenticKnowledgeBase</code>, <code>AKB_Manager</code>)</td>
+</tr>
+<tr>
+<td><code>agent_kb/agent_kb_service.py</code></td>
+<td>FastAPI 서비스 (포트 8005)</td>
 </tr>
 <tr>
 <td><code>planner_kb/planner.py</code></td>
@@ -184,8 +144,8 @@ hr {
 <td>프롬프트 템플릿</td>
 </tr>
 <tr>
-<td><code>smolagents.CodeAgent</code></td>
-<td>ReAct 루프 실행</td>
+<td><code>smolagents/agents.py</code></td>
+<td><code>CodeAgent.planning_step()</code> — answer_plan 주입</td>
 </tr>
 <tr>
 <td><code>scripts/reformulator.py</code></td>
@@ -224,7 +184,7 @@ hr {
 <tr>
 <td><code>task_analysis</code></td>
 <td>dict</td>
-<td><code>{ knowledge, plan, task_type, domain }</code></td>
+<td><code>{ knowledge, plan, task_type, domain, task_type_normalized, domain_normalized }</code></td>
 </tr>
 <tr>
 <td><code>agent_planning</code></td>
@@ -234,298 +194,349 @@ hr {
 <tr>
 <td><code>decision_augmentation</code></td>
 <td>dict</td>
-<td><code>{ final_reference, signals_summary }</code></td>
+<td><code>{ final_reference: {knowledge, plan, instance}, signals_summary: [...] }</code></td>
 </tr>
 </tbody>
 </table>
-<p>로딩 시 정규화 처리:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># task_type / domain : dict → list 변환</span>
-<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ta_type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-    <span class="n">task_analysis</span><span class="p">[</span><span class="s2">&quot;task_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">ta_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;raw&quot;</span><span class="p">),</span> <span class="n">ta_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;normalized&quot;</span><span class="p">)]</span>
+<p>로딩 시 정규화 처리 (<code>parse_json_file</code>):</p>
+<pre><code class="language-python"># odyseuss_db: task_type / domain 이 {&quot;raw&quot;: &quot;...&quot;, &quot;normalized&quot;: &quot;...&quot;} 형태
+if isinstance(ta_type, dict):
+    # 검색용: raw + normalized 모두 보관
+    task_analysis[&quot;task_type&quot;] = [ta_type.get(&quot;raw&quot;), ta_type.get(&quot;normalized&quot;)]
+    # 버킷 인덱싱용: normalized 값만 별도 저장
+    task_analysis[&quot;task_type_normalized&quot;] = [ta_type[&quot;normalized&quot;]]
+else:
+    task_analysis[&quot;task_type_normalized&quot;] = list(ta_type or [])
 
-<span class="c1"># final_reference 의 knowledge/plan 주입</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">task_analysis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;knowledge&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">fr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;knowledge&quot;</span><span class="p">):</span>
-    <span class="n">task_analysis</span><span class="p">[</span><span class="s2">&quot;knowledge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fr</span><span class="p">[</span><span class="s2">&quot;knowledge&quot;</span><span class="p">]</span>
-</code></pre></div>
+# domain 동일하게 처리
+task_analysis[&quot;domain_normalized&quot;] = ...
 
-<h3>2.2 검색 모드</h3>
-<p><strong>hybrid_search</strong> — TF-IDF와 semantic 점수의 가중 합산</p>
-<div class="codehilite"><pre><span></span><code>score = weight[&quot;text&quot;]     × TF-IDF cosine similarity
-      + weight[&quot;semantic&quot;]  × all-MiniLM-L6-v2 cosine similarity
-기본 가중치: { &quot;text&quot;: 0.5, &quot;semantic&quot;: 0.5 }
-</code></pre></div>
+# decision_augmentation.final_reference 의 knowledge/plan 주입
+if not task_analysis.get(&quot;knowledge&quot;) and fr.get(&quot;knowledge&quot;):
+    task_analysis[&quot;knowledge&quot;] = fr[&quot;knowledge&quot;]
+</code></pre>
+<h3>2.2 검색 인덱스 초기화 순서</h3>
+<p>서비스 시작 시 <code>finalize_index()</code> 가 다음 순서로 인덱스를 빌드합니다.</p>
+<pre><code>1. build_tfidf_indices()  — task 텍스트 TF-IDF 행렬 생성
+2. build_embeddings()     — all-MiniLM-L6-v2 sentence embedding 생성
+3. build_bucket_index()   — normalized task_type × domain 역인덱스 생성
+</code></pre>
+<h3>2.3 검색 모드</h3>
+<h4>bucket_rank_search <em>(신규 — 2단계 검색)</em></h4>
+<p>정규화된 task_type과 domain을 기준으로 버킷 후보를 먼저 수집한 뒤, 그 안에서 텍스트 유사도로 최종 k개를 선정합니다.</p>
+<pre><code>Stage 1 — 버킷 후보 수집
+  query_types × query_domains 의 모든 (task_type, domain) 쌍에 대해
+  bucket_index[task_type][domain] 조회 → 후보 task_id 집합 구성
+  (각 버킷에 최소 1개 보장, 버킷별 10개 문서 사전 구축 예정)
 
-<p><strong>search_by_text</strong> — TF-IDF 벡터라이저로 task 필드 검색</p>
-<p><strong>search_by_semantic</strong> — sentence-transformers 임베딩 후 cosine 검색</p>
-<p><strong>type_domain_text_search</strong> — 유형·도메인 오버랩 + TF-IDF 가중 합산</p>
-<div class="codehilite"><pre><span></span><code><span class="nx">final_score</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="m m-Double">0.3</span><span class="w"> </span><span class="err">×</span><span class="w"> </span><span class="nx">type_score</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m m-Double">0.3</span><span class="w"> </span><span class="err">×</span><span class="w"> </span><span class="nx">domain_score</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m m-Double">0.4</span><span class="w"> </span><span class="err">×</span><span class="w"> </span><span class="nx">text_score</span>
-<span class="nx">type_score</span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="o">|</span><span class="nx">query_types</span><span class="w"> </span><span class="err">∩</span><span class="w"> </span><span class="nx">kb_types</span><span class="o">|</span><span class="w">    </span><span class="o">/</span><span class="w"> </span><span class="nx">max</span><span class="p">(</span><span class="o">|</span><span class="nx">query_types</span><span class="o">|</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
-<span class="nx">domain_score</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">|</span><span class="nx">query_domains</span><span class="w"> </span><span class="err">∩</span><span class="w"> </span><span class="nx">kb_domains</span><span class="o">|</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">max</span><span class="p">(</span><span class="o">|</span><span class="nx">query_domains</span><span class="o">|</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
-</code></pre></div>
+Stage 2 — TF-IDF 텍스트 랭킹
+  후보 집합 내에서만 TF-IDF cosine similarity 계산
+  → 상위 top_k 반환
 
-<h3>2.3 검색 결과 스키마</h3>
-<div class="codehilite"><pre><span></span><code><span class="p">{</span>
-    <span class="s2">&quot;task_id&quot;</span><span class="p">:</span>           <span class="nb">str</span><span class="p">,</span>
-    <span class="s2">&quot;total_score&quot;</span><span class="p">:</span>       <span class="nb">float</span><span class="p">,</span>
-    <span class="s2">&quot;task&quot;</span><span class="p">:</span>              <span class="nb">str</span><span class="p">,</span>
-    <span class="s2">&quot;true_answer&quot;</span><span class="p">:</span>       <span class="nb">str</span><span class="p">,</span>
-    <span class="s2">&quot;task_analysis&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;knowledge&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="s2">&quot;plan&quot;</span><span class="p">:</span>      <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="s2">&quot;task_type&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="s2">&quot;domain&quot;</span><span class="p">:</span>    <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;instance&quot;</span><span class="p">:</span>       <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>   <span class="c1"># decision_augmentation.final_reference.instance</span>
-    <span class="s2">&quot;decision_guide&quot;</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># decision_augmentation.signals_summary</span>
-<span class="p">}</span>
-</code></pre></div>
-
+후보 없으면 hybrid_search 로 fallback
+</code></pre>
+<h4>hybrid_search</h4>
+<pre><code>score = 0.5 × TF-IDF cosine + 0.5 × all-MiniLM-L6-v2 cosine
+</code></pre>
+<h4>search_by_text</h4>
+<p>TF-IDF 벡터라이저로 task 필드 검색 (전체 문서 대상)</p>
+<h4>search_by_semantic</h4>
+<p>sentence-transformers 임베딩 후 cosine 검색 (전체 문서 대상)</p>
+<h4>type_domain_text_search</h4>
+<pre><code>final_score = 0.3 × type_score + 0.3 × domain_score + 0.4 × text_score
+type_score   = |query_types ∩ kb_types|    / max(|query_types|, 1)
+domain_score = |query_domains ∩ kb_domains| / max(|query_domains|, 1)
+</code></pre>
+<h3>2.4 버킷 인덱스 구조</h3>
+<pre><code class="language-python"># AgenticKnowledgeBase.bucket_index
+{
+    &quot;Algebra and Operations&quot;: {
+        &quot;Mathematics General&quot;: [&quot;gsm8k_001&quot;, &quot;gsm8k_002&quot;, ...],
+        &quot;Finance Math&quot;:        [&quot;mathqa_100&quot;, ...],
+    },
+    &quot;Reasoning Skills&quot;: {
+        &quot;Mathematics General&quot;: [...],
+    },
+    ...
+}
+# 22개 normalized task_type × 40개 normalized domain
+</code></pre>
+<h3>2.5 서비스 엔드포인트 (포트 8005)</h3>
+<table>
+<thead>
+<tr>
+<th>엔드포인트</th>
+<th>방식</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/search/bucket</code></td>
+<td>POST</td>
+<td>버킷 2단계 검색 (신규)</td>
+</tr>
+<tr>
+<td><code>/search/hybrid</code></td>
+<td>POST</td>
+<td>TF-IDF + semantic 혼합</td>
+</tr>
+<tr>
+<td><code>/search/text</code></td>
+<td>POST</td>
+<td>TF-IDF 전체 검색</td>
+</tr>
+<tr>
+<td><code>/search/semantic</code></td>
+<td>POST</td>
+<td>semantic 전체 검색</td>
+</tr>
+<tr>
+<td><code>/search/type_domain_text</code></td>
+<td>POST</td>
+<td>type·domain 가중 점수 검색</td>
+</tr>
+</tbody>
+</table>
+<p><code>/search/bucket</code> 요청 스키마:</p>
+<pre><code class="language-python">{
+    &quot;query&quot;:      str,           # 질문 텍스트
+    &quot;task_types&quot;: list[str],     # normalized task_type 값들
+    &quot;domains&quot;:    list[str],     # normalized domain 값들
+    &quot;top_k&quot;:      int = 3
+}
+</code></pre>
+<h3>2.6 검색 결과 스키마</h3>
+<pre><code class="language-python">{
+    &quot;task_id&quot;:    str,
+    &quot;task&quot;:       str,
+    &quot;true_answer&quot;: str,
+    &quot;task_analysis&quot;: {
+        &quot;knowledge&quot;:          str,
+        &quot;plan&quot;:               list[str],
+        &quot;task_type&quot;:          list[str],   # raw + normalized
+        &quot;domain&quot;:             list[str],
+        &quot;task_type_normalized&quot;: list[str], # 버킷 인덱싱용
+        &quot;domain_normalized&quot;:    list[str],
+    },
+    &quot;instance&quot;:       str | None,   # decision_augmentation.final_reference.instance
+    &quot;decision_guide&quot;: list | None,  # decision_augmentation.signals_summary
+    &quot;total_score&quot;:    float,
+}
+</code></pre>
 <p>Decision Guide 항목 구조:</p>
-<div class="codehilite"><pre><span></span><code><span class="p">{</span>
-    <span class="s2">&quot;level&quot;</span><span class="p">:</span>       <span class="s2">&quot;knowledge&quot;</span> <span class="o">|</span> <span class="s2">&quot;plan&quot;</span> <span class="o">|</span> <span class="s2">&quot;instance&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;failures&quot;</span><span class="p">:</span>    <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="s2">&quot;causes&quot;</span><span class="p">:</span>      <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="s2">&quot;corrections&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-<span class="p">}</span>
-</code></pre></div>
-
+<pre><code class="language-python">{
+    &quot;level&quot;:       &quot;knowledge&quot; | &quot;plan&quot; | &quot;instance&quot;,
+    &quot;failures&quot;:    list[str],
+    &quot;causes&quot;:      list[str],
+    &quot;corrections&quot;: list[str],
+}
+</code></pre>
 <hr />
 <h2>3. proposal_planning 함수</h2>
 <h3>3.1 함수 시그니처</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">proposal_planning</span><span class="p">(</span>
-    <span class="n">example</span><span class="p">,</span>                    <span class="c1"># GAIA 태스크 dict</span>
-    <span class="n">augmented_question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>    <span class="c1"># 파일 설명 포함 확장 질문</span>
-    <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">slm</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-    <span class="n">retrieval_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-    <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">retrieval_option</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;task_text&quot;</span><span class="p">,</span>   <span class="c1"># &quot;task_text&quot; | &quot;type_and_domain&quot;</span>
-    <span class="n">type_domain_retrieval_method</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">plan_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">tools</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">managed_agents</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">planning_prompt_templates</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
-</code></pre></div>
-
+<pre><code class="language-python">def proposal_planning(
+    example,                    # GAIA 태스크 dict
+    augmented_question: str,    # 파일 설명 포함 확장 질문
+    model_name: str,
+    key: str,
+    url: str,
+    model: Any,
+    slm: bool,
+    retrieval_method: Callable,
+    top_k: int,
+    retrieval_option: str = &quot;task_text&quot;,   # &quot;task_text&quot; | &quot;type_and_domain&quot;
+    type_domain_retrieval_method = None,
+    plan_mode: str | None = None,
+    tools = None,
+    managed_agents = None,
+    planning_prompt_templates = None,
+) -&gt; dict
+</code></pre>
 <p>반환값:</p>
-<div class="codehilite"><pre><span></span><code><span class="p">{</span>
-    <span class="s2">&quot;plan&quot;</span><span class="p">:</span>              <span class="nb">str</span><span class="p">,</span>   <span class="c1"># CodeAgent에 주입되는 최종 컨텍스트</span>
-    <span class="s2">&quot;knowledge&quot;</span><span class="p">:</span>         <span class="nb">str</span><span class="p">,</span>   <span class="c1"># Stage 1b 출력 (refined knowledge)</span>
-    <span class="s2">&quot;plan_steps&quot;</span><span class="p">:</span>        <span class="nb">str</span><span class="p">,</span>   <span class="c1"># Stage 2b 출력 (refined plan)</span>
-    <span class="s2">&quot;instance&quot;</span><span class="p">:</span>          <span class="nb">str</span><span class="p">,</span>   <span class="c1"># Stage 3b 출력 (refined instance)</span>
-    <span class="s2">&quot;retrieval_results&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
-    <span class="s2">&quot;examples&quot;</span><span class="p">:</span>          <span class="nb">dict</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
-
+<pre><code class="language-python">{
+    &quot;plan&quot;:              str,   # &quot;Knowledge:\n...\n\nPlan:\n...\n\nInstance:\n...&quot;
+    &quot;knowledge&quot;:         str,   # Stage 1b 출력 (refined knowledge)
+    &quot;plan_steps&quot;:        str,   # Stage 2b 출력 (refined plan)
+    &quot;instance&quot;:          str,   # Stage 3b 출력 (refined instance)
+    &quot;retrieval_results&quot;: list,
+    &quot;examples&quot;:          dict,
+}
+</code></pre>
 <hr />
 <h3>3.2 단계 [1] — 유사 태스크 검색</h3>
 <p>현재 질문과 가장 유사한 KB 레코드 top_k개를 가져와 few-shot 예시와 Decision Guide로 활용합니다.</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># retrieval_option == &quot;task_text&quot; (기본)</span>
-<span class="n">retrieval_results</span> <span class="o">=</span> <span class="n">retrieval_method</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="s2">&quot;question&quot;</span><span class="p">],</span> <span class="n">top_k</span><span class="o">=</span><span class="n">top_k</span><span class="p">)</span>
+<pre><code class="language-python"># retrieval_option == &quot;task_text&quot; (기본)
+retrieval_results = retrieval_method(example[&quot;question&quot;], top_k=top_k)
 
-<span class="c1"># retrieval_option == &quot;type_and_domain&quot;</span>
-<span class="n">classification</span> <span class="o">=</span> <span class="n">classify_task_type_and_domain</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="n">augmented_question</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-<span class="n">retrieval_results</span> <span class="o">=</span> <span class="n">type_domain_retrieval_method</span><span class="p">(</span>
-    <span class="n">example</span><span class="p">[</span><span class="s2">&quot;question&quot;</span><span class="p">],</span>
-    <span class="n">task_types</span><span class="o">=</span><span class="n">classification</span><span class="p">[</span><span class="s2">&quot;task_type_normalized&quot;</span><span class="p">],</span>
-    <span class="n">domains</span><span class="o">=</span><span class="n">classification</span><span class="p">[</span><span class="s2">&quot;domain_normalized&quot;</span><span class="p">],</span>
-    <span class="n">top_k</span><span class="o">=</span><span class="n">top_k</span><span class="p">,</span>
-<span class="p">)</span>
-</code></pre></div>
-
-<p>검색 후 6개의 예시·가이드 블록을 구성합니다:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">knowledge_examples</span> <span class="o">=</span> <span class="n">build_similar_task_direction_blocks</span><span class="p">(</span><span class="n">retrieval_results</span><span class="p">)</span>
-<span class="n">plan_examples</span>      <span class="o">=</span> <span class="n">build_similar_task_plan_blocks</span><span class="p">(</span><span class="n">retrieval_results</span><span class="p">)</span>
-<span class="n">instance_examples</span>  <span class="o">=</span> <span class="n">build_instance_examples</span><span class="p">(</span><span class="n">retrieval_results</span><span class="p">)</span>
-<span class="n">guide_knowledge</span>    <span class="o">=</span> <span class="n">build_decision_guide_blocks</span><span class="p">(</span><span class="n">retrieval_results</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;knowledge&quot;</span><span class="p">)</span>
-<span class="n">guide_plan</span>         <span class="o">=</span> <span class="n">build_decision_guide_blocks</span><span class="p">(</span><span class="n">retrieval_results</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>
-<span class="n">guide_instance</span>     <span class="o">=</span> <span class="n">build_decision_guide_blocks</span><span class="p">(</span><span class="n">retrieval_results</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;instance&quot;</span><span class="p">)</span>
-</code></pre></div>
-
+# retrieval_option == &quot;type_and_domain&quot;
+classification = classify_task_type_and_domain(task=augmented_question, ...)
+retrieval_results = type_domain_retrieval_method(
+    example[&quot;question&quot;],
+    task_types=classification[&quot;task_type_normalized&quot;],
+    domains=classification[&quot;domain_normalized&quot;],
+    top_k=top_k,
+)
+</code></pre>
+<p>검색 후 6개 블록을 구성합니다:</p>
+<pre><code class="language-python">knowledge_examples = build_similar_task_direction_blocks(retrieval_results)
+plan_examples      = build_similar_task_plan_blocks(retrieval_results)
+instance_examples  = build_instance_examples(retrieval_results)
+guide_knowledge    = build_decision_guide_blocks(retrieval_results, level=&quot;knowledge&quot;)
+guide_plan         = build_decision_guide_blocks(retrieval_results, level=&quot;plan&quot;)
+guide_instance     = build_decision_guide_blocks(retrieval_results, level=&quot;instance&quot;)
+</code></pre>
 <hr />
 <h3>3.3 Stage 1a — generate_knowledge</h3>
-<p><strong>목적</strong>: 태스크를 풀기 위해 필요한 도메인 지식(선언적 + 절차적)을 생성합니다.</p>
-<p><strong>함수 시그니처</strong>:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_knowledge</span><span class="p">(</span>
-    <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">examples</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>         <span class="c1"># knowledge_examples 블록</span>
-    <span class="n">planning_prompt_template</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-    <span class="n">model_name</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">slm</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
-</code></pre></div>
-
+<p><strong>목적</strong>: 태스크를 풀기 위한 도메인 지식(선언적 + 절차적)을 생성합니다.</p>
 <p><strong>프롬프트</strong> (<code>knowledge_prompt</code>):</p>
-<div class="codehilite"><pre><span></span><code><span class="x">Extract the domain knowledge required to understand and solve the given task.</span>
-<span class="x">Provide both:</span>
-<span class="x">    (a) declarative knowledge: domain concepts and definitions used</span>
-<span class="x">    (b) procedural knowledge: methodology, paradigm, or algorithm to apply</span>
-<span class="x">Return only the knowledge as plain text. Do NOT include the direct answer.</span>
+<pre><code>Extract the domain knowledge required to understand and solve the given task.
+Provide both:
+    (a) declarative knowledge: domain concepts and definitions used
+    (b) procedural knowledge: methodology, paradigm, or algorithm to apply
+Return only the knowledge as plain text. Do NOT include the direct answer.
 
-<span class="x">TASK:</span>
-<span class="cp">{{</span><span class="nv">task</span><span class="cp">}}</span>
-
-<span class="x">SIMILAR TASKS:</span>
-<span class="cp">{{</span><span class="nv">examples</span><span class="cp">}}</span>
-</code></pre></div>
-
-<p><strong>출력</strong>: <code>knowledge_draft</code> — 선언적·절차적 지식 텍스트</p>
+TASK: {{task}}
+SIMILAR TASKS: {{examples}}
+</code></pre>
+<p><strong>출력</strong>: <code>knowledge_draft</code></p>
 <hr />
-<h3>3.4 Stage 1b — refine_knowledge (Decision Guide 교정)</h3>
-<p><strong>목적</strong>: Stage 1a 초안을 Decision Guide 신호로 교정합니다. Decision Guide가 없으면 초안을 그대로 반환합니다.</p>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">refine_knowledge</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">draft</span><span class="p">,</span> <span class="n">decision_guide</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">decision_guide</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">draft</span>      <span class="c1"># 가이드 없으면 스킵</span>
-    <span class="o">...</span>
-</code></pre></div>
-
+<h3>3.4 Stage 1b — refine_knowledge</h3>
+<p>Decision Guide가 있으면 초안을 교정합니다. 없으면 초안을 그대로 반환합니다.</p>
+<pre><code class="language-python">if not decision_guide:
+    return draft
+</code></pre>
 <p><strong>프롬프트</strong> (<code>refine_knowledge_prompt</code>):</p>
-<div class="codehilite"><pre><span></span><code><span class="nx">You</span><span class="w"> </span><span class="nx">generated</span><span class="w"> </span><span class="nx">domain</span><span class="w"> </span><span class="nx">knowledge</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">task</span><span class="p">.</span><span class="w"> </span><span class="nx">A</span><span class="w"> </span><span class="nx">Decision</span><span class="w"> </span><span class="nx">Guide</span><span class="w"> </span><span class="nx">identifies</span><span class="w"> </span><span class="nx">failure</span>
-<span class="nx">patterns</span><span class="w"> </span><span class="nx">observed</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">similar</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span>
-<span class="nx">Refine</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">generated</span><span class="w"> </span><span class="nx">knowledge</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">address</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">failures</span><span class="p">.</span><span class="w"> </span><span class="nx">Only</span><span class="w"> </span><span class="nx">modify</span><span class="w"> </span><span class="nx">what</span><span class="w"> </span><span class="nx">the</span>
-<span class="nx">guide</span><span class="w"> </span><span class="nx">says</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">insufficient</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="nx">wrong</span><span class="p">.</span>
-<span class="nx">Preserve</span><span class="w"> </span><span class="nx">all</span><span class="w"> </span><span class="nx">correct</span><span class="w"> </span><span class="nx">parts</span><span class="p">.</span><span class="w"> </span><span class="nx">Return</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">full</span><span class="w"> </span><span class="nx">refined</span><span class="w"> </span><span class="nx">knowledge</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nx">plain</span><span class="w"> </span><span class="nx">text</span><span class="p">.</span>
+<pre><code>You generated domain knowledge for a task. A Decision Guide identifies failure
+patterns observed in similar tasks.
+Refine the generated knowledge to address the failures. Only modify what the
+guide says is insufficient or wrong.
+Preserve all correct parts. Return the full refined knowledge as plain text.
 
-<span class="nx">TASK</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">task</span><span class="p">}}</span>
-<span class="nx">GENERATED</span><span class="w"> </span><span class="nx">KNOWLEDGE</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">draft</span><span class="p">}}</span>
-<span class="nx">DECISION</span><span class="w"> </span><span class="nx">GUIDE</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">decision_guide</span><span class="p">}}</span>
-</code></pre></div>
-
-<p><strong>출력</strong>: <code>knowledge_text</code> — 교정된 최종 지식</p>
+TASK: {{task}}
+GENERATED KNOWLEDGE: {{draft}}
+DECISION GUIDE: {{decision_guide}}
+</code></pre>
+<p><strong>출력</strong>: <code>knowledge_text</code></p>
 <hr />
 <h3>3.5 Stage 2a — generate_plan</h3>
-<p><strong>목적</strong>: 지식과 유사 예시를 바탕으로 최대 10단계 고수준 계획을 생성합니다.</p>
 <p><strong>프롬프트</strong> (<code>plan_prompt</code>):</p>
-<div class="codehilite"><pre><span></span><code><span class="x">Develop a high-level plan of no more than 10 steps to solve the given task</span>
-<span class="x">based only on the provided knowledge and similar tasks.</span>
-<span class="x">The plan must not include the final answer and the final conclusion.</span>
+<pre><code>Develop a high-level plan of no more than 10 steps to solve the given task
+based only on the provided knowledge and similar tasks.
+The plan must not include the final answer and the final conclusion.
 
-<span class="x">Requirements:</span>
-<span class="x">- Use the knowledge explicitly and progressively in each step.</span>
-<span class="x">- Derive a decision criterion: an intermediate, task-specific quantity,</span>
-<span class="x">  rule, or structure that can be used to select the answer.</span>
+Requirements:
+- Use the knowledge explicitly and progressively in each step.
+- Derive a decision criterion: an intermediate, task-specific quantity,
+  rule, or structure that can be used to select the answer.
 
-<span class="x">Strict Output Format:</span>
-<span class="x">- &lt;step&gt;</span>
-<span class="x">- &lt;step&gt;</span>
-<span class="x">- ...</span>
+Strict Output Format:
+- &lt;step&gt;
+- &lt;step&gt;
+- ...
 
-<span class="x">TASK: </span><span class="cp">{{</span><span class="nv">task</span><span class="cp">}}</span>
-<span class="x">KNOWLEDGE: </span><span class="cp">{{</span><span class="nv">knowledge</span><span class="cp">}}</span>
-<span class="x">SIMILAR TASKS: </span><span class="cp">{{</span><span class="nv">examples</span><span class="cp">}}</span>
-</code></pre></div>
-
-<p><strong>출력</strong>: <code>plan_draft</code> — bullet-list 형식 계획</p>
+TASK: {{task}}
+KNOWLEDGE: {{knowledge}}
+SIMILAR TASKS: {{examples}}
+</code></pre>
+<p><strong>출력</strong>: <code>plan_draft</code></p>
 <hr />
-<h3>3.6 Stage 2b — refine_plan (Decision Guide 교정)</h3>
+<h3>3.6 Stage 2b — refine_plan</h3>
 <p><strong>프롬프트</strong> (<code>refine_plan_prompt</code>):</p>
-<div class="codehilite"><pre><span></span><code><span class="nx">You</span><span class="w"> </span><span class="nx">generated</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">solution</span><span class="w"> </span><span class="nx">plan</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">task</span><span class="p">.</span><span class="w"> </span><span class="nx">A</span><span class="w"> </span><span class="nx">Decision</span><span class="w"> </span><span class="nx">Guide</span><span class="w"> </span><span class="nx">identifies</span><span class="w"> </span><span class="nx">failure</span>
-<span class="nx">patterns</span><span class="w"> </span><span class="nx">observed</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">similar</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span>
-<span class="nx">Refine</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">generated</span><span class="w"> </span><span class="nx">plan</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">address</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">failures</span><span class="p">.</span><span class="w"> </span><span class="nx">Only</span><span class="w"> </span><span class="nx">modify</span><span class="w"> </span><span class="nx">steps</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">the</span>
-<span class="nx">guide</span><span class="w"> </span><span class="nx">says</span><span class="w"> </span><span class="nx">are</span><span class="w"> </span><span class="nx">wrong</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="nx">missing</span><span class="p">.</span>
-<span class="nx">Preserve</span><span class="w"> </span><span class="nx">all</span><span class="w"> </span><span class="nx">correct</span><span class="w"> </span><span class="nx">steps</span><span class="p">.</span><span class="w"> </span><span class="nx">Return</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">full</span><span class="w"> </span><span class="nx">refined</span><span class="w"> </span><span class="nx">plan</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">bullet</span><span class="w"> </span><span class="nx">list</span><span class="p">.</span>
+<pre><code>You generated a solution plan for a task. A Decision Guide identifies failure
+patterns observed in similar tasks.
+Refine the generated plan to address the failures. Only modify steps that the
+guide says are wrong or missing.
+Preserve all correct steps. Return the full refined plan as a bullet list.
 
-<span class="nx">TASK</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">task</span><span class="p">}}</span>
-<span class="nx">KNOWLEDGE</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">knowledge</span><span class="p">}}</span>
-<span class="nx">GENERATED</span><span class="w"> </span><span class="nx">PLAN</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">draft</span><span class="p">}}</span>
-<span class="nx">DECISION</span><span class="w"> </span><span class="nx">GUIDE</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">decision_guide</span><span class="p">}}</span>
-</code></pre></div>
-
-<p><strong>출력</strong>: <code>plan_str</code> — 교정된 최종 계획</p>
+TASK: {{task}}
+KNOWLEDGE: {{knowledge}}
+GENERATED PLAN: {{draft}}
+DECISION GUIDE: {{decision_guide}}
+</code></pre>
+<p><strong>출력</strong>: <code>plan_str</code></p>
 <hr />
 <h3>3.7 Stage 3a — generate_instance</h3>
-<p><strong>목적</strong>: 계획을 실제 태스크에 구체적으로 적용한 실행 인스턴스를 생성합니다. 중간 계산값과 추론 과정을 포함하되 최종 답은 제외합니다.</p>
+<p>중간 계산값과 추론 과정을 포함하되 최종 답은 제외합니다.</p>
 <p><strong>프롬프트</strong> (<code>instance_prompt</code>):</p>
-<div class="codehilite"><pre><span></span><code><span class="x">Generate a concrete execution instance that grounds the given plan into</span>
-<span class="x">specific, actionable steps with actual values and reasoning.</span>
-<span class="x">The instance should demonstrate exactly how to apply the plan to THIS task,</span>
-<span class="x">showing intermediate computations and logical deductions.</span>
+<pre><code>Generate a concrete execution instance that grounds the given plan into
+specific, actionable steps with actual values and reasoning.
 
-<span class="x">Requirements:</span>
-<span class="x">- Walk through each plan step with concrete values from the task.</span>
-<span class="x">- Show actual computations, lookups, or reasoning steps.</span>
-<span class="x">- Do NOT reveal or guess the final answer — stop just before the conclusion.</span>
+Requirements:
+- Walk through each plan step with concrete values from the task.
+- Show actual computations, lookups, or reasoning steps.
+- Do NOT reveal or guess the final answer — stop just before the conclusion.
 
-<span class="x">TASK: </span><span class="cp">{{</span><span class="nv">task</span><span class="cp">}}</span>
-<span class="x">KNOWLEDGE: </span><span class="cp">{{</span><span class="nv">knowledge</span><span class="cp">}}</span>
-<span class="x">PLAN: </span><span class="cp">{{</span><span class="nv">plan</span><span class="cp">}}</span>
-<span class="x">SIMILAR INSTANCES: </span><span class="cp">{{</span><span class="nv">examples</span><span class="cp">}}</span>
-</code></pre></div>
-
-<p><strong>출력</strong>: <code>instance_draft</code> — 구체적 실행 인스턴스 텍스트</p>
+TASK: {{task}}
+KNOWLEDGE: {{knowledge}}
+PLAN: {{plan}}
+SIMILAR INSTANCES: {{examples}}
+</code></pre>
+<p><strong>출력</strong>: <code>instance_draft</code></p>
 <hr />
-<h3>3.8 Stage 3b — refine_instance (Decision Guide 교정)</h3>
+<h3>3.8 Stage 3b — refine_instance</h3>
 <p><strong>프롬프트</strong> (<code>refine_instance_prompt</code>):</p>
-<div class="codehilite"><pre><span></span><code><span class="nx">You</span><span class="w"> </span><span class="nx">generated</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">concrete</span><span class="w"> </span><span class="nx">execution</span><span class="w"> </span><span class="nx">instance</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">task</span><span class="p">.</span><span class="w"> </span><span class="nx">A</span><span class="w"> </span><span class="nx">Decision</span><span class="w"> </span><span class="nx">Guide</span>
-<span class="nx">identifies</span><span class="w"> </span><span class="nx">failure</span><span class="w"> </span><span class="nx">patterns</span><span class="w"> </span><span class="nx">observed</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">similar</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span>
-<span class="nx">Refine</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">instance</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">fix</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">failures</span><span class="w"> </span><span class="nx">identified</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">guide</span><span class="p">.</span><span class="w"> </span><span class="nx">Only</span><span class="w"> </span><span class="nx">modify</span>
-<span class="nx">what</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">incorrect</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="nx">incomplete</span><span class="p">.</span>
-<span class="nx">Preserve</span><span class="w"> </span><span class="nx">all</span><span class="w"> </span><span class="nx">correct</span><span class="w"> </span><span class="nx">parts</span><span class="p">.</span><span class="w"> </span><span class="nx">Return</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">full</span><span class="w"> </span><span class="nx">refined</span><span class="w"> </span><span class="nx">execution</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span>
+<pre><code>You generated a concrete execution instance for a task. A Decision Guide
+identifies failure patterns observed in similar tasks.
+Refine the instance to fix the failures identified in the guide.
 
-<span class="nx">TASK</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">task</span><span class="p">}}</span>
-<span class="nx">KNOWLEDGE</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">knowledge</span><span class="p">}}</span>
-<span class="nx">PLAN</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">plan</span><span class="p">}}</span>
-<span class="nx">GENERATED</span><span class="w"> </span><span class="nx">INSTANCE</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">draft</span><span class="p">}}</span>
-<span class="nx">DECISION</span><span class="w"> </span><span class="nx">GUIDE</span><span class="p">:</span><span class="w"> </span><span class="p">{{</span><span class="nx">decision_guide</span><span class="p">}}</span>
-</code></pre></div>
-
-<p><strong>출력</strong>: <code>instance_str</code> — 교정된 최종 인스턴스</p>
+TASK: {{task}}
+KNOWLEDGE: {{knowledge}}
+PLAN: {{plan}}
+GENERATED INSTANCE: {{draft}}
+DECISION GUIDE: {{decision_guide}}
+</code></pre>
+<p><strong>출력</strong>: <code>instance_str</code></p>
 <hr />
 <h3>3.9 최종 plan 문자열 조합</h3>
-<div class="codehilite"><pre><span></span><code><span class="c1"># plan_mode == None 또는 &quot;plan&quot; (기본)</span>
-<span class="n">final_plan</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="sa">f</span><span class="s2">&quot;Knowledge:</span><span class="se">\n</span><span class="si">{</span><span class="n">knowledge_text</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-    <span class="sa">f</span><span class="s2">&quot;Plan:</span><span class="se">\n</span><span class="si">{</span><span class="n">plan_str</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-    <span class="sa">f</span><span class="s2">&quot;Instance:</span><span class="se">\n</span><span class="si">{</span><span class="n">instance_str</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="p">)</span>
-</code></pre></div>
-
+<pre><code class="language-python">final_plan = (
+    f&quot;Knowledge:\n{knowledge_text}\n\n&quot;
+    f&quot;Plan:\n{plan_str}\n\n&quot;
+    f&quot;Instance:\n{instance_str}&quot;
+)
+</code></pre>
+<p>이 문자열이 <code>result["plan"]</code> 으로 반환되어 CodeAgent에 전달됩니다.</p>
 <hr />
 <h2>4. Generate-then-Refine 전략</h2>
 <h3>4.1 흐름도</h3>
-<div class="codehilite"><pre><span></span><code>KB 유사 태스크 검색
-        │
-        ├── build_decision_guide_blocks(level=&quot;knowledge&quot;) → guide_knowledge
-        ├── build_decision_guide_blocks(level=&quot;plan&quot;)      → guide_plan
-        └── build_decision_guide_blocks(level=&quot;instance&quot;)  → guide_instance
+<pre><code>KB 유사 태스크 검색
+│
+├── guide_knowledge = build_decision_guide_blocks(level=&quot;knowledge&quot;)
+├── guide_plan      = build_decision_guide_blocks(level=&quot;plan&quot;)
+└── guide_instance  = build_decision_guide_blocks(level=&quot;instance&quot;)
 
 Stage 1a: generate_knowledge(task, examples)       → knowledge_draft
 Stage 1b: refine_knowledge(draft, guide_knowledge) → knowledge_text
-                                                      (가이드 없으면 draft 반환)
+           └─ guide 없으면 draft 그대로 반환
 
 Stage 2a: generate_plan(task, knowledge, examples) → plan_draft
 Stage 2b: refine_plan(draft, guide_plan)           → plan_str
-                                                      (가이드 없으면 draft 반환)
+           └─ guide 없으면 draft 그대로 반환
 
 Stage 3a: generate_instance(task, knowledge, plan, examples) → instance_draft
 Stage 3b: refine_instance(draft, guide_instance)             → instance_str
-                                                               (가이드 없으면 draft 반환)
-</code></pre></div>
-
+           └─ guide 없으면 draft 그대로 반환
+</code></pre>
 <h3>4.2 Decision Guide 신호 구조</h3>
-<div class="codehilite"><pre><span></span><code><span class="c1"># odyseuss_db.jsonl: decision_augmentation.signals_summary</span>
-<span class="p">[</span>
-    <span class="p">{</span>
-        <span class="s2">&quot;level&quot;</span><span class="p">:</span>       <span class="s2">&quot;knowledge&quot;</span> <span class="o">|</span> <span class="s2">&quot;plan&quot;</span> <span class="o">|</span> <span class="s2">&quot;instance&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;failures&quot;</span><span class="p">:</span>    <span class="p">[</span><span class="s2">&quot;실패 현상 설명 ...&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;causes&quot;</span><span class="p">:</span>      <span class="p">[</span><span class="s2">&quot;근본 원인 ...&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;corrections&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;수정 방법 ...&quot;</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="o">...</span>
-<span class="p">]</span>
-</code></pre></div>
-
+<pre><code class="language-python"># odyseuss_db: decision_augmentation.signals_summary
+[
+    {
+        &quot;level&quot;:       &quot;knowledge&quot; | &quot;plan&quot; | &quot;instance&quot;,
+        &quot;failures&quot;:    [&quot;실패 현상 ...&quot;],
+        &quot;causes&quot;:      [&quot;근본 원인 ...&quot;],
+        &quot;corrections&quot;: [&quot;수정 방법 ...&quot;],
+    },
+    ...
+]
+</code></pre>
 <p><code>build_decision_guide_blocks()</code> 가 이를 프롬프트용 텍스트로 변환합니다:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">[From Task: &lt;task text&gt;]</span>
-<span class="w">  </span><span class="na">[KNOWLEDGE] Failure</span><span class="o">:</span><span class="w"> </span><span class="s">...</span>
-<span class="w">              </span><span class="na">Cause</span><span class="o">:</span><span class="w"> </span><span class="s">...</span>
-<span class="w">              </span><span class="na">Correction</span><span class="o">:</span><span class="w"> </span><span class="s">...</span>
-</code></pre></div>
-
+<pre><code>[From Task: &lt;task text&gt;]
+  [KNOWLEDGE] Failure: ...
+              Cause: ...
+              Correction: ...
+  [PLAN] Failure: ...
+         ...
+</code></pre>
 <h3>4.3 Generate-then-Refine 방식을 선택한 이유</h3>
 <table>
 <thead>
@@ -545,74 +556,77 @@ Stage 3b: refine_instance(draft, guide_instance)             → instance_str
 </tr>
 </tbody>
 </table>
-<p>각 refine 함수는 <code>if not decision_guide: return draft</code> 가드로, KB에 해당 레벨 가이드가 없으면 불필요한 LLM 호출을 방지합니다.</p>
 <hr />
-<h2>5. CodeAgent 실행</h2>
-<h3>5.1 에이전트 생성</h3>
-<div class="codehilite"><pre><span></span><code><span class="n">manager_agent</span> <span class="o">=</span> <span class="n">CodeAgent</span><span class="p">(</span>
-    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>                                    <span class="c1"># TogetherAI SLM 또는 OpenAI 모델</span>
-    <span class="n">tools</span><span class="o">=</span><span class="p">[],</span>
-    <span class="n">max_steps</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">max_steps</span><span class="p">,</span>                       <span class="c1"># 기본 12</span>
-    <span class="n">planning_interval</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">planning_interval</span><span class="p">,</span>       <span class="c1"># 기본 1 (매 스텝마다 재계획)</span>
-    <span class="n">additional_authorized_imports</span><span class="o">=</span><span class="n">AUTHORIZED_IMPORTS</span><span class="p">,</span>
-    <span class="n">agent_kb</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">agent_kb</span><span class="p">,</span>
-    <span class="n">top_k</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">top_k</span><span class="p">,</span>
-    <span class="n">retrieval_type</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">retrieval_type</span><span class="p">,</span>
-    <span class="n">plan_mode</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">plan_mode</span><span class="p">,</span>
-<span class="p">)</span>
-</code></pre></div>
+<h2>5. CodeAgent 실행 — answer_plan 주입</h2>
+<h3>5.1 proposal_planning 결과가 answer_plan으로 가는 경로</h3>
+<p><code>proposal</code> 모드에서 <code>proposal_planning()</code> 결과는 <code>additional_knowledge</code>가 아닌 <strong><code>answer_plan</code>으로 직접 삽입</strong>됩니다.</p>
+<pre><code class="language-python"># run_gaia.py — proposal 모드 설정
+agent.planner_fn = planner_fn          # planner_fn 콜백 등록
+agent.run(augmented_question,
+          additional_knowledge=None)   # None으로 전달
 
-<p><code>AUTHORIZED_IMPORTS</code>: <code>requests</code>, <code>pandas</code>, <code>numpy</code>, <code>sympy</code>, <code>sklearn</code>, <code>scipy</code>, <code>PIL</code>, <code>PyPDF2</code>, <code>torch</code> 등 25개 라이브러리</p>
-<h3>5.2 additional_knowledge 주입</h3>
-<p><code>proposal_planning()</code>의 반환값 <code>plan["plan"]</code> 이 <code>additional_knowledge</code>로 에이전트에 전달됩니다.</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># run_gaia.py</span>
-<span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">kb_type</span> <span class="o">==</span> <span class="s2">&quot;proposal&quot;</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">planner_fn</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">tools</span><span class="p">,</span> <span class="n">managed_agents</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">proposal_planning</span><span class="p">(</span>
-            <span class="n">example</span><span class="o">=</span><span class="n">example</span><span class="p">,</span>
-            <span class="n">augmented_question</span><span class="o">=</span><span class="n">augmented_question</span><span class="p">,</span>
-            <span class="n">plan_mode</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">plan_mode</span><span class="p">,</span>
-            <span class="o">...</span>
-        <span class="p">)</span>
-    <span class="n">agent</span><span class="o">.</span><span class="n">planner_fn</span> <span class="o">=</span> <span class="n">planner_fn</span>
+# smolagents/agents.py — planning_step() 내부
+if self.planner_fn is not None:
+    result = self.planner_fn(task, self.tools, self.managed_agents)
+    proposal = result.get(&quot;plan&quot;, &quot;&quot;)  # &quot;Knowledge:\n...\n\nPlan:\n...\n\nInstance:\n...&quot;
 
-<span class="n">final_result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-    <span class="n">augmented_question</span><span class="p">,</span>
-    <span class="n">additional_knowledge</span><span class="o">=</span><span class="n">_additional_knowledge_for_planning</span>
-<span class="p">)</span>
-</code></pre></div>
+    if self.plan_mode in (&quot;plan&quot;, &quot;subtask&quot;, &quot;plan_subtask&quot;, &quot;plan_subtask_action&quot;):
+        answer_plan = proposal         # ← 바로 answer_plan으로 사용
 
-<p>에이전트 시스템 프롬프트에 삽입되는 내용:</p>
-<div class="codehilite"><pre><span></span><code>Knowledge:
-&lt;refined knowledge text&gt;
-
-Plan:
-&lt;refined plan bullet list&gt;
-
-Instance:
-&lt;refined execution instance&gt;
-</code></pre></div>
-
+    # answer_plan 이 PlanningStep 메모리에 기록됨
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>kb_type</th>
+<th>경로</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>proposal</code></td>
+<td><code>planner_fn</code> 콜백 → <code>result["plan"]</code> → <code>answer_plan</code> (planning_step마다 호출)</td>
+</tr>
+<tr>
+<td><code>plan_mode</code></td>
+<td><code>plan_mode_planning()</code> → <code>additional_knowledge</code> → LLM → <code>answer_plan</code></td>
+</tr>
+<tr>
+<td><code>original</code></td>
+<td>KB 조회 → <code>additional_knowledge</code> → LLM → <code>answer_plan</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>핵심</strong>: <code>proposal</code> 모드에서는 LLM이 plan을 재생성하지 않고, <code>proposal_planning()</code>이 만든 <code>"Knowledge+Plan+Instance"</code> 블록이 그대로 <code>answer_plan</code>이 됩니다.</p>
+<h3>5.2 에이전트 생성</h3>
+<pre><code class="language-python">manager_agent = CodeAgent(
+    model=model,                           # TogetherAI SLM 또는 OpenAI
+    max_steps=args.max_steps,              # 기본 12
+    planning_interval=args.planning_interval,  # 기본 1 (매 스텝마다 재계획)
+    additional_authorized_imports=AUTHORIZED_IMPORTS,
+    agent_kb=args.agent_kb,
+    top_k=args.top_k,
+    plan_mode=args.plan_mode,
+)
+</code></pre>
 <h3>5.3 ReAct 루프</h3>
-<div class="codehilite"><pre><span></span><code>Iteration 1 ~ max_steps:
-┌─ PlanningStep (planning_interval마다) ─────────────────────────┐
-│  LLM이 현재 상태를 보고 high-level plan 재작성                 │
-└────────────────────────────────────────────────────────────────┘
-┌─ ActionStep ───────────────────────────────────────────────────┐
-│  Thought    : LLM이 다음 행동을 Python 코드로 작성             │
-│  Code       : 에이전트가 Python 코드 실행                      │
-│  Observation: 코드 실행 결과(stdout/반환값) 수집               │
-└────────────────────────────────────────────────────────────────┘
-
+<pre><code>Iteration 1 ~ max_steps:
+┌─ PlanningStep (planning_interval마다) ────────────────────┐
+│  planner_fn() 호출 → answer_plan 갱신                     │
+└───────────────────────────────────────────────────────────┘
+┌─ ActionStep ──────────────────────────────────────────────┐
+│  Thought    : LLM이 다음 행동을 Python 코드로 작성         │
+│  Code       : Python 코드 실행                            │
+│  Observation: 실행 결과(stdout/반환값) 수집               │
+└───────────────────────────────────────────────────────────┘
 max_steps 초과 또는 final_answer() 호출 시 종료
-</code></pre></div>
-
+</code></pre>
 <h3>5.4 사용 가능한 도구</h3>
 <table>
 <thead>
 <tr>
 <th>도구</th>
-<th>클래스</th>
+<th>파일</th>
 <th>역할</th>
 </tr>
 </thead>
@@ -635,115 +649,90 @@ max_steps 초과 또는 final_answer() 호출 시 종료
 <tr>
 <td>TextInspectorTool</td>
 <td><code>scripts/text_inspector_tool.py</code></td>
-<td>PDF/텍스트 파일 검사</td>
+<td>PDF/텍스트 검사</td>
 </tr>
 <tr>
 <td>AudioInspectorTool</td>
 <td><code>scripts/audio_inspector_tool.py</code></td>
-<td>오디오 파일 검사</td>
+<td>오디오 검사</td>
 </tr>
 <tr>
 <td>VisualInspectorTool</td>
 <td><code>scripts/visual_inspector_tool.py</code></td>
-<td>이미지 파일 검사</td>
-</tr>
-</tbody>
-</table>
-<h3>5.5 메모리 타입</h3>
-<table>
-<thead>
-<tr>
-<th>타입</th>
-<th>용도</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>TaskStep</td>
-<td>최초 태스크와 additional_knowledge</td>
-</tr>
-<tr>
-<td>PlanningStep</td>
-<td>매 planning_interval마다 LLM이 작성하는 고수준 계획</td>
-</tr>
-<tr>
-<td>ActionStep</td>
-<td>(Thought, Code, Observation) 삼중 쌍</td>
+<td>이미지 검사</td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h2>6. 최종 답변 추출</h2>
 <h3>6.1 prepare_response() — scripts/reformulator.py</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">prepare_response</span><span class="p">(</span>
-    <span class="n">original_task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">inner_messages</span><span class="p">,</span>           <span class="c1"># agent.write_memory_to_messages() 결과</span>
-    <span class="n">reformulation_model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
-    <span class="n">multiple</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
-</code></pre></div>
-
+<pre><code class="language-python">def prepare_response(
+    original_task: str,
+    inner_messages,           # agent.write_memory_to_messages() 결과
+    reformulation_model: Model,
+) -&gt; str
+</code></pre>
 <p>처리 과정:</p>
 <ol>
 <li>시스템 메시지에 원래 태스크 제시</li>
-<li>에이전트 메모리(<code>inner_messages</code>)를 USER 역할로 변환</li>
-<li>최종 지시 메시지 추가 — 단답형 포맷 규칙 명시</li>
-<li><code>reformulation_model(messages).content</code> 호출</li>
-<li><code>response.split("FINAL ANSWER: ")[-1].strip()</code> 로 최종 답 추출</li>
+<li>에이전트 메모리를 USER 역할로 변환하여 대화 이력 구성</li>
+<li>최종 지시 메시지 추가</li>
 </ol>
-<p>최종 지시 메시지의 포맷 규칙:</p>
-<div class="codehilite"><pre><span></span><code>- 숫자: 숫자만 사용, 쉼표·단위 제거 (단, 질문에서 요구하면 유지)
+<p>포맷 규칙:</p>
+<pre><code>- 숫자: 숫자만, 쉼표·단위 제거 (질문에서 요구하면 유지)
 - 텍스트: 관사·약어 제거, 마침표 제외
 - 목록: 쉼표로 구분
-- 답을 알 수 없으면: &quot;Unable to determine&quot;
-</code></pre></div>
-
-<p><strong>출력</strong>: 정제된 단답형 최종 답변 문자열</p>
+- 답 불명: &quot;Unable to determine&quot;
+</code></pre>
+<ol>
+<li><code>response.split("FINAL ANSWER: ")[-1].strip()</code> 으로 답 추출</li>
+</ol>
 <hr />
 <h2>7. 데이터 스키마</h2>
 <h3>7.1 odyseuss_db.jsonl 레코드</h3>
-<div class="codehilite"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;task_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;task&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;true_answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;agent_planning&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string | null&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;task_analysis&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;knowledge&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;plan&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;step1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;step2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;task_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;computation&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;analysis&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;domain&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;mathematics&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;science&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">]</span>
-<span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;decision_augmentation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;final_reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;knowledge&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;plan&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;step1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">],</span>
-<span class="w">      </span><span class="nt">&quot;instance&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;signals_summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">      </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;knowledge | plan | instance&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;failures&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">],</span>
-<span class="w">        </span><span class="nt">&quot;causes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">],</span>
-<span class="w">        </span><span class="nt">&quot;corrections&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">]</span>
-<span class="w">      </span><span class="p">}</span>
-<span class="w">    </span><span class="p">]</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-
+<pre><code class="language-json">{
+  &quot;task_id&quot;: &quot;string&quot;,
+  &quot;task&quot;: &quot;string&quot;,
+  &quot;true_answer&quot;: &quot;string&quot;,
+  &quot;agent_planning&quot;: &quot;string | null&quot;,
+  &quot;task_analysis&quot;: {
+    &quot;knowledge&quot;: &quot;string&quot;,
+    &quot;plan&quot;: [&quot;step1&quot;, &quot;step2&quot;, &quot;...&quot;],
+    &quot;task_type&quot;: [&quot;raw_value&quot;, &quot;Normalized Value&quot;],
+    &quot;domain&quot;:    [&quot;raw_value&quot;, &quot;Normalized Value&quot;],
+    &quot;task_type_normalized&quot;: [&quot;Normalized Value&quot;],
+    &quot;domain_normalized&quot;:    [&quot;Normalized Value&quot;]
+  },
+  &quot;decision_augmentation&quot;: {
+    &quot;final_reference&quot;: {
+      &quot;knowledge&quot;: &quot;string&quot;,
+      &quot;plan&quot;: [&quot;step1&quot;, &quot;...&quot;],
+      &quot;instance&quot;: &quot;string&quot;
+    },
+    &quot;signals_summary&quot;: [
+      {
+        &quot;level&quot;: &quot;knowledge | plan | instance&quot;,
+        &quot;failures&quot;: [&quot;string&quot;],
+        &quot;causes&quot;: [&quot;string&quot;],
+        &quot;corrections&quot;: [&quot;string&quot;]
+      }
+    ]
+  }
+}
+</code></pre>
 <h3>7.2 proposal_planning() 반환값</h3>
-<div class="codehilite"><pre><span></span><code><span class="p">{</span>
-    <span class="s2">&quot;plan&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="c1"># &quot;Knowledge:\n{knowledge_text}\n\nPlan:\n{plan_str}\n\nInstance:\n{instance_str}&quot;</span>
+<pre><code class="language-python">{
+    &quot;plan&quot;: str,
+    # &quot;Knowledge:\n{knowledge_text}\n\nPlan:\n{plan_str}\n\nInstance:\n{instance_str}&quot;
+    # → CodeAgent.planning_step()에서 answer_plan 으로 직접 사용
 
-    <span class="s2">&quot;knowledge&quot;</span><span class="p">:</span>         <span class="nb">str</span><span class="p">,</span>   <span class="c1"># Stage 1b 출력</span>
-    <span class="s2">&quot;plan_steps&quot;</span><span class="p">:</span>        <span class="nb">str</span><span class="p">,</span>   <span class="c1"># Stage 2b 출력</span>
-    <span class="s2">&quot;instance&quot;</span><span class="p">:</span>          <span class="nb">str</span><span class="p">,</span>   <span class="c1"># Stage 3b 출력</span>
-    <span class="s2">&quot;retrieval_results&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>  <span class="c1"># KB 검색 결과 원본</span>
-    <span class="s2">&quot;examples&quot;</span><span class="p">:</span>          <span class="nb">dict</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
-
+    &quot;knowledge&quot;:         str,   # Stage 1b 출력
+    &quot;plan_steps&quot;:        str,   # Stage 2b 출력
+    &quot;instance&quot;:          str,   # Stage 3b 출력
+    &quot;retrieval_results&quot;: list,  # KB 검색 결과 원본
+    &quot;examples&quot;:          dict,
+}
+</code></pre>
 <hr />
 <h2>부록. 모듈 파일 경로</h2>
 <table>
